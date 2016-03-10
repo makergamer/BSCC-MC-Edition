@@ -3,7 +3,7 @@
 red='\e[0;31m'
 green='\e[1;32m'
 yellow='\e[1;33m'
-source Files/conf.cfg
+source /opt/BSCC/Files/conf.cfg
 
 INTERACTIVE=True
 ASK_TO_REBOOT=0
