@@ -216,6 +216,90 @@ fi
 fi
 }
 
+##Setup Minecraft server 
+#########################
+#Select Version of Minecraft and download.
+do_vanilla_latest() {
+downloadurl="https://minecraft.net/download"
+serverurl=""
+loc=$([[ -n $1 ]] && printf $1 || printf "$DIR/minecraft_server.jar")
+
+if [[ -a $loc ]]; then
+        printf "$loc exists -- moving to ${loc}.old\n"
+        mv $loc ${loc}.old
+fi
+
+printf "Getting download URL for minecraft server...\n"
+
+serverurl=`curl -s $downloadurl | egrep -io 'https.*versions\/(.*)\/minecraft_server.\1.jar'`
+
+printf "URL = "$serverurl"\n"
+
+printf "Downloading server jar...\n"
+
+wget -q -O $loc $serverurl
+}
+
+
+do_vanilla() {
+#Simple check to see if a server already exists
+while true; do
+FUN=$(whiptail --title "Vanilla Minecraft" --menu "Please pick a Vanilla Edition you would like." 15 60 3 \
+"1 Latest" "" \
+"2 Version 1.9" "" \
+"3 Version 1.8" "" \
+"4 Version 1.7.10" "" \
+ 3>&1 1>&2 2>&3)
+  RET=$?
+  if [ $RET -eq 1 ]; then
+    exit 0
+  elif [ $RET -eq 0 ]; then
+    case "$FUN" in
+      1\ *) do_vanilla_latest ;;
+      2\ *) wget https://launcher.mojang.com/mc/game/1.9/server/b4d449cf2918e0f3bd8aa18954b916a4d1880f0d/server.jar -O $DIR/minecraft_server.jar ;;
+      3\ *) wget https://launcher.mojang.com/mc/game/1.8/server/a028f00e678ee5c6aef0e29656dca091b5df11c7/server.jar -O $DIR/minecraft_server.jar ;;
+      4\ *) wget https://launcher.mojang.com/mc/game/1.7.10/server/952438ac4e01b4d115c5fc38f891710c4941df29/server.jar -O $DIR/minecraft_server.jar ;;
+      *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
+    esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
+  else
+    exit 1
+  fi
+done
+}
+
+do_spigot() {
+echo "Grabbing the latest successful build of Spigot"
+wget http://getspigot.org/jenkins/job/Spigot/lastSuccessfulBuild/artifact/spigot-1.9.jar -O $DIR/minecraft_server.jar
+}
+
+do_version_option() {
+while true; do
+VER=$(whiptail --title "Select Minecraft Version" --menu "Please selct what version of Minecraft you wish to run" 10 80 2 \
+"1 Vanilla Minecraft" "[Stright from Mojang.(Latest Version)]" \
+"2 Spigot" "[Fast lightwaight Bucket style server.(Latest Version)]" \
+ 3>&1 1>&2 2>&3)
+  RET=$?
+  if [ $RET -eq 1 ]; then
+    exit 0
+  elif [ $RET -eq 0 ]; then
+    case "$VER" in
+      1\ *) do_vanilla ;;
+      2\ *) do_spigot ;;
+      *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
+    esac || whiptail --msgbox "There was an error running option $VER" 20 60 1
+  else
+    exit 1
+  fi
+done
+}
+
+#Simple check to see if a server already exists
+if [ ! -d "$DIR" ]; then
+	mkdir $DIR
+        do_version_option
+fi
+
+
 do_help() {
 echo -e "${yellow}This is the list of commands"
 echo "To use these commands do ./Main command. example ./Main help"
@@ -272,14 +356,14 @@ if [ $RET -eq 0 ]; then
 #Restart checks
 if ! screen -list | grep -q "Players"; then
     echo "should be starting"
-    cd Files
+    cd $INSTALL_LOC/Files
     screen -dmS "Players" ./Players
 else
     screen -X -S Players quit
     echo "you are leaving"
-    echo $INPUT >> Files/RandomMSG.txt
+    echo $INPUT >> $INSTALL_LOC/Files/RandomMSG.txt
     echo "script found running"
-    cd Files
+    cd $INSTALL_LOC/Files
     screen -dmS "Players" ./Players
 fi
 fi
@@ -340,6 +424,7 @@ while true; do
   FUN=$(whiptail --fb --title "Admin Area" --menu "Server Controls"  --cancel-button Exit --ok-button Select 20 80 3 \
     "1 Chat" "[Direct message to console]" \
     "2 Server Properties" "[Modify Server Properties]" \
+    "3 Advanced menu" "Upgrade & Delete servers" \
     3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
@@ -348,6 +433,7 @@ while true; do
     case "$FUN" in
       1\ *) do_chat ;;
       2\ *) do_prop ;;
+      3\ *) do_admin_advanced ;;
       *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
 fi
