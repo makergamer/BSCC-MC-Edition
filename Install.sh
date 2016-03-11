@@ -44,8 +44,6 @@ This is the first time you have ran this so everything is going to need to be bu
 
 
 If you agree Please, continue." 15 60) then
-
-        echo "user selected Yes"
         (
         sleep 2
         echo XXX
