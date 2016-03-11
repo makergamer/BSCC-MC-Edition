@@ -59,8 +59,6 @@ If you agree Please, continue." 15 60) then
         echo XXX
         echo 40
         echo "Touching files :)"
-        touch $INSTALL_LOC/Files/Players
-        touch $INSTALL_LOC/Files/RandomMSG.txt
         touch $INSTALL_LOC/Files/players.list
         echo XXX
         sleep 2
@@ -79,7 +77,7 @@ If you agree Please, continue." 15 60) then
         echo XXX
         echo 100
         echo "Launching Main script, enjoy"
-        source BSCC mc_select
+        source BSCC do_version
         echo XXX
         sleep 2
 ) | whiptail --gauge "Gathering info" 8 40 0
