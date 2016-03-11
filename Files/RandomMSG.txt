@@ -1,1 +1,1 @@
-
+This is a sample message. To erase please edit /opt/BSCC/Files/RandomMsg.txt
