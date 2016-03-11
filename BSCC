@@ -10,7 +10,6 @@ ASK_TO_REBOOT=0
 CONFIG=$HOME/conf.cfg
 LOG=$HOME/logs/uptime
 RDIFF=$HOME/rdiff-backup
-START="screen -dmS Minecraft java -Xms1G -Xmx6G -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSIncrementalPacing -XX:MaxPermSize=512m -XX:ParallelGCThreads=4 -XX:+AggressiveOpts -jar $SERVERJAR nogui"  #Very temp
 BACKUP=$HOME/backup
 
 #Extra Functions for Cronjobs and Debugs (Down the road)
