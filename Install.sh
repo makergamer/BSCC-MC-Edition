@@ -51,6 +51,7 @@ If you agree Please, continue." 15 60) then
         echo "Making Directories & Moving Files"
         mkdir $INSTALL_LOC
         mkdir $INSTALL_LOC/Files
+	mkdir $INSTALL_LOC/minecraft_server
         cp Files/* $INSTALL_LOC/Files
         echo XXX
         sleep 5
@@ -75,11 +76,10 @@ If you agree Please, continue." 15 60) then
         echo XXX
         echo 100
         echo "Launching Main script, enjoy"
-        source BSCC do_version
         echo XXX
         sleep 2
 ) | whiptail --gauge "Gathering info" 8 40 0
-
+BSCC
 else
         exit 0
 fi
