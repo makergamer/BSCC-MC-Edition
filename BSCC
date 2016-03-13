@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash
 #Add Color for help list
 red='\e[0;31m'
 green='\e[1;32m'
@@ -7,7 +7,7 @@ source /opt/BSCC/Files/conf.cfg
 
 INTERACTIVE=True
 ASK_TO_REBOOT=0
-CONFIG=$HOME/conf.cfg
+CONFIG=$INSTALL_LOC/Files/conf.cfg
 LOG=$HOME/logs/uptime
 RDIFF=$HOME/rdiff-backup
 BACKUP=$HOME/backup
@@ -215,6 +215,97 @@ fi
 fi
 }
 
+do_eula() {
+#eula.txt Should be there. If not then something went wrong and should say so now.
+#source BSCC
+if [ ! -f $DIR/eula.txt ]; then
+     whiptail --msgbox --fb "Something is wrong here, there is no eula.txt file to be found." 20 60
+        exit 0
+fi
+
+##start server and wait for EULA##
+usereula=`cat $DIR/eula.txt`
+#whiptail --msgbox --title "Eula Agreement Info" "$usereula$  On the next tab you will select agree or cancel" 20 60 1
+
+#EULA Needs to be accepted by the user
+if (whiptail --title "EULA AGREEMENT" --fb --yesno "$usereula" --yes-button true --no-button false 15 60) then
+    sed -i 's/eula=.*/eula=true/g' $DIR/eula.txt
+else
+    sed -i 's/eula=.*/eula=false/g' $DIR/eula.txt
+    whiptail --msgbox --fb "Without accepting the eula agreement you won't be able to start this server. Run (BSCC eula) to accept again." 20 60
+    exit 0
+fi
+}
+
+do_first_run() {
+##Setting up Memory alocation to the server
+#################################
+USERMAX=$(whiptail --inputbox "Please select a MAXMEM Default is 512M" 8 78 $MAXMEM --title "Example Dialog" 3>&1 1>&2 2>&3)
+exitstatus=$?
+if [ $exitstatus = 0 ]; then
+    sed -i 's/MAXMEM=.*/MAXMEM='$USERMAX'/g' $CONFIG
+fi
+USERMIN=$(whiptail --inputbox "Please select a MINMEM Default is 128M. (MUST BE LOWER THEN MAXMEM)" 8 78 $MINMEM --title "Setting MINMEM" 3>&1 1>&2 2>&3)
+exitstatus=$?
+if [ $exitstatus = 0 ]; then
+    sed -i 's/MINMEM=.*/MINMEM='$USERMIN'/g' $CONFIG
+fi
+
+(
+        sleep 1
+        echo XXX
+        echo 20
+        echo "Inputing user selection"
+        echo XXX
+        sleep 1
+        echo XXX
+        echo 40
+	echo "Attemping to starting server"
+        echo XXX
+        sleep 1
+        echo XXX
+        echo 60
+        echo "Attemping to starting server"
+	cd $DIR
+	$START
+        echo XXX
+        sleep 20
+        echo XXX
+        echo 80
+        echo "Searching for User Agreements"
+        echo XXX
+        sleep 1
+        echo XXX
+        echo 100
+        echo "Finishing up."
+        echo XXX
+        sleep 2
+) | whiptail --gauge "Gathering info" 8 40 0
+
+#eula.txt Should be there. If not then something went wrong and should say so now.
+if [ ! -f $DIR/eula.txt ]; then
+     whiptail --msgbox --fb "Something is wrong here, there is no eula.txt file to be found." 20 60
+        exit 0
+fi
+
+##start server and wait for EULA##
+usereula=`cat $DIR/eula.txt`
+#whiptail --msgbox --title "Eula Agreement Info" "$usereula$  On the next tab you will select agree or cancel" 20 60 1
+
+#EULA Needs to be accepted by the user
+if (whiptail --title "EULA AGREEMENT" --fb --yesno "$usereula" --yes-button true --no-button false 15 60) then
+    sed -i 's/eula=.*/eula=true/g' $DIR/eula.txt
+else
+    sed -i 's/eula=.*/eula=false/g' $DIR/eula.txt
+    whiptail --msgbox --fb "Without accepting the eula agreement you won't be able to start this server. Run (BSCC eula) to accept again." 20 60
+    exit 0
+fi
+
+#All done here
+whiptail --fb --title "YOUR ALL SETUP!!!" --msgbox "Well if your seeing this it means that there is a good chance that your server is all setup and read to go. Give it some time to load and enjoy. Run BSCC for more info" 20 60
+exit 0
+}
+
 ##Setup Minecraft server 
 #########################
 #Select Version of Minecraft and download.
@@ -237,6 +328,7 @@ printf "URL = "$serverurl"\n"
 printf "Downloading server jar...\n"
 
 wget -q -O $loc $serverurl
+do_first_run
 }
 
 
@@ -255,9 +347,9 @@ FUN=$(whiptail --title "Vanilla Minecraft" --menu "Please pick a Vanilla Edition
   elif [ $RET -eq 0 ]; then
     case "$FUN" in
       1\ *) do_vanilla_latest ;;
-      2\ *) wget https://launcher.mojang.com/mc/game/1.9/server/b4d449cf2918e0f3bd8aa18954b916a4d1880f0d/server.jar -O $DIR/minecraft_server.jar ;;
-      3\ *) wget https://launcher.mojang.com/mc/game/1.8/server/a028f00e678ee5c6aef0e29656dca091b5df11c7/server.jar -O $DIR/minecraft_server.jar ;;
-      4\ *) wget https://launcher.mojang.com/mc/game/1.7.10/server/952438ac4e01b4d115c5fc38f891710c4941df29/server.jar -O $DIR/minecraft_server.jar ;;
+      2\ *) wget https://launcher.mojang.com/mc/game/1.9/server/b4d449cf2918e0f3bd8aa18954b916a4d1880f0d/server.jar -O $DIR/minecraft_server.jar ; do_first_run ;;
+      3\ *) wget https://launcher.mojang.com/mc/game/1.8/server/a028f00e678ee5c6aef0e29656dca091b5df11c7/server.jar -O $DIR/minecraft_server.jar ; do_first_run ;;
+      4\ *) wget https://launcher.mojang.com/mc/game/1.7.10/server/952438ac4e01b4d115c5fc38f891710c4941df29/server.jar -O $DIR/minecraft_server.jar ; do_first_run ;;
       *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
   else
@@ -269,6 +361,7 @@ done
 do_spigot() {
 echo "Grabbing the latest successful build of Spigot"
 wget http://getspigot.org/jenkins/job/Spigot/lastSuccessfulBuild/artifact/spigot-1.9.jar -O $DIR/minecraft_server.jar
+do_first_run
 }
 
 do_version_option() {
@@ -293,8 +386,7 @@ done
 }
 
 #Simple check to see if a server already exists
-if [ ! -d "$DIR" ]; then
-	mkdir $DIR
+if [ ! -f "$DIR/$SERVERJAR" ]; then
         do_version_option
 fi
 
@@ -509,7 +601,12 @@ case "$1" in
    do_inventory
     exit 0
     ;;
- (help)
+  (eula)
+   do_eula
+   do_menu
+   exit 0
+    ;;
+  (help)
     do_help
     exit 0
     ;;
