@@ -8,14 +8,15 @@ source /opt/BSCC/Files/conf.cfg
 INTERACTIVE=True
 ASK_TO_REBOOT=0
 CONFIG=$INSTALL_LOC/Files/conf.cfg
-LOG=$HOME/logs/uptime
-RDIFF=$HOME/rdiff-backup
-BACKUP=$HOME/backup
+LOG=$INSTALL_LOC/logs/uptime
+RDIFF=$INSTALL_LOC/rdiff-backup
+BACKUP=$INSTALL_LOC/backup
 
 #Extra Functions for Cronjobs and Debugs (Down the road)
 
+
 do_adminpass() {
-ADMIN_AREA=$(whiptail --passwordbox "Enter Password:" 8 78 --title "password dialog" 3>&1 1>&2 2>&3)
+ADMIN_AREA=$(whiptail --passwordbox "Enter Password:" 8 30 --title "password dialog" 3>&1 1>&2 2>&3)
 exitstatus=$?
 if [ $ADMIN_PASS == "$ADMIN_AREA"  ]; then 
 whiptail --ok-button Done --msgbox "Correct password" 10 30
@@ -59,41 +60,11 @@ echo " ======================================" >> $LOG
     echo "Server is restarting now." >> $LOG
     date >> $LOG
     echo "================================================" >> $LOG
-$CONSOLE1 "say Restart in 5 Minutes..$CONSOLE2"
 $CONSOLE1 "save-all $CONSOLE2"
-sleep 1m
-$CONSOLE1 "say Restart in 4 Minutes..$CONSOLE2"
-sleep 1m
-$CONSOLE1 "say Restart in 3 Minutes..$CONSOLE2"
-sleep 1m
-$CONSOLE1 "say Restart in 2 Minutes..$CONSOLE2"
-sleep 1m
 $CONSOLE1 "say Restart in 1 Minutes..WHY ARE YOU STILL HERE!!! $CONSOLE2"
-sleep 30s
-$CONSOLE1 "say 30 seconds..$CONSOLE2"
-sleep 10s
-$CONSOLE1 "say 20 seconds..$CONSOLE2"
-sleep 10s
+sleep 1m
 $CONSOLE1 "say 10 seconds..$CONSOLE2"
-sleep 1s
-$CONSOLE1 "say 9 seconds..$CONSOLE2"
-sleep 1s
-$CONSOLE1 "say 8 seconds..$CONSOLE2"
-sleep 1s
-$CONSOLE1 "say 7 seconds..$CONSOLE2"
-sleep 1s
-$CONSOLE1 "say 6 seconds..$CONSOLE2"
-sleep 1s
-$CONSOLE1 "say 5 seconds..$CONSOLE2"
-sleep 1s
-$CONSOLE1 "say 4 seconds..$CONSOLE2"
-sleep 1s
-$CONSOLE1 "say 3 seconds..$CONSOLE2"
-sleep 1s
-$CONSOLE1 "say 2 seconds..$CONSOLE2"
-sleep 1s
-$CONSOLE1 "say 1 seconds..$CONSOLE2"
-sleep 1s
+sleep 10s
 $CONSOLE1 "stop $CONSOLE2"
 sleep 3
 cd $DIR
@@ -109,7 +80,6 @@ echo " This was done by the command restart_now" >> $LOG
 date >> $LOG
 echo " ======================================" >> $LOG
 do_backup
-
 $CONSOLE1 "say Server is going down.... Please log NOW! $CONSOLE2"
 $CONSOLE1 "save-all $CONSOLE2"
 sleep 10
@@ -134,8 +104,30 @@ echo " ======================================" >> $LOG
 $CONSOLE1 "say Backing up server, Sorry for any lag. $CONSOLE2"
 do_rdiff
 tar -zcvf "$today".tar.gz -C $RDIFF .
-rm `ls -t | awk 'NR>3'`
+rm `ls -t | awk 'NR>8'` 2>/dev/null
 $CONSOLE1 "say Backup complete, carry on knowing you're trusting my scripts... :( $CONSOLE2"
+fi
+}
+
+do_rollback() {
+if ! screen -list | grep -q "Minecraft"; then
+sed -i 's/check=.*/check=false/g' $CONFIG
+echo "Server is down, Continuing." >> $LOG
+date >> $LOG
+rm -rf $DIR/*
+rsync -r -t $RDIFF/* $DIR
+echo "Server has been rolled back!" >> $LOG
+cd $DIR
+$START
+sed -i 's/check=.*/check=true/g' $CONFIG
+else
+echo "Server was found running, Stopping now." >> $LOG
+sed -i 's/check=.*/check=false/g' $CONFIG
+$CONSOLE1 "say Going down for rollback! $CONSOLE2"
+sleep 10
+$CONSOLE1 "stop $CONSOLE2"
+sleep 20
+do_rollback
 fi
 }
 
@@ -145,7 +137,7 @@ sed -i 's/check=.*/check=false/g' $CONFIG
 echo "Server is down, Continuing." >> $LOG
 date >> $LOG
 rm -rf $DIR/*
-cp -p "`ls -dtr1 $BACKUP/2016* | tail -1`" $DIR/restore.tar.gz
+cp -p "`ls -dtr1 $BACKUP/* | tail -1`" $DIR/restore.tar.gz
 cd $DIR
 tar -xvf restore.tar.gz
 rm restore.tar.gz
@@ -180,13 +172,20 @@ fi
 
 do_inventory() {
 clear
+#Check that the mods are actually installed...
+if [ -f $DIR/mods/OpenB* ]; then
+echo "it's there"
+else
+whiptail --msgbox --fb "You don't have Openblocks and OpenModsLib installed, Please install it to use this feature." 20 60 0
+exit 1
+fi
 
 #Grab User from player list.
 unset playarr
 playarr=`cat $PLAYERS | awk '{print $1 " |"}'`
 playarr=(${playarr[@]})
 unset selected_player
-selected_player=$(whiptail --menu "Things go here" 20 60 10  ${playarr[@]} 3>&1 1>&2 2>&3)
+selected_player=$(whiptail --menu "OpenBlocks Inventory Restore Center" 20 60 10  ${playarr[@]} 3>&1 1>&2 2>&3)
 RET=$?
 if [ $RET -eq 0 ]; then
 #Grab all deaths from the users in data folder.
@@ -237,20 +236,72 @@ else
 fi
 }
 
-do_first_run() {
+do_console() {
+if ! screen -list | grep -q "Minecraft"; then
+        sed -i 's/MCSCREEN=.*/MCSCREEN=false/g' Files/conf.cfg
+        do_admin
+else
+        sed -i 's/MCSCREEN=.*/MCSCREEN=true/g' Files/conf.cfg 
+fi
+
+do_command() {
+INPUT=$(whiptail --fb --inputbox "Simple chat link to console." 8 78 --title "Chat Log" 3>&1 1>&2 2>&3)
+RET=$?
+if [ $RET -eq 0 ]; then
+screen -S Minecraft -p 0 -X stuff "`printf "$INPUT\r"`";
+fi
+
+}
+
+while :
+do
+   read -t 1 -n 1 key
+   if [[ $key = c ]] 
+then
+      do_command
+   else
+      clear
+        if ! screen -list | grep -q "Minecraft"; then
+        echo "Server not found...exiting"
+        exit 1
+else
+        echo "PRESS C TO TYPE IN CONSOLE, OR Q TO EXIT"
+      cat /opt/BSCC/minecraft_server/logs/latest.log | tail -10
+        read -t 1 -n 1 key
+        if [[ $key = q ]]
+then
+        exit ;
+fi
+fi
+fi
+done
+}
+
+do_ram() {
 ##Setting up Memory alocation to the server
 #################################
 USERMAX=$(whiptail --inputbox "Please select a MAXMEM Default is 512M" 8 78 $MAXMEM --title "Example Dialog" 3>&1 1>&2 2>&3)
 exitstatus=$?
 if [ $exitstatus = 0 ]; then
     sed -i 's/MAXMEM=.*/MAXMEM='$USERMAX'/g' $CONFIG
+echo "Maxram set to $USERMAX"
+else
+    sed -i 's/MAXMEM=.*/MAXMEM=512M/g' $CONFIG
+echo "Maxram set to 512M"
 fi
+
 USERMIN=$(whiptail --inputbox "Please select a MINMEM Default is 128M. (MUST BE LOWER THEN MAXMEM)" 8 78 $MINMEM --title "Setting MINMEM" 3>&1 1>&2 2>&3)
 exitstatus=$?
 if [ $exitstatus = 0 ]; then
     sed -i 's/MINMEM=.*/MINMEM='$USERMIN'/g' $CONFIG
+echo "Minram set to $USERMIN"
+else
+    sed -i 's/MINMEM=.*/MINMEM=128M/g' $CONFIG
+echo "Minram set to 128M"
 fi
+}
 
+do_first_run() {
 (
         sleep 1
         echo XXX
@@ -260,16 +311,25 @@ fi
         sleep 1
         echo XXX
         echo 40
-	echo "Attemping to starting server"
+	echo "Attemping to start server"
         echo XXX
         sleep 1
         echo XXX
         echo 60
-        echo "Attemping to starting server"
+        echo "Attemping to starting server (Allowing 20 seconds for first load)"
+	source /opt/BSCC/Files/conf.cfg
 	cd $DIR
 	$START
+        echo "Server should be up ^^"
         echo XXX
-        sleep 20
+        while :
+        do
+           if screen -list | grep -q "Minecraft"; then
+           sleep 1
+        else
+           break
+        fi
+	done
         echo XXX
         echo 80
         echo "Searching for User Agreements"
@@ -281,7 +341,6 @@ fi
         echo XXX
         sleep 2
 ) | whiptail --gauge "Gathering info" 8 40 0
-
 #eula.txt Should be there. If not then something went wrong and should say so now.
 if [ ! -f $DIR/eula.txt ]; then
      whiptail --msgbox --fb "Something is wrong here, there is no eula.txt file to be found." 20 60
@@ -328,47 +387,214 @@ printf "URL = "$serverurl"\n"
 printf "Downloading server jar...\n"
 
 wget -q -O $loc $serverurl
+sed -i 's/MCVERSION=.*/MCVERSION=Latest??/g' $CONFIG
+sed -i 's/SERVERJAR=.*/SERVERJAR=minecraft_server.jar/g' $CONFIG
+do_ram
 do_first_run
 }
+
 
 
 do_vanilla() {
-#Simple check to see if a server already exists
-while true; do
-FUN=$(whiptail --title "Vanilla Minecraft" --menu "Please pick a Vanilla Edition you would like." 15 60 3 \
-"1 Latest" "" \
-"2 Version 1.9" "" \
-"3 Version 1.8" "" \
-"4 Version 1.7.10" "" \
- 3>&1 1>&2 2>&3)
-  RET=$?
+#Present User with selected Vanilla servers from list.
+vanilla_list=`cut -d "=" -f 1 $INSTALL_LOC/Files/vanilla.list | awk '{print $1 " |"}'`
+vanilla_list=(${vanilla_list[@]})
+vanilla_servers=$(whiptail --menu "Select Your Vanilla server." 20 60 10 ${vanilla_list[@]} 3>&1 1>&2 2>&3)
+RET=$?
   if [ $RET -eq 1 ]; then
-    exit 0
-  elif [ $RET -eq 0 ]; then
-    case "$FUN" in
-      1\ *) do_vanilla_latest ;;
-      2\ *) wget https://launcher.mojang.com/mc/game/1.9/server/b4d449cf2918e0f3bd8aa18954b916a4d1880f0d/server.jar -O $DIR/minecraft_server.jar ; do_first_run ;;
-      3\ *) wget https://launcher.mojang.com/mc/game/1.8/server/a028f00e678ee5c6aef0e29656dca091b5df11c7/server.jar -O $DIR/minecraft_server.jar ; do_first_run ;;
-      4\ *) wget https://launcher.mojang.com/mc/game/1.7.10/server/952438ac4e01b4d115c5fc38f891710c4941df29/server.jar -O $DIR/minecraft_server.jar ; do_first_run ;;
-      *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
-    esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
-  else
     exit 1
-  fi
-done
+  elif [ $RET -eq 0 ]; then
+dl_link=`cat $INSTALL_LOC/Files/vanilla.list | grep "$vanilla_servers" | awk '{print $2}'`
+echo $dl_link
+Check the download and if failed remove the file.
+clear
+if [ $dl_link = do_vanilla_latest ]; then
+$dl_link
+fi
+r=`wget -O $DIR/$vanilla_servers.jar $dl_link`
+echo $vanilla_servers.jar
+if [ $? -ne 0 ]; then 
+rm $DIR/$vanilla_servers.jar
+whiptail --msgbox --clear --fb "Download failed!, check your internet and the link.\
+sed -i 's/SERVERJAR=.*/SERVERJAR=/g' $CONFIG
+The current link is: $dl_link" 20 60
+  else
+sed -i 's/MCVERSION=.*/MCVERSION='$vanilla_servers'/g' $CONFIG
+sed -i 's/SERVERJAR=.*/SERVERJAR='$vanilla_servers.jar'/g' $CONFIG
+do_ram
+do_first_run
+exit 0
+fi
+fi
 }
 
 do_spigot() {
-echo "Grabbing the latest successful build of Spigot"
-wget http://getspigot.org/jenkins/job/Spigot/lastSuccessfulBuild/artifact/spigot-1.9.jar -O $DIR/minecraft_server.jar
+#Present User with selected Spigot servers from list.
+spigot_list=`cut -d "=" -f 1 $INSTALL_LOC/Files/spigot.list | awk '{print $1 " |"}'`
+spigot_list=(${spigot_list[@]})
+spigot_servers=$(whiptail --menu "Select Your Spigot server." 20 60 10 ${spigot_list[@]} 3>&1 1>&2 2>&3)
+RET=$?
+  if [ $RET -eq 1 ]; then
+    exit 1
+  elif [ $RET -eq 0 ]; then
+dl_link=`cat $INSTALL_LOC/Files/spigot.list | grep "$spigot_servers" | awk '{print $2}'`
+
+#Check the download and if failed remove the file.
+clear
+r=`wget -O $DIR/$spigot_servers.jar $dl_link`
+if [ $? -ne 0 ]; then 
+rm $DIR/$spigot_servers.jar
+whiptail --msgbox --clear --fb "Download failed!, check your internet and the link.\
+The current link is: $dl_link" 20 60
+ else
+sed -i 's/MCVERSION=.*/MCVERSION='$spigot_servers'/g' $CONFIG
+sed -i 's/SERVERJAR=.*/SERVERJAR='$spigot_servers.jar'/g' $CONFIG
+do_ram
 do_first_run
+fi
+fi
 }
+
+do_bukkit() {
+#Present User with selected Bukkit servers from list.
+bukkit_list=`cut -d "=" -f 1 $INSTALL_LOC/Files/bukkit.list | awk '{print $1 " |"}'`
+bukkit_list=(${bukkit_list[@]})
+bukkit_servers=$(whiptail --menu "Select Your Bukkit server." 20 60 10 ${bukkit_list[@]} 3>&1 1>&2 2>&3)
+RET=$?
+  if [ $RET -eq 1 ]; then
+    exit 1
+  elif [ $RET -eq 0 ]; then
+dl_link=`cat $INSTALL_LOC/Files/bukkit.list | grep "$bukkit_servers" | awk '{print $2}'`
+
+#Check the download and if failed remove the file.
+clear
+r=`wget -O $DIR/$bukkit_servers.jar $dl_link`
+if [ $? -ne 0 ]; then 
+rm $DIR/$spigot_servers.jar
+whiptail --msgbox --clear --fb "Download failed!, check your internet and the link.\
+The current link is: $dl_link" 20 60
+  else
+sed -i 's/MCVERSION=.*/MCVERSION='$bukkit_servers'/g' $CONFIG
+sed -i 's/SERVERJAR=.*/SERVERJAR='$bukkit_servers'/g' $CONFIG
+do_ram
+do_first_run
+fi
+fi
+}
+
+do_ftb() {
+FTB_list=`cut -d "=" -f 1 $INSTALL_LOC/Files/FTB.list | awk '{print $1 " |"}'`
+FTB_list=(${FTB_list[@]})
+FTB_servers=$(whiptail --menu "Select Your FTB server." 20 60 10 ${FTB_list[@]} 3>&1 1>&2 2>&3)
+RET=$?
+  if [ $RET -eq 1 ]; then
+    exit 1
+  elif [ $RET -eq 0 ]; then
+dl_link=`cat $INSTALL_LOC/Files/FTB.list | grep "$FTB_servers" | awk '{print $2}'`
+fi
+#Check the download and if failed remove the file.
+clear
+
+r=`wget -O $DIR/$FTB_servers.zip $dl_link`
+if [ $? -ne 0 ]; then 
+rm $DIR/$FTB_servers.zip
+whiptail --msgbox --clear --fb "Download failed!, check your internet and the link.\
+The current link is: $dl_link" 20 60
+ else
+sed -i 's/MCVERSION=.*/MCVERSION='$FTB_servers'/g' $CONFIG
+sed -i 's/SERVERJAR=.*/SERVERJAR=FTBserver.jar/g' $CONFIG
+fi
+
+do_ram
+cd $DIR
+unzip $FTB_servers
+if [ -f $DIR/FTBInstall.sh ]; then
+sh FTBInstall.sh
+else
+echo "FTB start script is missing..."
+fi
+#EULA Needs to be accepted by the user
+usereula=`cat $DIR/eula.txt`
+if (whiptail --title "EULA AGREEMENT" --fb --yesno "$usereula" --yes-button true --no-button false 15 60) then
+    sed -i 's/eula=.*/eula=true/g' $DIR/eula.txt
+else
+    sed -i 's/eula=.*/eula=false/g' $DIR/eula.txt
+    whiptail --msgbox --fb "Without accepting the eula agreement you won't be able to start this server. Run (BSCC eula) to accept again." 20 60
+    exit 0
+fi
+whiptail --msgbox --fb "Ok everything should now be ready for you to start. Please use (BSCC menu) also these servers could load slowly...give it some time \n
+Also a big THANK YOU to all of the effort from MODS/DEVS involved in the FTB servers and maintenance" 20 60 0
+exit 0
+}
+
+do_forge() {
+if [ ! -d $DIR/world ]; then
+  whiptail --msgbox --fb "You are missing the $DIR/world folder... have you ran the server yet?" 20 60 0
+clear
+echo -e ${red} "Please attempt to start the server at least once."
+tput sgr0
+exit 1
+fi
+unset forge_list
+forge_list=`cut -d "=" -f 1 $INSTALL_LOC/Files/forge.list | awk '{print $1 " |"}'`
+forge_list=(${forge_list[@]})
+unset forge_servers
+forge_servers=$(whiptail --menu "Your current minecraft is $MCVERSION." 20 60 10 ${forge_list[@]} 3>&1 1>&2 2>&3)
+RET=$?
+  if [ $RET -eq 1 ]; then
+    exit 1
+  elif [ $RET -eq 0 ]; then
+unset dl_link
+dl_link=`cat $INSTALL_LOC/Files/forge.list | grep "$forge_servers" | awk '{print $2}'`
+
+#Make sure that the user is sure..
+if (whiptail --title "sellected $forge_servers, your running $MCVERSION" --fb --yesno "You can seriously mess up your server if you mess this up... Are you sure?" 20 70) then
+	echo "User choose to test the beta..."
+else
+	break
+fi
+r=`wget -O $DIR/forgeinstaller.jar $dl_link`
+if [ $? -ne 0 ]; then 
+rm $DIR/forgeinstaller.jar
+whiptail --msgbox --clear --fb "Download failed!, check your internet and the link.\
+The current link is: $dl_link" 20 60
+else
+
+#Check if the server is currently live
+if screen -list | grep -q "Minecraft"; then
+$CONSOLE1 "stop $CONSOLE2"
+fi
+
+cd $DIR
+java -Xmx$MAXMEM -Xms$MINMEM -jar forgeinstaller.jar --installServer > $DIR/forgeinstall.log 
+rm forgeinstaller.jar
+forge=`tail -n 2 $DIR/forgeinstall.log | awk '{print $14}'`
+sed -i 's/SERVERJAR=.*/SERVERJAR='$forge'/g' $CONFIG
+whiptail --msgbox --fb "Your server was updated and should now start with $forge.\
+To install mods you should look here: $DIR/" 20 60 0 
+rm $DIR/forgeinstall.log
+exit 0
+
+#Check that something didn't fail, If so allow for fallback.
+fallback=`ls -l $DIR | grep "jar" | awk '{print $9}' | awk '{print $1 " |"}'`
+fallback=(${fallback[@]})
+if [ -z "$SERVERJAR" ]; then
+whiptail --msgbox --fb "Something went wrong. No Server jar found. Please try a fallback from the list.." 20 60 0
+fallback_attempt=$(whiptail --menu "These are the Jar files we found." 20 60 3 ${fallback[@]} 3>&1 1>&2 2>&3)
+sed -i 's/SERVERJAR=.*/SERVERJAR='$fallback_attempt'/g' $CONFIG
+fi
+fi
+fi
+}
+
 
 do_version_option() {
 while true; do
-VER=$(whiptail --title "Select Minecraft Version" --menu "Please selct what version of Minecraft you wish to run" 10 80 2 \
+VER=$(whiptail --title "Select Minecraft Version" --menu "Please selct what version of Minecraft you wish to run" 10 80 4 \
 "1 Vanilla Minecraft" "[Stright from Mojang.(Latest Version)]" \
 "2 Spigot" "[Fast lightwaight Bucket style server.(Latest Version)]" \
+"3 Bukkit" "[Bukkit also known as Craftbukkit]" \
+"4 FTB" "This will allow you to run a FTB server." \
  3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
@@ -377,6 +603,8 @@ VER=$(whiptail --title "Select Minecraft Version" --menu "Please selct what vers
     case "$VER" in
       1\ *) do_vanilla ;;
       2\ *) do_spigot ;;
+      3\ *) do_bukkit ;;
+      4\ *) do_ftb ;;
       *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $VER" 20 60 1
   else
@@ -393,7 +621,7 @@ fi
 
 do_help() {
 echo -e "${yellow}This is the list of commands"
-echo "To use these commands do ./Main command. example ./Main help"
+echo -e "To use these commands do ./Main command. example ./Main help"
 echo -e "${red}save ${green}[This runs minecrafts default save functions.]"
 echo -e "${red}restart ${green}[This will prompt the server to restart in 5 minutes...backing up also]"
 echo -e "${red}restart_now ${green}[Same as restart but only gives 10 second warning on restart.]"
@@ -410,15 +638,17 @@ tput sgr0
 #GUI Menu Starts here!
 
 do_start() {
+ if ! screen -list | grep -q "Greeting"; then
+    cd $INSTALL_LOC/Files/
+    $GREETING
+ fi
  if ! screen -list | grep -q "Minecraft"; then
-    echo "Screen not found!"
     cd $DIR
     $START
     whiptail --fb --msgbox "Your Server is loading up please check the client after a minute or so..." 20 60 1
 else
     whiptail --fb --msgbox "Found a server running please stop it first!" 20 60 1
-    echo "Screen found!"
-    do_question
+    do_Qstop
 fi
 }
 
@@ -445,17 +675,17 @@ INPUT=$(whiptail --fb --inputbox "Simple chat link to console." 8 78 --title "Ch
 RET=$?
 if [ $RET -eq 0 ]; then
 #Restart checks
-if ! screen -list | grep -q "Players"; then
+if ! screen -list | grep -q "Greeting"; then
     echo "should be starting"
     cd $INSTALL_LOC/Files
-    screen -dmS "Players" ./Players
+    screen -dmS "Greeting" ./Greeting
 else
-    screen -X -S Players quit
+    screen -X -S Greeting quit
     echo "you are leaving"
     echo $INPUT >> $INSTALL_LOC/Files/RandomMSG.txt
     echo "script found running"
     cd $INSTALL_LOC/Files
-    screen -dmS "Players" ./Players
+    screen -dmS "Greeting" ./Greeting
 fi
 fi
 echo "finished"
@@ -493,12 +723,92 @@ do_Qstop() {
     --yes-button Yes --no-button No
   RET=$?
   if [ $RET -eq 0 ]; then
+    screen -ls | grep Greeting | cut -d. -f1 | awk '{print $1}' | xargs kill
+    rm $INSTALL_LOC/Files/online.list
     sed -i 's/check=.*/check=false/g' $CONFIG
     $CONSOLE1 "stop $CONSOLE2"
     echo "Someone stopped this server!" >> $LOG
     whiptail --fb --msgbox "Stopping Server.." 20 60 1
   fi
 }
+
+do_delete() {
+if screen -list | grep -q "Minecraft"; then
+$CONSOLE1 "stop $CONSOLE2"
+sleep 3
+fi
+if (whiptail --fb --yesno "YOUR ABOUT TO DELETE YOUR MINECRAFT SERVER...IF YOU DO THIS THERE IS NO GOING BACK! \
+
+
+Think about those poor creepers when you pick your option here." --yes-button DELETE --no-button Leave_Now 20 60 ) then
+	(
+        sleep 2
+        echo XXX
+        echo 20
+        echo "Searching for poor pigs to kill"
+	rm -rf $DIR/*
+        rm $INSTALL_LOC/Files/players.list
+	touch $INSTALL_LOC/Files/players.list
+        echo XXX
+        sleep 2
+        echo XXX
+        echo 40
+        echo "Deleting all mods"
+        echo XXX
+        sleep 2
+        echo XXX
+        echo 60
+        echo "Smashing houses"
+        echo XXX
+        sleep 2
+        echo XXX
+        echo 80
+        echo "Hitting Overworld with a comet"
+        echo XXX
+        sleep 2
+        echo XXX
+        echo 100
+        echo "After the dust settles, you hear a faint creeper hiss..."
+        echo XXX
+        sleep 2
+) | whiptail --gauge "Creapers scatter!" 8 60 0
+	whiptail --fb --msgbox "Well we will just ignore that last few seconds and move on to a brighter world..." 20 60
+fi
+
+#See if they are looking to start fresh right now.
+ whiptail --fb --yesno "Would you like to setup a new server right now?" 20 60 2 \
+    --yes-button Yes --no-button No
+  RET=$?
+  if [ $RET -eq 0 ]; then
+    BSCC
+    clear
+    exit 0
+  else
+    whiptail --fb --msgbox "Just use (BSCC menu) when your ready to build a new world." 20 60 
+    exit 0
+  fi
+}
+
+
+do_admin_advanced() {
+while true; do
+  FUN=$(whiptail --fb --title "Admin Advanced menu" --menu "WARNING!!!"  --cancel-button Exit --ok-button Select 20 80 4 \
+    "1 Forge Installer" "[Very much in beta]" \
+    "2 DELETE SERVER" "[DELETES YOUR SERVER!!]" \
+    3>&1 1>&2 2>&3)
+  RET=$?
+  if [ $RET -eq 1 ]; then
+    exit 1
+  elif [ $RET -eq 0 ]; then
+    case "$FUN" in
+      1\ *) do_forge ;;
+      2\ *) do_delete ;;
+      *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
+    esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
+fi
+done
+}
+
 
 do_finish() {
   if [ $ASK_TO_REBOOT -eq 1 ]; then
@@ -512,19 +822,21 @@ do_finish() {
 
 do_admin() {
 while true; do
-  FUN=$(whiptail --fb --title "Admin Area" --menu "Server Controls"  --cancel-button Exit --ok-button Select 20 80 3 \
-    "1 Chat" "[Direct message to console]" \
-    "2 Server Properties" "[Modify Server Properties]" \
-    "3 Advanced menu" "Upgrade & Delete servers" \
+  FUN=$(whiptail --fb --title "Admin Area" --menu "Server Controls"  --cancel-button Exit --ok-button Select 20 80 5 \
+    "1 Console" "[Send/view console.]" \
+    "2 Random MSG" "Random Greating/Leaving MSG" \
+    "3 Server Properties" "[Modify Server Properties]" \
+    "4 Advanced menu" "Upgrade & Delete servers" \
     3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
     exit 1
   elif [ $RET -eq 0 ]; then
     case "$FUN" in
-      1\ *) do_chat ;;
-      2\ *) do_prop ;;
-      3\ *) do_admin_advanced ;;
+      1\ *) do_console ;;
+      2\ *) do_msg ;;
+      3\ *) do_prop ;;
+      4\ *) do_admin_advanced ;;
       *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
 fi
@@ -538,7 +850,8 @@ while true; do
     "2 Start" "[Attempts to start the server]" \
     "3 Stop" "[Attempt to stop the server]" \
     "4 Inventory" "[Restore player's inventory (up to 5 deaths back.)]" \
-    "5 Random MSG" "[clearly fun stuff]" \
+    "5 Chat" "[Send chat directly to the server]" \
+    "6 Info" "[Fast info about your device/server]" \
     3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
@@ -549,7 +862,8 @@ while true; do
       2\ *) do_start ;;
       3\ *) do_stop ;;
       4\ *) do_inventory ;;
-      5\ *) do_msg ;;
+      5\ *) do_chat ;;
+      6\ *) do_info ;;
       *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
   else
@@ -557,6 +871,31 @@ while true; do
   fi
 done
 }
+
+do_info(){
+on_list=`cat $INSTALL_LOC/Files/online.list`
+on_list=(${on_list[@]})
+on_now=`cat /opt/BSCC/minecraft_server/server.properties | grep "max-players" | cut -d "=" -f 2`
+CPU=`top -bn 1 | awk 'NR>7{s+=$9} END {print s/4}'`
+RAM=`free -mh | grep Mem | cut -c 37-40`
+HDD_TOTAL=`df -kh . | grep / | awk '{print $4}'`
+JAVA_VERSION=`java -version 2>&1 |awk 'NR==1{ gsub(/"/,""); print $3 }'`
+whiptail --fb --title "Current server stats" --yesno --yes-button REFRESH --no-button Back "Current Players Online: ${#on_list[@]}/$on_now \n
+CPU Usage is: $CPU% \n
+Server Uptime: $UPTIME \n
+Ram Available: $RAM/$RAM_TOTAL \n 
+Total Storage used/left: $TOTAL/$HDD_TOTAL \n
+Your Java Version is: $JAVA_VERSION" 25 50 10
+CHOICES=$?
+unset on_list
+unset CPU
+unset RAM
+  if [ $CHOICES -eq 0 ]; then
+   	do_info
+fi
+clear
+}
+
 #Extra Functions for cronjobs and debug (Down the road)
 #Selection for Functions.
 
@@ -593,14 +932,22 @@ case "$1" in
     do_restore
     exit 0
     ;;
+  (rollback)
+    do_rollback
+    exit 0
+    ;;
   (stats)
     do_stats
     exit 0
     ;;
- (inventory)
+  (inventory)
    do_inventory
     exit 0
     ;;
+  (info)
+   do_info
+    exit 0
+    ;; 
   (eula)
    do_eula
    do_menu
