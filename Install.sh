@@ -1,5 +1,7 @@
-#!/bin/bash
+#!/bin/bash -ex
 INSTALL_LOC=/opt/BSCC
+CPUINFO=`lscpu | grep "Architecture" | awk '{print $2}'`
+
 
 # Make sure we run with root privileges
 if [ $UID != 0 ]; then
@@ -36,6 +38,38 @@ else
 fi
 }
 
+#Check PC specs to see if it's ARM or X86 and grab the correct java version.
+CPUINFO=`lscpu | grep "Architecture" | awk '{print $2}'`
+
+
+
+#Check PC specs to see if it's ARM or X86 and grab the correct java version.
+if [ ! -f /usr/bin/java ]; then
+#Install Java for Arm.
+if [[ "$CPUINFO" == arm* ]]; then
+wget -O java.tar.gz --no-check-certificate http://www.java.net/download/java/jdk8u102/archive/b03/binaries/jdk-8u102-ea-bin-b03-linux-arm-vfp-hflt-19_apr_2016.tar.gz
+mkdir /opt/java_jdk
+tar zxvf java.tar.gz -C /opt/java_jdk --strip-components=1
+rm java.tar.gz
+update-alternatives --install "/usr/bin/java" "java" "/opt/java_jdk/bin/java" 1
+update-alternatives --set java /opt/java_jdk/bin/java
+. /etc/profile
+
+#Install Java for X64 PC's
+if [[ "$CPUINFO" == x86_64 ]]; then
+wget -O java.tar.gz --no-check-certificate --no-cookies --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u91-b14/jre-8u91-linux-x64.tar.gz && con$
+mkdir /opt/java_jdk
+tar zxvf java.tar.gz -C /opt/java_jdk --strip-components=1
+rm java.tar.gz
+update-alternatives --install "/usr/bin/java" "java" "/opt/java_jdk/bin/java" 1
+update-alternatives --set java /opt/java_jdk/bin/java
+. /etc/profile
+clear
+fi
+fi
+fi
+
+
 if [ ! -d "$INSTALL_LOC" ]; then
         if (whiptail --fb --title "BSCC-MC-Edition" --yesno "Welcome to the Bash Script Command Center - MC Edition. \
 
@@ -71,6 +105,8 @@ If you agree Please, continue." 15 60) then
         echo 80
         echo "Setting Permissions"
         chown -R $USER:$USER $INSTALL_LOC
+	chmod +x $INSTALL_LOC/Files/Greeting
+	chmod +x /usr/bin/BSCC
         echo XXX
         sleep 2
         echo XXX
@@ -79,7 +115,9 @@ If you agree Please, continue." 15 60) then
         echo XXX
         sleep 2
 ) | whiptail --gauge "Gathering info" 8 40 0
-BSCC
+	whiptail --fb --msgbox "Ok everything is in order and you should now be able to run (BSCC) and start your server builds." 20 60
+	clear
+	echo "Ok everything is in order and you should now be able to run (BSCC) and start your server builds."
 else
         exit 0
 fi
