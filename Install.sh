@@ -41,11 +41,8 @@ fi
 #Check PC specs to see if it's ARM or X86 and grab the correct java version.
 CPUINFO=`lscpu | grep "Architecture" | awk '{print $2}'`
 
-
-
-#Check PC specs to see if it's ARM or X86 and grab the correct java version.
-if [ ! -f /usr/bin/java ]; then
 #Install Java for Arm.
+do_arm() {
 if [[ "$CPUINFO" == arm* ]]; then
 wget -O java.tar.gz --no-check-certificate http://www.java.net/download/java/jdk8u102/archive/b03/binaries/jdk-8u102-ea-bin-b03-linux-arm-vfp-hflt-19_apr_2016.tar.gz
 mkdir /opt/java_jdk
@@ -54,21 +51,40 @@ rm java.tar.gz
 update-alternatives --install "/usr/bin/java" "java" "/opt/java_jdk/bin/java" 1
 update-alternatives --set java /opt/java_jdk/bin/java
 . /etc/profile
+fi
+}
 
 #Install Java for X64 PC's
+do_x86() {
 if [[ "$CPUINFO" == x86_64 ]]; then
-wget -O java.tar.gz --no-check-certificate --no-cookies --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u91-b14/jre-8u91-linux-x64.tar.gz && con$
+wget -O java.tar.gz --no-check-certificate --no-cookies --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u91-b14/jre-8u91-linux-x64.tar.gz && continue
 mkdir /opt/java_jdk
 tar zxvf java.tar.gz -C /opt/java_jdk --strip-components=1
 rm java.tar.gz
 update-alternatives --install "/usr/bin/java" "java" "/opt/java_jdk/bin/java" 1
 update-alternatives --set java /opt/java_jdk/bin/java
 . /etc/profile
-clear
+#clear
 fi
-fi
-fi
+}
 
+#Check Architecture
+do_java() {
+if [[ "$CPUINFO" == arm* ]]; then
+echo "it's arm"
+do_arm
+else
+if [[ "$CPUINFO" == x86_64 ]]; then
+echo "it's X86"
+do_x86
+fi
+fi
+}
+
+#Check for java install.
+if [ ! -f /usr/bin/java ]; then
+do_java
+fi
 
 if [ ! -d "$INSTALL_LOC" ]; then
         if (whiptail --fb --title "BSCC-MC-Edition" --yesno "Welcome to the Bash Script Command Center - MC Edition. \
