@@ -11,10 +11,6 @@ Change to Directory
 
 `cd BSCC-MC-Edition`
 
-Followed by:
-
-`chmod +x Install.sh`
-
 And to launch do:
 
 `./Install.sh`
