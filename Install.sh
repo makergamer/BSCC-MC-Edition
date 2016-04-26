@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash
 INSTALL_LOC=/opt/BSCC
 CPUINFO=`lscpu | grep "Architecture" | awk '{print $2}'`
 
