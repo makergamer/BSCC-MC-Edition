@@ -71,11 +71,9 @@ fi
 #Check Architecture
 do_java() {
 if [[ "$CPUINFO" == arm* ]]; then
-echo "it's arm"
 do_arm
 else
 if [[ "$CPUINFO" == x86_64 ]]; then
-echo "it's X86"
 do_x86
 fi
 fi
