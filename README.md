@@ -5,7 +5,11 @@ This is an early stage project that i've been making for me and a few friends. I
 
 To install run these simple commands.
 
-`wget https://github.com/kicker22004/BSCC-MC-Edition.git`
+`git clone https://github.com/kicker22004/BSCC-MC-Edition.git`
+
+Change to Directory
+
+`cd BSCC-MC-Edition`
 
 Followed by:
 
