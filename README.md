@@ -5,14 +5,14 @@ This is an early stage project that i've been making for me and a few friends. I
 
 To install run these simple commands.
 
-wget https://github.com/kicker22004/BSCC-MC-Edition.git
+`wget https://github.com/kicker22004/BSCC-MC-Edition.git`
 
 Followed by:
 
-chmod +x Install.sh
+`chmod +x Install.sh`
 
 And to launch do:
 
-./Install.sh
+`./Install.sh`
 
 This Program is very much Beta but it is at a point where it can be used, use at your own risk....
