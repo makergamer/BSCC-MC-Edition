@@ -5,10 +5,10 @@ CPUINFO=`lscpu | grep "Architecture" | awk '{print $2}'`
 
 # Make sure we run with root privileges
 if [ $UID != 0 ]; then
-	# not root, use sudo
+# not root, use sudo
 	echo "This script needs root privileges, rerunning it now using sudo!"
 	sudo "${SHELL}" "$0" $*
-	exit $? 
+	exit $?
 fi
 # get real username
 if [ $UID = 0 ] && [ ! -z "$SUDO_USER" ]; then
@@ -98,6 +98,8 @@ If you agree Please, continue." 15 60) then
         echo 20
         echo "Making Directories & Moving Files"
         mkdir $INSTALL_LOC
+	mkdir $INSTALL_LOC/rdiff-backup
+	mkdir $INSTALL_LOC/archive
         mkdir $INSTALL_LOC/Files
 	mkdir $INSTALL_LOC/minecraft_server
         cp Files/* $INSTALL_LOC/Files
