@@ -23,6 +23,7 @@ if (whiptail --fb --title "Erase Everything??" --yesno "If you choose to do a cl
 
 This is your only chance to back out so you have been warned!..." 20 60) then
 	rm -rf $INSTALL_LOC
+	rm /usr/bin/BSCC
 	source Install.sh
 else
 	exit 0
