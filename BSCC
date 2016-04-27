@@ -8,17 +8,15 @@ source /opt/BSCC/Files/conf.cfg
 INTERACTIVE=True
 ASK_TO_REBOOT=0
 CONFIG=$INSTALL_LOC/Files/conf.cfg
-LOG=$INSTALL_LOC/logs/uptime
 RDIFF=$INSTALL_LOC/rdiff-backup
-BACKUP=$INSTALL_LOC/backup
+ARCHIVE=$INSTALL_LOC/archive
 
 #Extra Functions for Cronjobs and Debugs (Down the road)
-
 
 do_adminpass() {
 ADMIN_AREA=$(whiptail --passwordbox "Enter Password:" 8 30 --title "password dialog" 3>&1 1>&2 2>&3)
 exitstatus=$?
-if [ $ADMIN_PASS == "$ADMIN_AREA"  ]; then 
+if [ $ADMIN_PASS == "$ADMIN_AREA"  ]; then
 whiptail --ok-button Done --msgbox "Correct password" 10 30
 do_admin
 else
@@ -26,13 +24,38 @@ whiptail --ok-button Done --msgbox "Incorrect password" 10 30
 fi
 }
 
+do_no_menu_start() {
+  if ! screen -list | grep -q "Greeting"; then
+     cd $INSTALL_LOC/Files/
+     $GREETING
+  fi
+  if ! screen -list | grep -q "Minecraft"; then
+     cd $DIR
+     $START
+  else
+     echo "Server was found running... close it before running this"
+  fi
+}
+
+do_no_menu_stop() {
+  if screen -list | grep -q "Minecraft"; then
+    screen -ls | grep Greeting | cut -d. -f1 | awk '{print $1}' | xargs kill
+    rm $INSTALL_LOC/Files/online.list 2>/dev/null
+    sed -i 's/check=.*/check=false/g' $CONFIG
+    do_save
+    sleep 2
+    $CONSOLE1 "stop $CONSOLE2"
+  else
+     echo "No server was found to be running...did you start on?"
+  fi
+}
+
 do_save() {
 $CONSOLE1 "save-all $CONSOLE2"
-exit 0
 }
 
 do_check() {
-  if [[ $check = "true" ]] 
+  if [[ $check = "true" ]]
 then
   do_reload
 fi
@@ -41,28 +64,18 @@ exit 0
 
 do_reload() {
 if ! screen -list | grep -q "Minecraft"; then
-    echo "Minecraft server was down, attempting to restart now!!!" >> $LOG
-    date >> $LOG
     cd $DIR
     $START
-    echo "================================================" >> $LOG
 fi
 exit 0
 }
 
 do_restart() {
 sed -i 's/check=.*/check=false/g' $CONFIG
-echo " This is on restart but catching the backup log" >> $LOG
-do_backup
-echo " This was done by the command do_restart" >> $LOG
-date >> $LOG
-echo " ======================================" >> $LOG
-    echo "Server is restarting now." >> $LOG
-    date >> $LOG
-    echo "================================================" >> $LOG
+do_rdiff
 $CONSOLE1 "save-all $CONSOLE2"
 $CONSOLE1 "say Restart in 1 Minutes..WHY ARE YOU STILL HERE!!! $CONSOLE2"
-sleep 1m
+sleep 50s
 $CONSOLE1 "say 10 seconds..$CONSOLE2"
 sleep 10s
 $CONSOLE1 "stop $CONSOLE2"
@@ -76,10 +89,7 @@ exit 0
 
 do_restart_now() {
 sed -i 's/check=.*/check=false/g' $CONFIG
-echo " This was done by the command restart_now" >> $LOG
-date >> $LOG
-echo " ======================================" >> $LOG
-do_backup
+do_rdiff
 $CONSOLE1 "say Server is going down.... Please log NOW! $CONSOLE2"
 $CONSOLE1 "save-all $CONSOLE2"
 sleep 10
@@ -91,37 +101,31 @@ sed -i 's/check=.*/check=true/g' $CONFIG
 exit 0
 }
 
-do_backup() {
-today=$(date '+%Y-%mM-%dD_%HH_%MM_%SS')
+do_archive() {
+  today=$(date '+%Y-%mM-%dD_%HH_%MM_%SS')
 if ! screen -list | grep -q "Minecraft"; then
-echo "Backup failed due to no running server found" >> $LOG
-    echo "==================================================" >> $LOG
+  echo "Backup failed due to no running server found"
+  echo "=================================================="
 else
-cd $BACKUP
-echo " This was done by the command do_backup" >> $LOG
-date >> $LOG
-echo " ======================================" >> $LOG
-$CONSOLE1 "say Backing up server, Sorry for any lag. $CONSOLE2"
-do_rdiff
-tar -zcvf "$today".tar.gz -C $RDIFF .
-rm `ls -t | awk 'NR>8'` 2>/dev/null
-$CONSOLE1 "say Backup complete, carry on knowing you're trusting my scripts... :( $CONSOLE2"
+  cd $ARCHIVE
+  $CONSOLE1 "say Creating Archive of the server, Sorry for any lag. $CONSOLE2"
+  do_rdiff
+  tar -zcvf "$today".tar.gz -C $RDIFF .
+  rm `ls -t | awk 'NR>8'` 2>/dev/null
+  $CONSOLE1 "say Archive complete, carry on... :( $CONSOLE2"
 fi
 }
 
 do_rollback() {
 if ! screen -list | grep -q "Minecraft"; then
 sed -i 's/check=.*/check=false/g' $CONFIG
-echo "Server is down, Continuing." >> $LOG
-date >> $LOG
 rm -rf $DIR/*
+rm $INSTALL_LOC/Files/online.list
 rsync -r -t $RDIFF/* $DIR
-echo "Server has been rolled back!" >> $LOG
 cd $DIR
 $START
 sed -i 's/check=.*/check=true/g' $CONFIG
 else
-echo "Server was found running, Stopping now." >> $LOG
 sed -i 's/check=.*/check=false/g' $CONFIG
 $CONSOLE1 "say Going down for rollback! $CONSOLE2"
 sleep 10
@@ -131,32 +135,48 @@ do_rollback
 fi
 }
 
-do_restore() {
+  do_restore() {
+  unset restore
+  unset selected_restore
+  restore=`ls -1t $INSTALL_LOC/archive | awk '{print $1 " |"}'`
+  restore=(${restore[@]})
 if ! screen -list | grep -q "Minecraft"; then
-sed -i 's/check=.*/check=false/g' $CONFIG
-echo "Server is down, Continuing." >> $LOG
-date >> $LOG
-rm -rf $DIR/*
-cp -p "`ls -dtr1 $BACKUP/* | tail -1`" $DIR/restore.tar.gz
-cd $DIR
-tar -xvf restore.tar.gz
-rm restore.tar.gz
-echo "Server has been restored!" >> $LOG
-$START
-sed -i 's/check=.*/check=true/g' $CONFIG
+  sed -i 's/check=.*/check=false/g' $CONFIG
+  selected_restore=$(whiptail --menu --fb "Select your restore point" 20 60 10 ${restore[@]} 3>&1 1>&2 2>&3)
+  rm -rf $DIR/*
+  cp $INSTALL_LOC/archive/$selected_restore $DIR/restore.tar.gz
+  cd $DIR
+  tar -xvf restore.tar.gz
+  rm restore.tar.gz
+  $START
+  sed -i 's/check=.*/check=true/g' $CONFIG
+
+#Just incase something went really bad...
+if [ ! -f "$DIR/$SERVERJAR" ]; then
+    do_fallback
+fi
+  whiptail --msgbox --fb "Your server should now be restored and loading up.." 20 50 0
 else
-echo "Server was found running, Stopping now." >> $LOG
-sed -i 's/check=.*/check=false/g' $CONFIG
-$CONSOLE1 "say Going down for rollback! $CONSOLE2"
-sleep 10
-$CONSOLE1 "stop $CONSOLE2"
-sleep 20
-do_restore
+  sed -i 's/check=.*/check=false/g' $CONFIG
+  $CONSOLE1 "say Going down for rollback! $CONSOLE2"
+  sleep 5
+  whiptail --msgbox --fb "Server was found running.. Hit ok and wait up to 20 seconds to recheck." 20 50 0
+  $CONSOLE1 "stop $CONSOLE2"
+for ((i=20;i>0;i=i-1)); do
+  clear
+if screen -list | grep -q "Minecraft"; then
+  clear
+  echo -n "Time Remaining $i seconds"
+  sleep 1
+else
+  break
+fi
+done
 fi
 }
 
 do_stats() {
-$CONSOLE1 "say "$RAM\B" Ram free out of 7949MB $CONSOLE2"
+$CONSOLE1 "say "$RAM\B" Ram free out of "$RAM_TOTAL\B" $CONSOLE2"
 $CONSOLE1 "say This server is now "$TOTAL\B" in size & $HDDUSED filled. $CONSOLE2"
 $CONSOLE1 "say The CPU is currently running at "$CPU\%" $CONSOLE2"
 $CONSOLE1 "say Server Uptime & load (1M 5M 15M) $UPTIME $CONSOLE2"
@@ -166,6 +186,8 @@ do_rdiff() {
 if ! screen -list | grep -q "Minecraft"; then
 echo "no server running"
 else
+do_save
+sleep 1
 rsync -r -t $DIR/* $RDIFF
 fi
 }
@@ -222,10 +244,7 @@ if [ ! -f $DIR/eula.txt ]; then
         exit 0
 fi
 
-##start server and wait for EULA##
 usereula=`cat $DIR/eula.txt`
-#whiptail --msgbox --title "Eula Agreement Info" "$usereula$  On the next tab you will select agree or cancel" 20 60 1
-
 #EULA Needs to be accepted by the user
 if (whiptail --title "EULA AGREEMENT" --fb --yesno "$usereula" --yes-button true --no-button false 15 60) then
     sed -i 's/eula=.*/eula=true/g' $DIR/eula.txt
@@ -237,13 +256,10 @@ fi
 }
 
 do_console() {
-if ! screen -list | grep -q "Minecraft"; then
-        sed -i 's/MCSCREEN=.*/MCSCREEN=false/g' Files/conf.cfg
+  if ! screen -list | grep -q "Minecraft"; then
+        whiptail --msgbox --fb "There is no server running." 20 60 0
         do_admin
-else
-        sed -i 's/MCSCREEN=.*/MCSCREEN=true/g' Files/conf.cfg 
-fi
-
+  fi
 do_command() {
 INPUT=$(whiptail --fb --inputbox "Simple chat link to console." 8 78 --title "Chat Log" 3>&1 1>&2 2>&3)
 RET=$?
@@ -256,7 +272,7 @@ fi
 while :
 do
    read -t 1 -n 1 key
-   if [[ $key = c ]] 
+   if [[ $key = c ]]
 then
       do_command
    else
@@ -270,7 +286,7 @@ else
         read -t 1 -n 1 key
         if [[ $key = q ]]
 then
-        exit ;
+        do_admin
 fi
 fi
 fi
@@ -311,25 +327,30 @@ do_first_run() {
         sleep 1
         echo XXX
         echo 40
-	echo "Attemping to start server"
+	      echo "Attemping to start server"
         echo XXX
         sleep 1
         echo XXX
         echo 60
         echo "Attemping to starting server (Allowing 20 seconds for first load)"
-	source /opt/BSCC/Files/conf.cfg
-	cd $DIR
-	$START
-        echo "Server should be up ^^"
+	      source /opt/BSCC/Files/conf.cfg
+	      cd $DIR
+	      $START
         echo XXX
-        while :
-        do
-           if screen -list | grep -q "Minecraft"; then
-           sleep 1
-        else
-           break
-        fi
-	done
+        #Allow time for the server to load and crash due to eula.
+        for ((i=20;i>0;i=i-1)); do
+ 	        clear
+	      if screen -list | grep -q "Minecraft"; then
+  	       clear
+  	       echo -n "Time Remaining $i seconds"
+  	       sleep 1
+	      else
+  	       break
+	      fi
+	      done
+        #If server doesn't go down, Force it.
+        screen -ls | grep Minecraft | cut -d. -f1 | awk '{print $1}' | xargs kill 2>/dev/null
+        screen -ls | grep Greeting | cut -d. -f1 | awk '{print $1}' | xargs kill 2>/dev/null
         echo XXX
         echo 80
         echo "Searching for User Agreements"
@@ -344,28 +365,34 @@ do_first_run() {
 #eula.txt Should be there. If not then something went wrong and should say so now.
 if [ ! -f $DIR/eula.txt ]; then
      whiptail --msgbox --fb "Something is wrong here, there is no eula.txt file to be found." 20 60
+        rm -rf $DIR/*
+        screen -ls | grep Minecraft | cut -d. -f1 | awk '{print $1}' | xargs kill
+        screen -ls | grep Greeting | cut -d. -f1 | awk '{print $1}' | xargs kill
+        sed -i 's/SERVERJAR=.*/SERVERJAR=/g' $CONFIG
         exit 0
 fi
 
-##start server and wait for EULA##
-usereula=`cat $DIR/eula.txt`
-#whiptail --msgbox --title "Eula Agreement Info" "$usereula$  On the next tab you will select agree or cancel" 20 60 1
-
 #EULA Needs to be accepted by the user
-if (whiptail --title "EULA AGREEMENT" --fb --yesno "$usereula" --yes-button true --no-button false 15 60) then
-    sed -i 's/eula=.*/eula=true/g' $DIR/eula.txt
-else
-    sed -i 's/eula=.*/eula=false/g' $DIR/eula.txt
-    whiptail --msgbox --fb "Without accepting the eula agreement you won't be able to start this server. Run (BSCC eula) to accept again." 20 60
-    exit 0
-fi
+do_eula
 
 #All done here
 whiptail --fb --title "YOUR ALL SETUP!!!" --msgbox "Well if your seeing this it means that there is a good chance that your server is all setup and read to go. Give it some time to load and enjoy. Run BSCC for more info" 20 60
 exit 0
 }
 
-##Setup Minecraft server 
+#Fallback incase the Server jar isn't found or is missing after restore..
+do_fallback() {
+fallback=`ls $DIR | grep ".*.jar" | awk '{print $1 " |"}'`
+fallback=(${fallback[@]})
+if [ -z "$SERVERJAR" ]; then
+whiptail --msgbox --fb "Looks like your Server jar is not set. Please try a fallback from the list.." 20 60 0
+fallback_attempt=$(whiptail --menu "These are the Jar files we found." 20 60 3 ${fallback[@]} 3>&1 1>&2 2>&3)
+sed -i 's/SERVERJAR=.*/SERVERJAR='$fallback_attempt'/g' $CONFIG
+fi
+}
+
+
+##Setup Minecraft server
 #########################
 #Select Version of Minecraft and download.
 do_vanilla_latest() {
@@ -377,23 +404,16 @@ if [[ -a $loc ]]; then
         printf "$loc exists -- moving to ${loc}.old\n"
         mv $loc ${loc}.old
 fi
-
 printf "Getting download URL for minecraft server...\n"
-
 serverurl=`curl -s $downloadurl | egrep -io 'https.*versions\/(.*)\/minecraft_server.\1.jar'`
-
 printf "URL = "$serverurl"\n"
-
 printf "Downloading server jar...\n"
-
 wget -q -O $loc $serverurl
 sed -i 's/MCVERSION=.*/MCVERSION=Latest??/g' $CONFIG
 sed -i 's/SERVERJAR=.*/SERVERJAR=minecraft_server.jar/g' $CONFIG
 do_ram
 do_first_run
 }
-
-
 
 do_vanilla() {
 #Present User with selected Vanilla servers from list.
@@ -413,7 +433,7 @@ $dl_link
 fi
 r=`wget -O $DIR/$vanilla_servers.jar $dl_link`
 echo $vanilla_servers.jar
-if [ $? -ne 0 ]; then 
+if [ $? -ne 0 ]; then
 rm $DIR/$vanilla_servers.jar
 whiptail --msgbox --clear --fb "Download failed!, check your internet and the link.\
 sed -i 's/SERVERJAR=.*/SERVERJAR=/g' $CONFIG
@@ -442,7 +462,7 @@ dl_link=`cat $INSTALL_LOC/Files/spigot.list | grep "$spigot_servers" | awk '{pri
 #Check the download and if failed remove the file.
 clear
 r=`wget -O $DIR/$spigot_servers.jar $dl_link`
-if [ $? -ne 0 ]; then 
+if [ $? -ne 0 ]; then
 rm $DIR/$spigot_servers.jar
 whiptail --msgbox --clear --fb "Download failed!, check your internet and the link.\
 The current link is: $dl_link" 20 60
@@ -469,7 +489,7 @@ dl_link=`cat $INSTALL_LOC/Files/bukkit.list | grep "$bukkit_servers" | awk '{pri
 #Check the download and if failed remove the file.
 clear
 r=`wget -O $DIR/$bukkit_servers.jar $dl_link`
-if [ $? -ne 0 ]; then 
+if [ $? -ne 0 ]; then
 rm $DIR/$spigot_servers.jar
 whiptail --msgbox --clear --fb "Download failed!, check your internet and the link.\
 The current link is: $dl_link" 20 60
@@ -496,32 +516,30 @@ fi
 clear
 
 r=`wget -O $DIR/$FTB_servers.zip $dl_link`
-if [ $? -ne 0 ]; then 
+if [ $? -ne 0 ]; then
 rm $DIR/$FTB_servers.zip
 whiptail --msgbox --clear --fb "Download failed!, check your internet and the link.\
 The current link is: $dl_link" 20 60
  else
 sed -i 's/MCVERSION=.*/MCVERSION='$FTB_servers'/g' $CONFIG
-sed -i 's/SERVERJAR=.*/SERVERJAR=FTBserver.jar/g' $CONFIG
 fi
-
 do_ram
 cd $DIR
 unzip $FTB_servers
 if [ -f $DIR/FTBInstall.sh ]; then
 sh FTBInstall.sh
+
+#Found some FTB that don't have FTBserver.jar in them...
+if [ -f $DIR/FTBserver.jar ]; then
+  sed -i 's/SERVERJAR=.*/SERVERJAR=FTBserver.jar/g' $CONFIG
+else
+  do_fallback
+fi
 else
 echo "FTB start script is missing..."
 fi
 #EULA Needs to be accepted by the user
-usereula=`cat $DIR/eula.txt`
-if (whiptail --title "EULA AGREEMENT" --fb --yesno "$usereula" --yes-button true --no-button false 15 60) then
-    sed -i 's/eula=.*/eula=true/g' $DIR/eula.txt
-else
-    sed -i 's/eula=.*/eula=false/g' $DIR/eula.txt
-    whiptail --msgbox --fb "Without accepting the eula agreement you won't be able to start this server. Run (BSCC eula) to accept again." 20 60
-    exit 0
-fi
+do_eula
 whiptail --msgbox --fb "Ok everything should now be ready for you to start. Please use (BSCC menu) also these servers could load slowly...give it some time \n
 Also a big THANK YOU to all of the effort from MODS/DEVS involved in the FTB servers and maintenance" 20 60 0
 exit 0
@@ -554,7 +572,7 @@ else
 	break
 fi
 r=`wget -O $DIR/forgeinstaller.jar $dl_link`
-if [ $? -ne 0 ]; then 
+if [ $? -ne 0 ]; then
 rm $DIR/forgeinstaller.jar
 whiptail --msgbox --clear --fb "Download failed!, check your internet and the link.\
 The current link is: $dl_link" 20 60
@@ -566,23 +584,14 @@ $CONSOLE1 "stop $CONSOLE2"
 fi
 
 cd $DIR
-java -Xmx$MAXMEM -Xms$MINMEM -jar forgeinstaller.jar --installServer > $DIR/forgeinstall.log 
+java -Xmx$MAXMEM -Xms$MINMEM -jar forgeinstaller.jar --installServer > $DIR/forgeinstall.log
 rm forgeinstaller.jar
 forge=`tail -n 2 $DIR/forgeinstall.log | awk '{print $14}'`
 sed -i 's/SERVERJAR=.*/SERVERJAR='$forge'/g' $CONFIG
 whiptail --msgbox --fb "Your server was updated and should now start with $forge.\
-To install mods you should look here: $DIR/" 20 60 0 
+To install mods you should look here: $DIR/" 20 60 0
 rm $DIR/forgeinstall.log
 exit 0
-
-#Check that something didn't fail, If so allow for fallback.
-fallback=`ls -l $DIR | grep "jar" | awk '{print $9}' | awk '{print $1 " |"}'`
-fallback=(${fallback[@]})
-if [ -z "$SERVERJAR" ]; then
-whiptail --msgbox --fb "Something went wrong. No Server jar found. Please try a fallback from the list.." 20 60 0
-fallback_attempt=$(whiptail --menu "These are the Jar files we found." 20 60 3 ${fallback[@]} 3>&1 1>&2 2>&3)
-sed -i 's/SERVERJAR=.*/SERVERJAR='$fallback_attempt'/g' $CONFIG
-fi
 fi
 fi
 }
@@ -613,20 +622,16 @@ VER=$(whiptail --title "Select Minecraft Version" --menu "Please selct what vers
 done
 }
 
-#Simple check to see if a server already exists
-if [ ! -f "$DIR/$SERVERJAR" ]; then
-        do_version_option
-fi
-
-
 do_help() {
 echo -e "${yellow}This is the list of commands"
 echo -e "To use these commands do ./Main command. example ./Main help"
+echo -e "${red}start ${green}[This will start your server without loading main menu.]"
+echo -e "${red}stop ${green}[Fast and easy way to stop your server.]"
 echo -e "${red}save ${green}[This runs minecrafts default save functions.]"
 echo -e "${red}restart ${green}[This will prompt the server to restart in 5 minutes...backing up also]"
 echo -e "${red}restart_now ${green}[Same as restart but only gives 10 second warning on restart.]"
-echo -e "${red}backup ${green}[Does what it says, Unlike save this actually makes a conpressed save of the server.. A true backup.]"
-echo -e "${red}rdiff ${green}[Because the server is ran in the RAM you need to pull it from the ram and save to the HDD often, This will do that. NOT A BACKUP!]"
+echo -e "${red}archive ${green}[Does what it says, Unlike save this actually makes a conpressed save of the server.. A true backup.]"
+echo -e "${red}rdiff ${green}[Because the server is ran in the RAM you need to pull it from the ram and save to the HDD often, Fastest way to make saves]"
 echo -e "${red}restore ${green}[Something broke bad and you need to roll back!, This will pull the last full backup and restore to that point.]"
 echo -e "${red}stats ${green}[Simple way to display information on the server about ram/cpu/storage/load]"
 echo -e "${red}inventory ${green}[Adds the ability to quickly recover lost inventory from a list of the last 5 deaths]"
@@ -692,7 +697,6 @@ echo "finished"
 }
 
 do_prop() {
-
 #Check to make sure the arrey isn't present, Stops duplicates..
 if [ ${#PROP[@]} -eq 0 ]; then
     PROP=`cat $SERVER_PROP | grep "=" | awk '{print $1 " |"}'`
@@ -727,7 +731,6 @@ do_Qstop() {
     rm $INSTALL_LOC/Files/online.list
     sed -i 's/check=.*/check=false/g' $CONFIG
     $CONSOLE1 "stop $CONSOLE2"
-    echo "Someone stopped this server!" >> $LOG
     whiptail --fb --msgbox "Stopping Server.." 20 60 1
   fi
 }
@@ -746,9 +749,12 @@ Think about those poor creepers when you pick your option here." --yes-button DE
         echo XXX
         echo 20
         echo "Searching for poor pigs to kill"
-	rm -rf $DIR/*
+	      rm -rf $DIR/*
+        rm -rf $INSTALL_LOC/archive/*
+        rm -rf $INSTALL_LOC/rdiff-backup*
         rm $INSTALL_LOC/Files/players.list
-	touch $INSTALL_LOC/Files/players.list
+	      touch $INSTALL_LOC/Files/players.list
+	      sed -i 's/SERVERJAR=.*/SERVERJAR=/g' $CONFIG
         echo XXX
         sleep 2
         echo XXX
@@ -784,11 +790,27 @@ fi
     clear
     exit 0
   else
-    whiptail --fb --msgbox "Just use (BSCC menu) when your ready to build a new world." 20 60 
+    whiptail --fb --msgbox "Just use (BSCC menu) when your ready to build a new world." 20 60
     exit 0
   fi
 }
 
+do_admin_backupmenu() {
+while true; do
+  FUN=$(whiptail --fb --title "Backup/Restore" --menu "WARNING!!!"  --cancel-button Exit --ok-button Select 20 80 4 \
+    "1 Restore Server" "[Restore the server from a Archive Backup.]" \
+    3>&1 1>&2 2>&3)
+  RET=$?
+  if [ $RET -eq 1 ]; then
+    exit 1
+  elif [ $RET -eq 0 ]; then
+    case "$FUN" in
+      1\ *) do_restore ;;
+      *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
+    esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
+fi
+done
+}
 
 do_admin_advanced() {
 while true; do
@@ -826,7 +848,8 @@ while true; do
     "1 Console" "[Send/view console.]" \
     "2 Random MSG" "Random Greating/Leaving MSG" \
     "3 Server Properties" "[Modify Server Properties]" \
-    "4 Advanced menu" "Upgrade & Delete servers" \
+    "4 Backup/Restore" "[For Restoring the server.]" \
+    "5 Advanced menu" "Upgrade & Delete servers" \
     3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
@@ -836,7 +859,8 @@ while true; do
       1\ *) do_console ;;
       2\ *) do_msg ;;
       3\ *) do_prop ;;
-      4\ *) do_admin_advanced ;;
+      4\ *) do_admin_backupmenu ;;
+      5\ *) do_admin_advanced ;;
       *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
 fi
@@ -880,10 +904,12 @@ CPU=`top -bn 1 | awk 'NR>7{s+=$9} END {print s/4}'`
 RAM=`free -mh | grep Mem | cut -c 37-40`
 HDD_TOTAL=`df -kh . | grep / | awk '{print $4}'`
 JAVA_VERSION=`java -version 2>&1 |awk 'NR==1{ gsub(/"/,""); print $3 }'`
-whiptail --fb --title "Current server stats" --yesno --yes-button REFRESH --no-button Back "Current Players Online: ${#on_list[@]}/$on_now \n
+whiptail --fb --title "Current server stats" --yesno --yes-button REFRESH --no-button Back \
+"Server Version: $MCVERSION \n
+Current Players Online: ${#on_list[@]}/$on_now \n
 CPU Usage is: $CPU% \n
 Server Uptime: $UPTIME \n
-Ram Available: $RAM/$RAM_TOTAL \n 
+Ram Available: "$RAM\B"/"$RAM_TOTAL\B" \n
 Total Storage used/left: $TOTAL/$HDD_TOTAL \n
 Your Java Version is: $JAVA_VERSION" 25 50 10
 CHOICES=$?
@@ -896,6 +922,21 @@ fi
 clear
 }
 
+#####################################################################
+#Actually the beginning of this huge mess..also a catch for problems..
+######################################################################
+if [ "$(ls -A $INSTALL_LOC/archive)" ]; then
+if (whiptail --fb --title "NO SERVER JAR DETECTED!!" --yesno "Something has gone horribly wrong... would you like to attempt a restore??" 20 50 0) then
+ do_restore
+else
+    do_version_option
+fi
+fi
+
+ if [ -z "$SERVERJAR" ]; then
+    do_version_option
+fi
+
 #Extra Functions for cronjobs and debug (Down the road)
 #Selection for Functions.
 
@@ -904,7 +945,15 @@ case "$1" in
     do_menu
     exit 0
     ;;
-  (save) 
+  (start)
+    do_no_menu_start
+    exit 0
+    ;;
+  (stop)
+    do_no_menu_stop
+    exit 0
+    ;;
+  (save)
     do_save
     exit 0
     ;;
@@ -920,8 +969,8 @@ case "$1" in
     do_restart_now
     exit 0
     ;;
-  (backup)
-    do_backup
+  (archive)
+    do_archive
     exit 0
     ;;
   (rdiff)
@@ -947,7 +996,7 @@ case "$1" in
   (info)
    do_info
     exit 0
-    ;; 
+    ;;
   (eula)
    do_eula
    do_menu
