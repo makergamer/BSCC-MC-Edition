@@ -135,7 +135,7 @@ do_rollback
 fi
 }
 
-  do_restore() {
+do_restore() {
   unset restore
   unset selected_restore
   restore=`ls -1t $INSTALL_LOC/archive | awk '{print $1 " |"}'`
@@ -152,7 +152,7 @@ if ! screen -list | grep -q "Minecraft"; then
   sed -i 's/check=.*/check=true/g' $CONFIG
 
 #Just incase something went really bad...
-if [ ! -f "$DIR/$SERVERJAR" ]; then
+if [ ! -f $DIR/$SERVERJAR ]; then
     do_fallback
 fi
   whiptail --msgbox --fb "Your server should now be restored and loading up.." 20 50 0
@@ -384,7 +384,7 @@ exit 0
 do_fallback() {
 fallback=`ls $DIR | grep ".*.jar" | awk '{print $1 " |"}'`
 fallback=(${fallback[@]})
-if [ -z "$SERVERJAR" ]; then
+if [ ! -f $DIR/$SERVERJAR ]; then
 whiptail --msgbox --fb "Looks like your Server jar is not set. Please try a fallback from the list.." 20 60 0
 fallback_attempt=$(whiptail --menu "These are the Jar files we found." 20 60 3 ${fallback[@]} 3>&1 1>&2 2>&3)
 sed -i 's/SERVERJAR=.*/SERVERJAR='$fallback_attempt'/g' $CONFIG
@@ -599,11 +599,12 @@ fi
 
 do_version_option() {
 while true; do
-VER=$(whiptail --title "Select Minecraft Version" --menu "Please selct what version of Minecraft you wish to run" 10 80 4 \
+VER=$(whiptail --title "Select Minecraft Version" --menu "Please selct what version of Minecraft you wish to run" 15 80 5 \
 "1 Vanilla Minecraft" "[Stright from Mojang.(Latest Version)]" \
 "2 Spigot" "[Fast lightwaight Bucket style server.(Latest Version)]" \
 "3 Bukkit" "[Bukkit also known as Craftbukkit]" \
-"4 FTB" "This will allow you to run a FTB server." \
+"4 FTB" "[This will allow you to run a FTB server.]" \
+"5 Restore" "[Attempt to restore a server from an archive.]" \
  3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
@@ -614,6 +615,7 @@ VER=$(whiptail --title "Select Minecraft Version" --menu "Please selct what vers
       2\ *) do_spigot ;;
       3\ *) do_bukkit ;;
       4\ *) do_ftb ;;
+      5\ *) do_restore ;;
       *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $VER" 20 60 1
   else
@@ -925,15 +927,7 @@ clear
 #####################################################################
 #Actually the beginning of this huge mess..also a catch for problems..
 ######################################################################
-if [ "$(ls -A $INSTALL_LOC/archive)" ]; then
-if (whiptail --fb --title "NO SERVER JAR DETECTED!!" --yesno "Something has gone horribly wrong... would you like to attempt a restore??" 20 50 0) then
- do_restore
-else
-    do_version_option
-fi
-fi
-
- if [ -z "$SERVERJAR" ]; then
+ if [ ! -f $DIR/$SERVERJAR ]; then
     do_version_option
 fi
 
