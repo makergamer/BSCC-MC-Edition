@@ -638,7 +638,6 @@ echo -e "${red}restart ${green}[This will prompt the server to restart in 5 minu
 echo -e "${red}restart_now ${green}[Same as restart but only gives 10 second warning on restart.]"
 echo -e "${red}archive ${green}[Does what it says, Unlike save this actually makes a conpressed save of the server.. A true backup.]"
 echo -e "${red}rdiff ${green}[Because the server is ran in the RAM you need to pull it from the ram and save to the HDD often, Fastest way to make saves]"
-echo -e "${red}restore ${green}[Something broke bad and you need to roll back!, This will pull the last full backup and restore to that point.]"
 echo -e "${red}stats ${green}[Simple way to display information on the server about ram/cpu/storage/load]"
 echo -e "${red}inventory ${green}[Adds the ability to quickly recover lost inventory from a list of the last 5 deaths]"
 echo -e "${red}menu ${green}[Main Menu for core server controls.]"
