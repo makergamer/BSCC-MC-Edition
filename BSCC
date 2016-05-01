@@ -136,6 +136,7 @@ fi
 }
 
 do_restore() {
+if [ "$(ls -A $INSTALL_LOC/archive)" ]; then
   unset restore
   unset selected_restore
   restore=`ls -1t $INSTALL_LOC/archive | awk '{print $1 " |"}'`
@@ -172,6 +173,9 @@ else
   break
 fi
 done
+fi
+else
+whiptail --msgbox --fb "No Archives found.." 10 60 0
 fi
 }
 
@@ -970,10 +974,6 @@ case "$1" in
   (rdiff)
    do_rdiff
    exit 0
-    ;;
-  (restore)
-    do_restore
-    exit 0
     ;;
   (rollback)
     do_rollback
