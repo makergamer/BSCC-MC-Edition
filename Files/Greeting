@@ -1,41 +1,41 @@
-#!/bin/bash -ex
+#!/bin/bash
 source conf.cfg 
 SERVERLOG="$DIR/logs/latest.log" 
 PLAYER_LIST="players.list"
 ONLINE_LIST="online.list"
 tmp="online.bak"
 
+
+
+do_whisper() {
+$CONSOLE1 "msg $PLAYER $MSG $CONSOLE2"
+sleep 1
+}
+
 IFS=$'\r\n' command eval 'MSG=($(cat RandomMSG.txt))' 
 
-x=0 
-while x=1; do 
+while :
+do 
 GEN=$((RANDOM % ${#MSG[@]})) 
 MSG=${MSG[$GEN]}
-	sleep 2
+
         PLAYER=`tail -2 $SERVERLOG | grep "logged in with entity id" | awk '{print $4}' | cut -d "[" -f1`
         if [ $PLAYER ]; then
                 if [ "$(grep $PLAYER $PLAYER_LIST)" != $PLAYER ]; then
-                        echo "$PLAYER" > $PLAYER_LIST
-			echo "$PLAYER" > $ONLINE_LIST
-                        $CONSOLE1 "say Welcome to the server. $CONSOLE2"
+                        echo "$PLAYER" >> $PLAYER_LIST
+                        echo $PLAYER >> $ONLINE_LIST
+                        $CONSOLE1 "say $PLAYER Welcome to the server. $CONSOLE2"
+                        sleep 1
                 else
-			$CONSOLE1 "say $MSG $CONSOLE2"
-			echo "$PLAYER" > $ONLINE_LIST
-		fi
-        fi
-                TESTPLAYER=`tail -2 $SERVERLOG | grep "logged in with entity id" | awk '{print $4}' | cut -d "[" -f1`
-		LOGOUT=`tail -1 $SERVERLOG | grep "left the game" | awk '{print $4}'`
-		if [ $LOGOUT ]; then
-			if [ "$(grep $LOGOUT $PLAYER_LIST)" != $LOGOUT ]; then
-                        $CONSOLE1 "say $Goodbye $CONSOLE2"
-                else
-			
-                        $CONSOLE1 "say $MSG $CONSOLE2"
-                        echo "you made it 1"
-			grep -vwE $LOGOUT $ONLINE_LIST > $tmp && continue
-                        echo "you made it 2"
-			mv $tmp $ONLINE_LIST
-			echo "You made it 3"
+                        grep -q -F $PLAYER $ONLINE_LIST || echo $PLAYER >> $ONLINE_LIST
+                        do_whisper
                 fi
-	fi 
+fi
+        TESTPLAYER=`tail -2 $SERVERLOG | grep "logged in with entity id" | awk '{print $4}' | cut -d "[" -f1`
+                LOGOUT=`tail -1 $SERVERLOG | grep "left the game" | awk '{print $4}'`
+                if [ $LOGOUT ]; then
+                        if [ "$(grep $LOGOUT $PLAYER_LIST)" = $LOGOUT ]; then
+                        sed -i '/'$LOGOUT'/d' $ONLINE_LIST
+                fi
+        fi 
 done
