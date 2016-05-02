@@ -1,0 +1,13 @@
+Source: bscc-mc-edition
+Section: unknown
+Priority: optional
+Maintainer: Kicker22004
+Build-Depends: debhelper (>= 8.0.0), dh-exec
+Standards-Version: 3.9.4
+
+Package: bscc-mc-edition
+Architecture: any
+Depends:
+ ${shlibs:Depends}, ${misc:Depends},
+ git, grep, whiptail, screen
+Description: A simple to use Minecraft Hosting program.
