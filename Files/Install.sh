@@ -1,9 +1,6 @@
 #!/bin/bash
 INSTALL_LOC=/opt/BSCC
 CPUINFO=`lscpu | grep "Architecture" | awk '{print $2}'`
-cp $INSTALL_LOC/Files/Install.sh /tmp
-cd tmp
-./Install.sh
 
 # Make sure we run with root privileges
 if [ $UID != 0 ]; then
@@ -105,7 +102,7 @@ If you agree Please, continue." 15 60) then
 	mkdir $INSTALL_LOC/archive
         mkdir $INSTALL_LOC/Files
 	mkdir $INSTALL_LOC/minecraft_server
-        cp Files/* $INSTALL_LOC/Files
+        cp * $INSTALL_LOC/Files
         echo XXX
         sleep 5
         echo XXX
@@ -117,7 +114,7 @@ If you agree Please, continue." 15 60) then
         echo XXX
         echo 60
         echo "Moving main to /usr/bin/"
-        cp BSCC /usr/bin/
+        cp ../BSCC /usr/bin/
         echo XXX
         sleep 2
         echo XXX
