@@ -62,6 +62,7 @@ if [ ! -f /usr/bin/java ]; then
 do_java
 fi
 
+chown -R $USER:$USER $INSTALL_LOC
 chmod +x $INSTALL_LOC/Files/Greeting
 chmod +x /usr/bin/BSCC
 clear
