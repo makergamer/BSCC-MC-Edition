@@ -9,5 +9,5 @@ Package: bscc-mc-edition
 Architecture: any
 Depends:
  ${shlibs:Depends}, ${misc:Depends},
- git, grep, whiptail, screen
+ git, grep, whiptail, screen, rsync
 Description: A simple to use Minecraft Hosting program.
