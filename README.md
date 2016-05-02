@@ -18,13 +18,13 @@ And to launch do:
 This Program is very much Beta but it is at a point where it can be used, use at your own risk....
 
 Built .deb files are now built. Download armhf for arm devices (RPi,Cubox,Odroid)
-`https://www.mediafire.com/folder/l21s0ll87ebr6/BSCC-MC-Edition`
+`ftp://allhosting.ddns.net`
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 Or you can wget the file directly with these commands.
 
 Amd64 download. Standard pc's/server.
-`wget http://www.mediafire.com/download/qk0q77r88478hd4/bscc-mc-edition_0.2_amd64.deb`
+`wget ftp://allhosting.ddns.net/bscc-mc-edition_0.2_amd64.deb`
 
 ARM devices (RPi,Cubox,Odroid)
-`wget http://www.mediafire.com/download/75vnjd95uhs7npg/bscc-mc-edition_0.2_armhf.deb`
+`wget ftp://allhosting.ddns.net/bscc-mc-edition_0.2_armhf.deb`
