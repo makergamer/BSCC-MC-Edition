@@ -1,22 +1,3 @@
-#!/bin/bash
-INSTALL_LOC=/opt/BSCC
-
-# Make sure we run with root privileges
-if [ $UID != 0 ]; then
-# not root, use sudo
-	echo "This script needs root privileges, rerunning it now using sudo!"
-	sudo "${SHELL}" "$0" $*
-	exit $?
-fi
-# get real username
-if [ $UID = 0 ] && [ ! -z "$SUDO_USER" ]; then
-	USER="$SUDO_USER"
-else
-	USER="$(whoami)"
-fi
-
-
-chown -R $USER:$USER $INSTALL_LOC
-chmod +x $INSTALL_LOC/Files/Greeting
-chmod +x /usr/bin/BSCC
-exit 0
+cp /opt/BSCC/Install.sh /tmp/
+cd /tmp/
+./Install.sh
