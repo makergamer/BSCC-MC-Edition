@@ -9,7 +9,7 @@ To install run these simple commands.
 
 Change to Directory
 
-`cd BSCC-MC-Edition`
+`cd BSCC-MC-Edition/Files`
 
 And to launch do:
 
