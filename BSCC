@@ -332,6 +332,7 @@ do_first_run() {
         echo XXX
         echo 40
 	      echo "Attemping to start server"
+	      touch $INSTALL_LOC/Files/player.list
         echo XXX
         sleep 1
         echo XXX
@@ -544,6 +545,7 @@ echo "FTB start script is missing..."
 fi
 #EULA Needs to be accepted by the user
 do_eula
+touch $INSTALL_LOC/Files/player.list
 whiptail --msgbox --fb "Ok everything should now be ready for you to start. Please use (BSCC menu) also these servers could load slowly...give it some time \n
 Also a big THANK YOU to all of the effort from MODS/DEVS involved in the FTB servers and maintenance" 20 60 0
 exit 0
