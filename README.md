@@ -16,15 +16,3 @@ And to launch do:
 `./Install.sh`
 
 This Program is very much Beta but it is at a point where it can be used, use at your own risk....
-
-Built .deb files are now built. Download armhf for arm devices (RPi,Cubox,Odroid)
-`ftp://allhosting.ddns.net`
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-Or you can wget the file directly with these commands.
-
-Amd64 download. Standard pc's/server.
-`wget ftp://allhosting.ddns.net/bscc-mc-edition_0.2_amd64.deb`
-
-ARM devices (RPi,Cubox,Odroid)
-`wget ftp://allhosting.ddns.net/bscc-mc-edition_0.2_armhf.deb`
