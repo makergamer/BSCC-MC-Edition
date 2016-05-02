@@ -802,6 +802,22 @@ fi
   fi
 }
 
+do_uninstall() {
+whiptail --fb --yesno "This is your only chance to say no to this... \n
+It will erase your server and everything involved with BSCC. \n
+Do you agree?" 20 60 2 \
+    --yes-button Yes --no-button No
+  RET=$?
+  if [ $RET -eq 0 ]; then
+    sudo rm -rf $INSTALL_LOC
+    sudo rm /usr/bin/BSCC
+    whiptail --msgbox --fb "Everything is now removed. I hope you enjoyed using BSCC and please leave a comment as to why your leaving. Thank you." 20 60 0
+  else
+    echo "no"
+    exit 0
+  fi
+}
+
 do_admin_backupmenu() {
 while true; do
   FUN=$(whiptail --fb --title "Backup/Restore" --menu "WARNING!!!"  --cancel-button Exit --ok-button Select 20 80 4 \
@@ -824,6 +840,7 @@ while true; do
   FUN=$(whiptail --fb --title "Admin Advanced menu" --menu "WARNING!!!"  --cancel-button Exit --ok-button Select 20 80 4 \
     "1 Forge Installer" "[Very much in beta]" \
     "2 DELETE SERVER" "[DELETES YOUR SERVER!!]" \
+    "3 Uninstall BSCC" "[This will remove BSCC completely]" \
     3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
@@ -832,6 +849,7 @@ while true; do
     case "$FUN" in
       1\ *) do_forge ;;
       2\ *) do_delete ;;
+      3\ *) do_uninstall ;;
       *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
 fi
