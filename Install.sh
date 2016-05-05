@@ -50,7 +50,6 @@ tar zxvf java.tar.gz -C /opt/java_jdk --strip-components=1
 rm java.tar.gz
 update-alternatives --install "/usr/bin/java" "java" "/opt/java_jdk/bin/java" 1
 update-alternatives --set java /opt/java_jdk/bin/java
-. /etc/profile
 fi
 }
 
@@ -63,7 +62,6 @@ tar zxvf java.tar.gz -C /opt/java_jdk --strip-components=1
 rm java.tar.gz
 update-alternatives --install "/usr/bin/java" "java" "/opt/java_jdk/bin/java" 1
 update-alternatives --set java /opt/java_jdk/bin/java
-. /etc/profile
 #clear
 fi
 }
