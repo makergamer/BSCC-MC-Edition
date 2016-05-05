@@ -343,7 +343,7 @@ do_first_run() {
 	      $START
         echo XXX
         #Allow time for the server to load and crash due to eula.
-        for ((i=20;i>0;i=i-1)); do
+        for ((i=120;i>0;i=i-1)); do
  	        clear
 	      if screen -list | grep -q "Minecraft"; then
   	       clear
