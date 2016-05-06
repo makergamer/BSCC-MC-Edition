@@ -32,6 +32,7 @@ do_no_menu_start() {
   if ! screen -list | grep -q "Minecraft"; then
      cd $DIR
      $START
+     sed -i 's/check=.*/check=true/g' $CONFIG
   else
      echo "Server was found running... close it before running this"
   fi
@@ -66,6 +67,7 @@ do_reload() {
 if ! screen -list | grep -q "Minecraft"; then
     cd $DIR
     $START
+    sed -i 's/check=.*/check=true/g' $CONFIG
 fi
 exit 0
 }
@@ -658,6 +660,7 @@ do_start() {
  if ! screen -list | grep -q "Minecraft"; then
     cd $DIR
     $START
+    sed -i 's/check=.*/check=true/g' $CONFIG
     whiptail --fb --msgbox "Your Server is loading up please check the client after a minute or so..." 20 60 1
 else
     whiptail --fb --msgbox "Found a server running please stop it first!" 20 60 1
