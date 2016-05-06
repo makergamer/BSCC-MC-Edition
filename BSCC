@@ -849,6 +849,22 @@ varr[3]='restart |'
 varr[4]='REMOVE |'
 varr=(${varr[@]})
 crontabs="/var/spool/cron/crontabs"
+do_cron() {
+unset list
+unset commands
+varr[0]='check |'
+varr[1]='stats |'
+varr[2]='archive |'
+varr[3]='restart |'
+varr[4]='REMOVE |'
+varr=(${varr[@]})
+crontabs="/var/spool/cron/crontabs"
+whiptail --msgbox --fb "The next menu will let you set times for basic functions \n
+CHECK=[How often the server should check if the server is up..if down it starts it.] \n
+STATS=[Display system stats to the minecraft console to display to users online.] \n
+ARCHIVE=[How often a archive should be done.] \n
+RESTART=[how often a restart should be done.] \n
+REMOVE=[Clear all crontab jobs.]" 20 90 0
 
 list=$(whiptail --menu --fb "testing as usual" 20 60 0 ${varr[@]} 3>&1 1>&2 2>&3)
 if [ "$list" = REMOVE ]; then
