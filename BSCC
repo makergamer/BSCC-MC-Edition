@@ -12,7 +12,7 @@ RDIFF=$INSTALL_LOC/rdiff-backup
 ARCHIVE=$INSTALL_LOC/archive
 
 #Extra Functions for Cronjobs and Debugs (Down the road)
-
+clear
 do_adminpass() {
 ADMIN_AREA=$(whiptail --passwordbox "Enter Password:" 8 30 --title "password dialog" 3>&1 1>&2 2>&3)
 exitstatus=$?
@@ -836,27 +836,83 @@ fi
 done
 }
 
-do_admin_advanced() {
-while true; do
-  FUN=$(whiptail --fb --title "Admin Advanced menu" --menu "WARNING!!!"  --cancel-button Exit --ok-button Select 20 80 4 \
-    "1 Forge Installer" "[Very much in beta]" \
-    "2 DELETE SERVER" "[DELETES YOUR SERVER!!]" \
-    "3 Uninstall BSCC" "[This will remove BSCC completely]" \
+do_cron() {
+unset list
+unset commands
+varr[0]='check |'
+varr[1]='stats |'
+varr[2]='archive |'
+varr[3]='restart |'
+varr[4]='REMOVE |'
+varr=(${varr[@]})
+crontabs="/var/spool/cron/crontabs"
+
+list=$(whiptail --menu --fb "testing as usual" 20 60 0 ${varr[@]} 3>&1 1>&2 2>&3)
+if [ "$list" = REMOVE ]; then
+whiptail --yesno --fb "This will remove all of your Cron Jobs!. Continue?" 20 60 0 \
+  --yes-button Yes --no-button No
+ RET=$?
+   if [ $RET -eq 0 ]; then
+    sudo sed -i".bak" '/BSCC*/d' $crontabs/$USER
+    whiptail --fb --msgbox "CRON JOBS cleared." 20 60 1
+    do_admin_advanced
+ else
+   if [ $RET -eq 1 ]; then
+    do_admin_advanced
+  fi
+fi
+fi
+clear
+  FUN=$(whiptail --fb --title "CRONTAB" --menu "Select how often you want this to be."  --cancel-button Back --ok-button Select 20 80 5 \
+    "1 5" "[Minutes]" \
+    "2 10" "[Minutes]" \
+    "3 15" "[Minutes]" \
+    "4 30" "[Minutes]" \
+    "5 1" "[Hour]" \
+    "6 2" "[Hours]" \
+    "7 6" "[Hours]" \
+    "8 12" "[Hours]" \
     3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
-    exit 1
+    do_admin_advanced
   elif [ $RET -eq 0 ]; then
     case "$FUN" in
-      1\ *) do_forge ;;
-      2\ *) do_delete ;;
-      3\ *) do_uninstall ;;
+      1\ *) sudo sed -i".bak" '/BSCC '${list}'/d' $crontabs/$USER; (crontab -l 2>/dev/null; echo "*/5 * * * * BSCC $list") | crontab - ;;
+      2\ *) sudo sed -i".bak" '/BSCC '${list}'/d' $crontabs/$USER; (crontab -l 2>/dev/null; echo "*/10 * * * * BSCC $list") | crontab - ;;
+      3\ *) sudo sed -i".bak" '/BSCC '${list}'/d' $crontabs/$USER; (crontab -l 2>/dev/null; echo "*/15 * * * * BSCC $list") | crontab - ;;
+      4\ *) sudo sed -i".bak" '/BSCC '${list}'/d' $crontabs/$USER; (crontab -l 2>/dev/null; echo "*/30 * * * * BSCC $list") | crontab - ;;
+      5\ *) sudo sed -i".bak" '/BSCC '${list}'/d' $crontabs/$USER; (crontab -l 2>/dev/null; echo "0 */1 * * * BSCC $list") | crontab - ;;
+      6\ *) sudo sed -i".bak" '/BSCC '${list}'/d' $crontabs/$USER; (crontab -l 2>/dev/null; echo "0 */2 * * * BSCC $list") | crontab - ;;
+      7\ *) sudo sed -i".bak" '/BSCC '${list}'/d' $crontabs/$USER; (crontab -l 2>/dev/null; echo "0 */6 * * * BSCC $list") | crontab - ;;
+      8\ *) sudo sed -i".bak" '/BSCC '${list}'/d' $crontabs/$USER; (crontab -l 2>/dev/null; echo "0 */12 * * * BSCC $list") | crontab - ;;
+      *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
+    esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
+fi
+}
+
+do_admin_advanced() {
+while true; do
+  FUN=$(whiptail --fb --title "Admin Advanced menu" --menu "WARNING!!!"  --cancel-button Back --ok-button Select 20 80 4 \
+    "1 Crontab" "[Setup jobs for autostart and other things]" \
+    "2 Forge Installer" "[Very much in beta]" \
+    "3 DELETE SERVER" "[DELETES YOUR SERVER!!]" \
+    "4 Uninstall BSCC" "[This will remove BSCC completely]" \
+    3>&1 1>&2 2>&3)
+  RET=$?
+  if [ $RET -eq 1 ]; then
+    do_admin
+  elif [ $RET -eq 0 ]; then
+    case "$FUN" in
+      1\ *) do_cron ;;
+      2\ *) do_forge ;;
+      3\ *) do_delete ;;
+      4\ *) do_uninstall ;;
       *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
 fi
 done
 }
-
 
 do_finish() {
   if [ $ASK_TO_REBOOT -eq 1 ]; then
@@ -879,7 +935,7 @@ while true; do
     3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
-    exit 1
+     exit 1
   elif [ $RET -eq 0 ]; then
     case "$FUN" in
       1\ *) do_console ;;
