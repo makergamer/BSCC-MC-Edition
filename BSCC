@@ -285,8 +285,9 @@ then
         echo "Server not found...exiting"
         exit 1
 else
-        echo "PRESS C TO TYPE IN CONSOLE, OR Q TO EXIT"
-      cat /opt/BSCC/minecraft_server/logs/latest.log | tail -10
+        echo ${green}"PRESS C TO TYPE IN CONSOLE, OR Q TO EXIT (Might need to hit twice!)"
+	tput sgr0
+        cat /opt/BSCC/minecraft_server/logs/latest.log | tail -20
         read -t 1 -n 1 key
         if [[ $key = q ]]
 then
