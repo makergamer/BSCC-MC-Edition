@@ -403,26 +403,6 @@ fi
 ##Setup Minecraft server
 #########################
 #Select Version of Minecraft and download.
-do_vanilla_latest() {
-downloadurl="https://minecraft.net/download"
-serverurl=""
-loc=$([[ -n $1 ]] && printf $1 || printf "$DIR/minecraft_server.jar")
-
-if [[ -a $loc ]]; then
-        printf "$loc exists -- moving to ${loc}.old\n"
-        mv $loc ${loc}.old
-fi
-printf "Getting download URL for minecraft server...\n"
-serverurl=`curl -s $downloadurl | egrep -io 'https.*versions\/(.*)\/minecraft_server.\1.jar'`
-printf "URL = "$serverurl"\n"
-printf "Downloading server jar...\n"
-wget -q -O $loc $serverurl
-sed -i 's/MCVERSION=.*/MCVERSION=Latest??/g' $CONFIG
-sed -i 's/SERVERJAR=.*/SERVERJAR=minecraft_server.jar/g' $CONFIG
-do_ram
-do_first_run
-}
-
 do_vanilla() {
 #Present User with selected Vanilla servers from list.
 vanilla_list=`cut -d "=" -f 1 $INSTALL_LOC/Files/vanilla.list | awk '{print $1 " |"}'`
@@ -434,7 +414,7 @@ RET=$?
   elif [ $RET -eq 0 ]; then
 dl_link=`cat $INSTALL_LOC/Files/vanilla.list | grep "$vanilla_servers" | awk '{print $2}'`
 echo $dl_link
-Check the download and if failed remove the file.
+#Check the download and if failed remove the file.
 clear
 if [ $dl_link = do_vanilla_latest ]; then
 $dl_link
