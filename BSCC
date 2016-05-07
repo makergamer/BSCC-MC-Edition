@@ -970,7 +970,7 @@ done
 
 do_menu() {
 while true; do
-  FUN=$(whiptail --fb --title "You can pry it works, that's what I do" --menu "Server Controls"  --cancel-button Exit --ok-button Select 20 80 7 \
+  FUN=$(whiptail --fb --title "Main Menu" --menu "Server Controls"  --cancel-button Exit --ok-button Select 20 80 7 \
     "1 Admins only" "[Admin controls]" \
     "2 Start" "[Attempts to start the server]" \
     "3 Stop" "[Attempt to stop the server]" \
