@@ -416,9 +416,6 @@ dl_link=`cat $INSTALL_LOC/Files/vanilla.list | grep "$vanilla_servers" | awk '{p
 echo $dl_link
 #Check the download and if failed remove the file.
 clear
-if [ $dl_link = do_vanilla_latest ]; then
-$dl_link
-fi
 r=`wget -O $DIR/$vanilla_servers.jar $dl_link`
 echo $vanilla_servers.jar
 if [ $? -ne 0 ]; then
@@ -478,7 +475,7 @@ dl_link=`cat $INSTALL_LOC/Files/bukkit.list | grep "$bukkit_servers" | awk '{pri
 clear
 r=`wget -O $DIR/$bukkit_servers.jar $dl_link`
 if [ $? -ne 0 ]; then
-rm $DIR/$spigot_servers.jar
+rm $DIR/$bukkit_servers.jar
 whiptail --msgbox --clear --fb "Download failed!, check your internet and the link.\
 The current link is: $dl_link" 20 60
   else
