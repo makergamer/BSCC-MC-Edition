@@ -8,7 +8,7 @@ tmp="online.bak"
 
 
 do_whisper() {
-$CONSOLE1 "msg $PLAYER $MSG $CONSOLE2"
+screen -S Minecraft -p 0 -X stuff "msg $PLAYER $MSG $(printf \\r)"
 sleep 1
 }
 
@@ -18,13 +18,16 @@ while :
 do 
 GEN=$((RANDOM % ${#MSG[@]})) 
 MSG=${MSG[$GEN]}
-
+if ! screen -list | grep -q "Minecraft"; then
+echo "Server is not running"
+exit $?
+else
         PLAYER=`tail -2 $SERVERLOG | grep "logged in with entity id" | awk '{print $4}' | cut -d "[" -f1`
         if [ $PLAYER ]; then
                 if [ "$(grep $PLAYER $PLAYER_LIST)" != $PLAYER ]; then
                         echo "$PLAYER" >> $PLAYER_LIST
                         echo $PLAYER >> $ONLINE_LIST
-                        $CONSOLE1 "say $PLAYER Welcome to the server. $CONSOLE2"
+                        screen -S Minecraft -p 0 -X stuff "say $PLAYER Welcome to the server. $(printf \\r)"
                         sleep 1
                 else
                         grep -q -F $PLAYER $ONLINE_LIST || echo $PLAYER >> $ONLINE_LIST
@@ -38,4 +41,5 @@ fi
                         sed -i '/'$LOGOUT'/d' $ONLINE_LIST
                 fi
         fi 
+   fi
 done
