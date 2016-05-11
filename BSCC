@@ -45,14 +45,14 @@ do_no_menu_stop() {
     sed -i 's/check=.*/check=false/g' $CONFIG
     do_save
     sleep 2
-    $CONSOLE1 "stop $CONSOLE2"
+    screen -S Minecraft -p 0 -X stuff "stop $(printf \\r)"
   else
      echo "No server was found to be running...did you start on?"
   fi
 }
 
 do_save() {
-$CONSOLE1 "save-all $CONSOLE2"
+screen -S Minecraft -p 0 -X stuff "save-all $(printf \\r)"
 }
 
 do_check() {
@@ -75,12 +75,12 @@ exit 0
 do_restart() {
 sed -i 's/check=.*/check=false/g' $CONFIG
 do_rdiff
-$CONSOLE1 "save-all $CONSOLE2"
-$CONSOLE1 "say Restart in 1 Minutes..WHY ARE YOU STILL HERE!!! $CONSOLE2"
+screen -S Minecraft -p 0 -X stuff "save-all $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "say Restart in 1 Minutes..WHY ARE YOU STILL HERE!!! $(printf \\r)"
 sleep 50s
-$CONSOLE1 "say 10 seconds..$CONSOLE2"
+screen -S Minecraft -p 0 -X stuff "say 10 seconds.. $(printf \\r)"
 sleep 10s
-$CONSOLE1 "stop $CONSOLE2"
+screen -S Minecraft -p 0 -X stuff "stop $(printf \\r)"
 sleep 3
 cd $DIR
 sleep 10
@@ -92,10 +92,10 @@ exit 0
 do_restart_now() {
 sed -i 's/check=.*/check=false/g' $CONFIG
 do_rdiff
-$CONSOLE1 "say Server is going down.... Please log NOW! $CONSOLE2"
-$CONSOLE1 "save-all $CONSOLE2"
+screen -S Minecraft -p 0 -X stuff "say Server is going down.... Please log NOW! $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "save-all $(printf \\r)"
 sleep 10
-$CONSOLE1 "stop $CONSOLE2"
+screen -S Minecraft -p 0 -X stuff "stop $(printf \\r)"
 sleep 10
 cd $DIR
 $START
@@ -110,11 +110,11 @@ if ! screen -list | grep -q "Minecraft"; then
   echo "=================================================="
 else
   cd $ARCHIVE
-  $CONSOLE1 "say Creating Archive of the server, Sorry for any lag. $CONSOLE2"
+  screen -S Minecraft -p 0 -X stuff "say Creating Archive of the server, Sorry for any lag. $(printf \\r)"
   do_rdiff
   tar -zcvf "$today".tar.gz -C $RDIFF .
   rm `ls -t | awk 'NR>8'` 2>/dev/null
-  $CONSOLE1 "say Archive complete, carry on... :( $CONSOLE2"
+  screen -S Minecraft -p 0 -X stuff "say Archive complete, carry on... :( $(printf \\r)"
 fi
 }
 
@@ -129,9 +129,9 @@ $START
 sed -i 's/check=.*/check=true/g' $CONFIG
 else
 sed -i 's/check=.*/check=false/g' $CONFIG
-$CONSOLE1 "say Going down for rollback! $CONSOLE2"
+screen -S Minecraft -p 0 -X stuff "say Going down for rollback! $(printf \\r)"
 sleep 10
-$CONSOLE1 "stop $CONSOLE2"
+screen -S Minecraft -p 0 -X stuff "stop $(printf \\r)"
 sleep 20
 do_rollback
 fi
@@ -161,10 +161,10 @@ fi
   whiptail --msgbox --fb "Your server should now be restored and loading up.." 20 50 0
 else
   sed -i 's/check=.*/check=false/g' $CONFIG
-  $CONSOLE1 "say Going down for rollback! $CONSOLE2"
+  screen -S Minecraft -p 0 -X stuff "say Going down for rollback! $(printf \\r)"
   sleep 5
   whiptail --msgbox --fb "Server was found running.. Hit ok and wait up to 20 seconds to recheck." 20 50 0
-  $CONSOLE1 "stop $CONSOLE2"
+  screen -S Minecraft -p 0 -X stuff "stop $(printf \\r)"
 for ((i=20;i>0;i=i-1)); do
   clear
 if screen -list | grep -q "Minecraft"; then
@@ -182,10 +182,10 @@ fi
 }
 
 do_stats() {
-$CONSOLE1 "say "$RAM\B" Ram free out of "$RAM_TOTAL\B" $CONSOLE2"
-$CONSOLE1 "say This server is now "$TOTAL\B" in size & $HDDUSED filled. $CONSOLE2"
-$CONSOLE1 "say The CPU is currently running at "$CPU\%" $CONSOLE2"
-$CONSOLE1 "say Server Uptime & load (1M 5M 15M) $UPTIME $CONSOLE2"
+screen -S Minecraft -p 0 -X stuff "say "$RAM\B" Ram free out of "$RAM_TOTAL\B" $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "say This server is now "$TOTAL\B" in size & $HDDUSED filled. $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "say The CPU is currently running at "$CPU\%" $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "say Server Uptime & load (1M 5M 15M) $UPTIME $(printf \\r)"
 }
 
 do_rdiff() {
@@ -232,8 +232,8 @@ res_playarr=$(whiptail --menu "Newest Deaths up top!" 20 60 5 ${new_playarr[@]} 
 RET=$?
 if [ $RET -eq 0 ]; then
 echo $res_playarr
-$CONSOLE1 "say Attempting to restore this data! $selected_player $CONSOLE2"
-$CONSOLE1 "/ob_inventory restore $selected_player $res_playarr $CONSOLE2"
+screen -S Minecraft -p 0 -X stuff "say Attempting to restore this data! $selected_player $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "/ob_inventory restore $selected_player $res_playarr $(printf \\r)"
 else
 if [ $RET -eq 1 ]; then
 do_inventory
@@ -566,7 +566,7 @@ else
 
 #Check if the server is currently live
 if screen -list | grep -q "Minecraft"; then
-$CONSOLE1 "stop $CONSOLE2"
+screen -S Minecraft -p 0 -X stuff "stop $(printf \\r)"
 fi
 
 cd $DIR
@@ -718,14 +718,14 @@ do_Qstop() {
     screen -ls | grep Greeting | cut -d. -f1 | awk '{print $1}' | xargs kill
     rm $INSTALL_LOC/Files/online.list
     sed -i 's/check=.*/check=false/g' $CONFIG
-    $CONSOLE1 "stop $CONSOLE2"
+    screen -S Minecraft -p 0 -X stuff "stop $(printf \\r)"
     whiptail --fb --msgbox "Stopping Server.." 20 60 1
   fi
 }
 
 do_delete() {
 if screen -list | grep -q "Minecraft"; then
-$CONSOLE1 "stop $CONSOLE2"
+screen -S Minecraft -p 0 -X stuff "stop $(printf \\r)"
 sleep 3
 fi
 if (whiptail --fb --yesno "YOUR ABOUT TO DELETE YOUR MINECRAFT SERVER...IF YOU DO THIS THERE IS NO GOING BACK! \
