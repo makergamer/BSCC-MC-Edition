@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash
 source conf.cfg
 
 server_port=`cat $DIR/server.properties | grep "server-port" | cut -d "=" -f2`
