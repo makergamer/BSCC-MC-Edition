@@ -6,7 +6,7 @@ actual="0"
 
 do_more() {
 if [ "$number" -gt "$actual" ]; then
-screen -dmS $RANDOM ./watch_login
+screen -dmS $RANDOM ./Greeting
 actual=$number
 else
 actual=$number
