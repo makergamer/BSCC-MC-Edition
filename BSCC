@@ -334,16 +334,16 @@ do_first_run() {
         sleep 1
         echo XXX
         echo 40
-	      echo "Attemping to start server"
-	      touch $INSTALL_LOC/Files/player.list
+	echo "Attemping to start server"
+	touch $INSTALL_LOC/Files/players.list
         echo XXX
         sleep 1
         echo XXX
         echo 60
         echo "Attemping to starting server (Allowing 20 seconds for first load)"
-	      source /opt/BSCC/Files/conf.cfg
-	      cd $DIR
-	      $START
+	source /opt/BSCC/Files/conf.cfg
+	cd $DIR
+	$START
         echo XXX
         #Allow time for the server to load and crash due to eula.
         for ((i=120;i>0;i=i-1)); do
