@@ -26,11 +26,11 @@ sleep 2
                 if [ "$(grep $PLAYER $PLAYER_LIST)" != $PLAYER ]; then
                         echo "$PLAYER" >> $PLAYER_LIST
                         echo $PLAYER >> $ONLINE_LIST
-                        screen -S Minecraft -p 0 -X stuff "say $PLAYER Welcome to the server. $(printf \\r)"
+                        screen -S Minecraft -p 0 -X stuff "msg $PLAYER Welcome to the server. $(printf \\r)"
                 else
                         echo "Your in"
                         grep -q -F $PLAYER $ONLINE_LIST || echo $PLAYER >> $ONLINE_LIST
-                        screen -S Minecraft -p 0 -X stuff "say $PLAYER $MSG $(printf \\r)"
+                        screen -S Minecraft -p 0 -X stuff "msg $PLAYER $MSG $(printf \\r)"
                 fi
 	fi
     fi
