@@ -15,17 +15,6 @@ echo "Server is not running"
 exit $?
 else
 
-login="logged in with entity"
-Clogin=`cat /opt/BSCC/minecraft_server/logs/latest.log | tail -1 | grep "logged in with entity" | awk '{print $5,$6,$7,$8}'`
-
-
-#########################################
-#Attempt to pull player first so if multi users come on at once!!
-
-#Do this by moving player up top...
-############################################
-
-#if [ "$Clogin" = "$login" ]; then 
 unset PLAYER
          PLAYER=`cat $SERVERLOG | grep "logged in with entity id" | awk '{print $4}' | cut -d "[" -f1 | tail -1`
 sleep 5
