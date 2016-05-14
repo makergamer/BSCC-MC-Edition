@@ -1,5 +1,9 @@
 #!/bin/bash
 
+#latest log is slower then user check..
+sleep 2
+#######################################
+
 source conf.cfg
 SERVERLOG="$DIR/logs/latest.log"
 PLAYER_LIST="players.list"
@@ -17,7 +21,7 @@ else
 
 unset PLAYER
          PLAYER=`cat $SERVERLOG | grep "logged in with entity id" | awk '{print $4}' | cut -d "[" -f1 | tail -1`
-sleep 7
+sleep 2
         if [ $PLAYER ]; then
                 if [ "$(grep $PLAYER $PLAYER_LIST)" != $PLAYER ]; then
                         echo "$PLAYER" >> $PLAYER_LIST
