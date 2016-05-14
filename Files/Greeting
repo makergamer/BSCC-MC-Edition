@@ -1,45 +1,45 @@
 #!/bin/bash
-source conf.cfg 
-SERVERLOG="$DIR/logs/latest.log" 
+
+source conf.cfg
+SERVERLOG="$DIR/logs/latest.log"
 PLAYER_LIST="players.list"
 ONLINE_LIST="online.list"
 tmp="online.bak"
 
+IFS=$'\r\n' command eval 'MSG=($(cat RandomMSG.txt))'
 
-
-do_whisper() {
-screen -S Minecraft -p 0 -X stuff "msg $PLAYER $MSG $(printf \\r)"
-sleep 1
-}
-
-IFS=$'\r\n' command eval 'MSG=($(cat RandomMSG.txt))' 
-
-while :
-do 
-GEN=$((RANDOM % ${#MSG[@]})) 
+GEN=$((RANDOM % ${#MSG[@]}))
 MSG=${MSG[$GEN]}
 if ! screen -list | grep -q "Minecraft"; then
 echo "Server is not running"
 exit $?
 else
-        PLAYER=`tail -2 $SERVERLOG | grep "logged in with entity id" | awk '{print $4}' | cut -d "[" -f1`
+
+login="logged in with entity"
+Clogin=`cat /opt/BSCC/minecraft_server/logs/latest.log | tail -1 | grep "logged in with entity" | awk '{print $5,$6,$7,$8}'`
+
+
+#########################################
+#Attempt to pull player first so if multi users come on at once!!
+
+#Do this by moving player up top...
+############################################
+
+#if [ "$Clogin" = "$login" ]; then 
+unset PLAYER
+         PLAYER=`cat $SERVERLOG | grep "logged in with entity id" | awk '{print $4}' | cut -d "[" -f1 | tail -1`
+sleep 5
         if [ $PLAYER ]; then
                 if [ "$(grep $PLAYER $PLAYER_LIST)" != $PLAYER ]; then
                         echo "$PLAYER" >> $PLAYER_LIST
                         echo $PLAYER >> $ONLINE_LIST
                         screen -S Minecraft -p 0 -X stuff "say $PLAYER Welcome to the server. $(printf \\r)"
-                        sleep 1
                 else
+                        echo "Your in"
                         grep -q -F $PLAYER $ONLINE_LIST || echo $PLAYER >> $ONLINE_LIST
-                        do_whisper
+                        screen -S Minecraft -p 0 -X stuff "say $PLAYER $MSG $(printf \\r)"
                 fi
-fi
-        TESTPLAYER=`tail -2 $SERVERLOG | grep "logged in with entity id" | awk '{print $4}' | cut -d "[" -f1`
-                LOGOUT=`tail -1 $SERVERLOG | grep "left the game" | awk '{print $4}'`
-                if [ $LOGOUT ]; then
-                        if [ "$(grep $LOGOUT $PLAYER_LIST)" = $LOGOUT ]; then
-                        sed -i '/'$LOGOUT'/d' $ONLINE_LIST
-                fi
-        fi 
-   fi
-done
+	fi
+    fi
+#fi
+exit 0
