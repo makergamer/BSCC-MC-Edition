@@ -965,16 +965,16 @@ done
 }
 
 do_info(){
-on_list=`cat $INSTALL_LOC/Files/online.list`
-on_list=(${on_list[@]})
-on_now=`cat /opt/BSCC/minecraft_server/server.properties | grep "max-players" | cut -d "=" -f 2`
+server_port=`cat $DIR/server.properties | grep "server-port" | cut -d "=" -f2`
+on_now=`ss -t | grep -o "$server_port" | wc -l`
+max_on=`cat /opt/BSCC/minecraft_server/server.properties | grep "max-players" | cut -d "=" -f 2`
 CPU=`top -bn 1 | awk 'NR>7{s+=$9} END {print s/4}'`
 RAM=`free -mh | grep Mem | cut -c 37-40`
 HDD_TOTAL=`df -kh . | grep / | awk '{print $4}'`
 JAVA_VERSION=`java -version 2>&1 |awk 'NR==1{ gsub(/"/,""); print $3 }'`
 whiptail --fb --title "Current server stats" --yesno --yes-button REFRESH --no-button Back \
 "Server Version: $MCVERSION \n
-Current Players Online: ${#on_list[@]}/$on_now \n
+Current Players Online: $on_now/$max_on \n
 CPU Usage is: $CPU% \n
 Server Uptime: $UPTIME \n
 Ram Available: "$RAM\B"/"$RAM_TOTAL\B" \n
