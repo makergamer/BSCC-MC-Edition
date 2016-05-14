@@ -1,0 +1,28 @@
+#!/bin/bash -ex
+source conf.cfg
+
+server_port=`cat $DIR/server.properties | grep "server-port" | cut -d "=" -f2`
+actual="0"
+
+do_more() {
+if [ "$number" -gt "$actual" ]; then
+screen -dmS $RANDOM ./watch_login
+actual=$number
+else
+actual=$number
+fi
+}
+
+while :
+do
+#Check to see if the server screen is running.
+if ! screen -list | grep -q "Minecraft"; then
+echo "Server is not running"
+exit $?
+fi
+sleep .5
+number=`ss -t | grep -o "$server_port" | wc -l`
+if [ ! "$number" -eq "$actual" ]; then
+do_more
+fi
+done
