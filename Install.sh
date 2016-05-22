@@ -44,7 +44,7 @@ CPUINFO=`lscpu | grep "Architecture" | awk '{print $2}'`
 #Install Java for Arm.
 do_arm() {
 if [[ "$CPUINFO" == arm* ]]; then
-wget -O java.tar.gz --no-check-certificate http://www.java.net/download/java/jdk8u102/archive/b03/binaries/jdk-8u102-ea-bin-b03-linux-arm-vfp-hflt-19_apr_2016.tar.gz
+wget -O java.tar.gz http://ftp.osuosl.org/pub/funtoo/distfiles/oracle-java/jdk-8u91-linux-arm32-vfp-hflt.tar.gz
 mkdir /opt/java_jdk
 tar zxvf java.tar.gz -C /opt/java_jdk --strip-components=1
 rm java.tar.gz
