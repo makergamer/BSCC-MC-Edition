@@ -2,11 +2,13 @@
 INSTALL_LOC=/opt/BSCC/
 CONFIG=$INSTALL_LOC/Files/conf.cfg
 
-CURRENTVER="0.3"
-
 cd $INSTALL_LOC
 #All checks cleared.. Update
 do_update() {
+	clear
+	echo -e "Version found was: $BSCC_VERSION \n
+	Updating to Version: $CURRENTVER"
+	sleep 2
 	cp $CONFIG $INSTALL_LOC/Files/conf.cfg.bak
 	cp conf.cfg /opt/BSCC/Files/
 #Grab old info and replace in new conf.cfg
@@ -23,21 +25,6 @@ whiptail --msgbox --fb "Ok everything should be up to date now.\n
 Please exit BSCC and relaunch it to make sure everything works.\n
 Your new version is: $CURRENTVER" 20 60 0
 	exit 0
-}
-
-
-#Do Version check and then install.
-do_version() {
-source /opt/BSCC/Files/conf.cfg
-if [ $BSCC_VERSION = $CURRENTVER ] ; then
-	whiptail --msgbox --fb "You are up to date." 15 50 0
-else
-	clear
-	echo -e "Version found was: $BSCC_VERSION \n
-	Updating to Version: $CURRENTVER"
-	sleep 2
-	do_update
-fi
 }
 
 if [ -f /opt/BSCC/Files/conf.cfg ]; then
