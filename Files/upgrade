@@ -5,10 +5,11 @@ CONFIG=$INSTALL_LOC/Files/conf.cfg
 cd $INSTALL_LOC
 #All checks cleared.. Update
 do_update() {
+	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/BSCC
 	clear
 	cp $CONFIG $INSTALL_LOC/Files/conf.cfg.bak
-	cp conf.cfg $INSTALL_LOC/Files/
-	cp BSCC /usr/bin/
+	mv conf.cfg $INSTALL_LOC/Files/
+	mv BSCC /usr/bin/
 #Grab old info and replace in new conf.cfg
 	source $INSTALL_LOC/Files/conf.cfg.bak
 	sed -i "s/MCVERSION=.*/MCVERSION=$MCVERSION/g" $CONFIG
@@ -34,5 +35,4 @@ else
 	echo "No conf.cfg found in /opt/BSCC/Files/" ; exit 1
 fi
 rm tmp
-rm conf.cfg
 exit 0
