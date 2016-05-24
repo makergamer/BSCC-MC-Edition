@@ -10,7 +10,8 @@ do_update() {
 	Updating to Version: $CURRENTVER"
 	sleep 2
 	cp $CONFIG $INSTALL_LOC/Files/conf.cfg.bak
-	cp conf.cfg /opt/BSCC/Files/
+	cp conf.cfg $INSTALL_LOC/Files/
+	cp BSCC /usr/bin/
 #Grab old info and replace in new conf.cfg
 	source $INSTALL_LOC/Files/conf.cfg.bak
 	sed -i "s/MCVERSION=.*/MCVERSION=$MCVERSION/g" $CONFIG
