@@ -6,9 +6,6 @@ cd $INSTALL_LOC
 #All checks cleared.. Update
 do_update() {
 	clear
-	echo -e "Version found was: $BSCC_VERSION \n
-	Updating to Version: $CURRENTVER"
-	sleep 2
 	cp $CONFIG $INSTALL_LOC/Files/conf.cfg.bak
 	cp conf.cfg $INSTALL_LOC/Files/
 	cp BSCC /usr/bin/
@@ -22,9 +19,10 @@ do_update() {
 	sed -i "s/check=.*/check=$check/g" $CONFIG
 	sed -i "s/startonboot=.*/startonboot=$startonboot/g" $CONFIG
 	sed -i "s/MCSREEN=.*/MCSCREEN=$MCSCREEN/g" $CONFIG
+	source $INSTALL_LOC/Files/conf.cfg
 whiptail --msgbox --fb "Ok everything should be up to date now.\n
 Please exit BSCC and relaunch it to make sure everything works.\n
-Your new version is: $CURRENTVER" 20 60 0
+Your new version is: $BSCC_VERSION" 20 60 0
 	exit 0
 }
 
