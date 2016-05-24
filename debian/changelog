@@ -1,4 +1,4 @@
-bscc-mc-edition (0.3ubuntu1) UNRELEASED; urgency=medium
+bscc-mc-edition (0.3) UNRELEASED; urgency=medium
 
   * Added update script
   * Added Start on boot checks.
