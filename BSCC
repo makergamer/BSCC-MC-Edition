@@ -13,6 +13,26 @@ ARCHIVE=$INSTALL_LOC/archive
 
 #Extra Functions for Cronjobs and Debugs (Down the road)
 clear
+
+do_update() {
+cd $INSTALL_LOC
+        wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/conf.cfg
+        source conf.cfg
+        find=$(grep "BSCC_VERSION" conf.cfg > tmp)
+        echo $find
+        find=$(cat tmp | cut -d "=" -f2)
+        unset BSCC_VERSION
+        echo $BSCC_VERSION
+	source /opt/BSCC/Files/conf.cfg
+if [ $find = $BSCC_VERSION ]; then 
+        whiptail --msgbox --fb "You are up to date." 15 50 0
+        rm conf.*
+        rm tmp
+else
+        /opt/BSCC/Files/upgrade
+fi
+}
+
 do_adminpass() {
 ADMIN_AREA=$(whiptail --passwordbox "Enter Password:" 8 30 --title "password dialog" 3>&1 1>&2 2>&3)
 exitstatus=$?
@@ -25,9 +45,9 @@ fi
 }
 
 do_no_menu_start() {
-  if ! screen -list | grep -q "Greeting"; then
+  if ! screen -list | grep -q "WATCH"; then
      cd $INSTALL_LOC/Files/
-     $GREETING
+     $WATCH
   fi
   if ! screen -list | grep -q "Minecraft"; then
      cd $DIR
@@ -40,7 +60,7 @@ do_no_menu_start() {
 
 do_no_menu_stop() {
   if screen -list | grep -q "Minecraft"; then
-    screen -ls | grep Greeting | cut -d. -f1 | awk '{print $1}' | xargs kill
+    screen -ls | grep WATCH | cut -d. -f1 | awk '{print $1}' | xargs kill
     rm $INSTALL_LOC/Files/online.list 2>/dev/null
     sed -i 's/check=.*/check=false/g' $CONFIG
     do_save
@@ -55,10 +75,16 @@ do_save() {
 screen -S Minecraft -p 0 -X stuff "save-all $(printf \\r)"
 }
 
-do_check() {
-  if [[ $check = "true" ]]
+do_onboot() {
+    if [[ $startonboot = "true" ]]
 then
-  do_reload
+  echo "Starting server"
+  cd $DIR
+  $START
+  cd $INSTALL_LOC/Files/
+  $WATCH
+else
+  echo "Not needed"
 fi
 exit 0
 }
@@ -68,6 +94,16 @@ if ! screen -list | grep -q "Minecraft"; then
     cd $DIR
     $START
     sed -i 's/check=.*/check=true/g' $CONFIG
+    cd $INSTALL_LOC/Files/
+    $WATCH
+fi
+exit 0
+}
+
+do_check() {
+  if [[ $check = "true" ]]
+then
+  do_reload
 fi
 exit 0
 }
@@ -358,7 +394,7 @@ do_first_run() {
 	      done
         #If server doesn't go down, Force it.
         screen -ls | grep Minecraft | cut -d. -f1 | awk '{print $1}' | xargs kill 2>/dev/null
-        screen -ls | grep Greeting | cut -d. -f1 | awk '{print $1}' | xargs kill 2>/dev/null
+        screen -ls | grep WATCH | cut -d. -f1 | awk '{print $1}' | xargs kill 2>/dev/null
         echo XXX
         echo 80
         echo "Searching for User Agreements"
@@ -375,7 +411,7 @@ if [ ! -f $DIR/eula.txt ]; then
      whiptail --msgbox --fb "Something is wrong here, there is no eula.txt file to be found." 20 60
         rm -rf $DIR/*
         screen -ls | grep Minecraft | cut -d. -f1 | awk '{print $1}' | xargs kill
-        screen -ls | grep Greeting | cut -d. -f1 | awk '{print $1}' | xargs kill
+        screen -ls | grep WATCH | cut -d. -f1 | awk '{print $1}' | xargs kill
         sed -i 's/SERVERJAR=.*/SERVERJAR=/g' $CONFIG
         exit 0
 fi
@@ -630,9 +666,9 @@ tput sgr0
 #GUI Menu Starts here!
 
 do_start() {
- if ! screen -list | grep -q "Greeting"; then
+ if ! screen -list | grep -q "WATCH"; then
     cd $INSTALL_LOC/Files/
-    $GREETING
+    $WATCH
  fi
  if ! screen -list | grep -q "Minecraft"; then
     cd $DIR
@@ -668,17 +704,17 @@ INPUT=$(whiptail --fb --inputbox "Simple chat link to console." 8 78 --title "Ch
 RET=$?
 if [ $RET -eq 0 ]; then
 #Restart checks
-if ! screen -list | grep -q "Greeting"; then
+if ! screen -list | grep -q "WATCH"; then
     echo "should be starting"
     cd $INSTALL_LOC/Files
-    screen -dmS "Greeting" ./Greeting
+    screen -dmS "WATCH" ./Greeting
 else
-    screen -X -S Greeting quit
+    screen -X -S WATCH quit
     echo "you are leaving"
     echo $INPUT >> $INSTALL_LOC/Files/RandomMSG.txt
     echo "script found running"
     cd $INSTALL_LOC/Files
-    screen -dmS "Greeting" ./Greeting
+    screen -dmS "WATCH" ./Greeting
 fi
 fi
 echo "finished"
@@ -715,7 +751,7 @@ do_Qstop() {
     --yes-button Yes --no-button No
   RET=$?
   if [ $RET -eq 0 ]; then
-    screen -ls | grep Greeting | cut -d. -f1 | awk '{print $1}' | xargs kill
+    screen -ls | grep WATCH | cut -d. -f1 | awk '{print $1}' | xargs kill
     rm $INSTALL_LOC/Files/online.list
     sed -i 's/check=.*/check=false/g' $CONFIG
     screen -S Minecraft -p 0 -X stuff "stop $(printf \\r)"
@@ -937,13 +973,14 @@ done
 
 do_menu() {
 while true; do
-  FUN=$(whiptail --fb --title "Main Menu" --menu "Server Controls"  --cancel-button Exit --ok-button Select 20 80 7 \
+  FUN=$(whiptail --fb --title "Main Menu, Build: $BSCC_VERSION" --menu "Server Controls"  --cancel-button Exit --ok-button Select 20 80 7 \
     "1 Admins only" "[Admin controls]" \
     "2 Start" "[Attempts to start the server]" \
     "3 Stop" "[Attempt to stop the server]" \
     "4 Inventory" "[Restore player's inventory]" \
     "5 Chat" "[Send chat directly to the server]" \
     "6 Info" "[Fast info about your device/server]" \
+    "7 Update BSCC" "[Update script to keep the fun rolling]" \
     3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
@@ -956,6 +993,7 @@ while true; do
       4\ *) do_inventory ;;
       5\ *) do_chat ;;
       6\ *) do_info ;;
+      7\ *) do_update ;;
       *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
   else
@@ -973,7 +1011,8 @@ RAM=`free -mh | grep Mem | cut -c 37-40`
 HDD_TOTAL=`df -kh . | grep / | awk '{print $4}'`
 JAVA_VERSION=`java -version 2>&1 |awk 'NR==1{ gsub(/"/,""); print $3 }'`
 whiptail --fb --title "Current server stats" --yesno --yes-button REFRESH --no-button Back \
-"Server Version: $MCVERSION \n
+"BSCC Version: $BSCC_VERSION \n
+Server Version: $MCVERSION \n
 Current Players Online: $on_now/$max_on \n
 CPU Usage is: $CPU% \n
 Server Uptime: $UPTIME \n
@@ -1015,6 +1054,10 @@ case "$1" in
     ;;
   (save)
     do_save
+    exit 0
+    ;;
+  (boot)
+    do_onboot
     exit 0
     ;;
   (check)
