@@ -19,11 +19,13 @@ cd $INSTALL_LOC
         wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/conf.cfg
         source conf.cfg
         find=$(grep "BSCC_VERSION" conf.cfg > tmp)
-        echo $find
         find=$(cat tmp | cut -d "=" -f2)
+        clear
+        echo "Version found online: $find"
         unset BSCC_VERSION
-        echo $BSCC_VERSION
-	source /opt/BSCC/Files/conf.cfg
+        source /opt/BSCC/Files/conf.cfg
+        echo "Currently Installed Version: $BSCC_VERSION"
+        sleep 3
 if [ $find = $BSCC_VERSION ]; then 
         whiptail --msgbox --fb "You are up to date." 15 50 0
         rm conf.*
