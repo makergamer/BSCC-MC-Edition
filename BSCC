@@ -15,6 +15,20 @@ ARCHIVE=$INSTALL_LOC/archive
 clear
 
 do_update() {
+	# Make sure we run with root privileges
+if [ $UID != 0 ]; then
+# not root, use sudo
+	echo "This script needs root privileges, rerunning it now using sudo!"
+	sleep 3
+	sudo "${SHELL}" "$0" $* menu
+	exit $?
+fi
+# get real username
+if [ $UID = 0 ] && [ ! -z "$SUDO_USER" ]; then
+	USER="$SUDO_USER"
+else
+	USER="$(whoami)"
+fi
 cd $INSTALL_LOC
         wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/conf.cfg
         source conf.cfg
@@ -35,7 +49,6 @@ else
 	sleep 4
         wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/upgrade
         cp upgrade Files/
-        wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/BSCC
         /opt/BSCC/Files/upgrade
 fi
 }
