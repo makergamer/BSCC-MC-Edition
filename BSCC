@@ -33,8 +33,8 @@ if [ $find = $BSCC_VERSION ]; then
 else
 	echo "An Updated Version was found, Grabbing files"
 	sleep 4
-        cp upgrade Files/
         wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/upgrade
+        cp upgrade Files/
         wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/BSCC
         /opt/BSCC/Files/upgrade
 fi
