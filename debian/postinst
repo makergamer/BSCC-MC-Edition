@@ -5,12 +5,12 @@ CPUINFO=`lscpu | grep "Architecture" | awk '{print $2}'`
 #Check PC specs to see if it's ARM or X86 and grab the correct java version.
 CPUINFO=`lscpu | grep "Architecture" | awk '{print $2}'`
 
- -# get real username		
- -if [ $UID = 0 ] && [ ! -z "$SUDO_USER" ]; then		
- -	USER="$SUDO_USER"		
- -else		
- -	USER="$(whoami)"		
- -fi
+# get real username		
+ if [ $UID = 0 ] && [ ! -z "$SUDO_USER" ]; then		
+ 	USER="$SUDO_USER"		
+ else		
+ 	USER="$(whoami)"		
+ fi
 
 
 #Install Java for Arm.
