@@ -1,20 +1,6 @@
-#!/bin/bash
+#!/bin/bash -e
 INSTALL_LOC=/opt/BSCC
 CPUINFO=`lscpu | grep "Architecture" | awk '{print $2}'`
-
-# Make sure we run with root privileges
-if [ $UID != 0 ]; then
-# not root, use sudo
-	echo "This script needs root privileges, rerunning it now using sudo!"
-	sudo "${SHELL}" "$0" $*
-	exit $?
-fi
-# get real username
-if [ $UID = 0 ] && [ ! -z "$SUDO_USER" ]; then
-	USER="$SUDO_USER"
-else
-	USER="$(whoami)"
-fi
 
 #Check PC specs to see if it's ARM or X86 and grab the correct java version.
 CPUINFO=`lscpu | grep "Architecture" | awk '{print $2}'`
@@ -66,4 +52,7 @@ chown -R $USER:$USER $INSTALL_LOC
 chmod +x $INSTALL_LOC/Files/Greeting
 chmod +x /usr/bin/BSCC
 clear
-echo "Ok everything is in order and you should now be able to run (BSCC) and start your server builds."
+echo "Ok everything is in order and you should now be able to run (BSCC Menu) and start your server builds."
+sleep 3
+echo "Starting BSCC for you the first time.."
+sleep 3
