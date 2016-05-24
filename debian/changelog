@@ -1,6 +1,19 @@
-bscc-mc-edition (0.3) UNRELEASED; urgency=medium
+bscc-mc-edition (0.3ubuntu1) UNRELEASED; urgency=medium
 
   * Added update script
   * Added Start on boot checks.
+  * 
 
- --  <test@odroid-server>  Tue, 24 May 2016 02:19:49 +0000
+ --  <test@odroid-server>  Tue, 24 May 2016 02:26:39 +0000
+
+bscc-mc-edition (0.2) UNRELEASED; urgency=medium
+
+  * Post script for permissions
+
+ --  <kicker22004@not.givin>  Mon, 02 May 2016 04:09:29 +0100
+
+bscc-mc-edition (0.1) UNSTABLE; urgency=medium
+
+  * Initial release. (0.1)
+
+ --  <kicker22004@not.givin>  Mon, 02 May 2016 01:19:04 +0100
