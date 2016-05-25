@@ -1,8 +1,16 @@
+bscc-mc-edition (1.0) STABLE; urgency=medium
+
+  * First Stable build
+  * Code cleanup
+  * Start on boot options enabled
+  * Version bump
+
+ --  <kicker22004@not.givin>  Tue, 24 May 2016 22:37:02 -0700
+
 bscc-mc-edition (0.3) UNRELEASED; urgency=medium
 
   * Added update script
   * Added Start on boot checks.
-  * 
 
  --  <test@odroid-server>  Tue, 24 May 2016 02:26:39 +0000
 

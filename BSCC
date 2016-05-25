@@ -15,40 +15,20 @@ ARCHIVE=$INSTALL_LOC/archive
 clear
 
 do_update() {
-	# Make sure we run with root privileges
-if [ $UID != 0 ]; then
-# not root, use sudo
-	echo "This script needs root privileges, rerunning it now using sudo!"
-	sleep 3
-	sudo "${SHELL}" "$0" $* menu
-	exit $?
-fi
-# get real username
-if [ $UID = 0 ] && [ ! -z "$SUDO_USER" ]; then
-	USER="$SUDO_USER"
-else
-	USER="$(whoami)"
-fi
 cd $INSTALL_LOC
         wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/conf.cfg
         source conf.cfg
         find=$(grep "BSCC_VERSION" conf.cfg > tmp)
+        echo $find
         find=$(cat tmp | cut -d "=" -f2)
-        clear
-        echo "Version found online: $find"
         unset BSCC_VERSION
-        source /opt/BSCC/Files/conf.cfg
-        echo "Currently Installed Version: $BSCC_VERSION"
-        sleep 3
+        echo $BSCC_VERSION
+	source /opt/BSCC/Files/conf.cfg
 if [ $find = $BSCC_VERSION ]; then 
         whiptail --msgbox --fb "You are up to date." 15 50 0
         rm conf.*
         rm tmp
 else
-	echo "An Updated Version was found, Grabbing files"
-	sleep 4
-        wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/upgrade
-        cp upgrade Files/
         /opt/BSCC/Files/upgrade
 fi
 }
@@ -93,6 +73,18 @@ do_no_menu_stop() {
 
 do_save() {
 screen -S Minecraft -p 0 -X stuff "save-all $(printf \\r)"
+}
+
+do_Qboot() {
+crontabs="/var/spool/cron/crontabs"
+##Setup on boot requests.
+if (whiptail --fb --title "Start Server on bootup?" --yes-button "Yes" --no-button "No"  --yesno "Would You like the server to startup on boot?" 10 60) then
+    sed -i 's/startonboot=.*/startonboot=true/g' $CONFIG
+    sudo sed -i".bak" '/BSCC boot/d' $crontabs/$USER; (crontab -l 2>/dev/null; echo "@reboot BSCC boot") | crontab -
+else
+    sed -i 's/startonboot=.*/startonboot=false/g' $CONFIG
+    sudo sed -i".bak" '/BSCC boot/d' /var/spool/cron/crontabs/$USER
+fi
 }
 
 do_onboot() {
@@ -438,7 +430,7 @@ fi
 
 #EULA Needs to be accepted by the user
 do_eula
-
+do_Qboot
 #All done here
 whiptail --fb --title "YOUR ALL SETUP!!!" --msgbox "Well if your seeing this it means that there is a good chance that your server is all setup and read to go. Give it some time to load and enjoy. Run BSCC for more info" 20 60
 exit 0
@@ -582,6 +574,7 @@ fi
 #EULA Needs to be accepted by the user
 do_eula
 touch $INSTALL_LOC/Files/player.list
+do_Qboot
 whiptail --msgbox --fb "Ok everything should now be ready for you to start. Please use (BSCC menu) also these servers could load slowly...give it some time \n
 Also a big THANK YOU to all of the effort from MODS/DEVS involved in the FTB servers and maintenance" 20 60 0
 exit 0
@@ -968,12 +961,13 @@ do_finish() {
 
 do_admin() {
 while true; do
-  FUN=$(whiptail --fb --title "Admin Area" --menu "Server Controls"  --cancel-button Exit --ok-button Select 20 80 5 \
+  FUN=$(whiptail --fb --title "Admin Area" --menu "Server Controls"  --cancel-button Exit --ok-button Select 20 80 6 \
     "1 Console" "[Send/view console.]" \
     "2 Random MSG" "Random Greating/Leaving MSG" \
     "3 Server Properties" "[Modify Server Properties]" \
-    "4 Backup/Restore" "[For Restoring the server.]" \
-    "5 Advanced menu" "Upgrade & Delete servers" \
+    "4 Start on boot" "[Start the server on boot?]" \
+    "5 Backup/Restore" "[For Restoring the server.]" \
+    "6 Advanced menu" "Upgrade & Delete servers" \
     3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
@@ -983,8 +977,9 @@ while true; do
       1\ *) do_console ;;
       2\ *) do_msg ;;
       3\ *) do_prop ;;
-      4\ *) do_admin_backupmenu ;;
-      5\ *) do_admin_advanced ;;
+      4\ *) do_Qboot ;;
+      5\ *) do_admin_backupmenu ;;
+      6\ *) do_admin_advanced ;;
       *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
 fi
@@ -1023,22 +1018,23 @@ done
 }
 
 do_info(){
-server_port=`cat $DIR/server.properties | grep "server-port" | cut -d "=" -f2`
-on_now=`ss -t | grep -o "$server_port" | wc -l`
-max_on=`cat /opt/BSCC/minecraft_server/server.properties | grep "max-players" | cut -d "=" -f 2`
-CPU=`top -bn 1 | awk 'NR>7{s+=$9} END {print s/4}'`
-RAM=`free -mh | grep Mem | cut -c 37-40`
-HDD_TOTAL=`df -kh . | grep / | awk '{print $4}'`
-JAVA_VERSION=`java -version 2>&1 |awk 'NR==1{ gsub(/"/,""); print $3 }'`
+server_port=$(cat $DIR/server.properties | grep "server-port" | cut -d "=" -f2)
+on_now=$(ss -t | grep -o "$server_port" | wc -l)
+max_on=$(cat /opt/BSCC/minecraft_server/server.properties | grep "max-players" | cut -d "=" -f2)
+CPU=$(top -bn 1 | awk 'NR>7{s+=$9} END {print s/4}')
+RAM=$(free -mh | grep Mem | cut -c 37-40)
+HDD_TOTAL=$(df -kh . | grep / | awk '{print $4}')
+JAVA_VERSION=$(java -version 2>&1 |awk 'NR==1{ gsub(/"/,""); print $3 }')
 whiptail --fb --title "Current server stats" --yesno --yes-button REFRESH --no-button Back \
 "BSCC Version: $BSCC_VERSION \n
+Start on Boot: $startonboot \n
 Server Version: $MCVERSION \n
 Current Players Online: $on_now/$max_on \n
 CPU Usage is: $CPU% \n
 Server Uptime: $UPTIME \n
 Ram Available: "$RAM\B"/"$RAM_TOTAL\B" \n
-Total Storage used/left: $TOTAL/$HDD_TOTAL \n
-Your Java Version is: $JAVA_VERSION" 25 50 10
+Server size on disk (used/left): $TOTAL/$HDD_TOTAL \n
+Your Java Version is: $JAVA_VERSION" 30 45 10
 CHOICES=$?
 unset on_list
 unset CPU
