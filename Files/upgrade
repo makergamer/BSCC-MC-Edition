@@ -10,6 +10,7 @@ do_update() {
 	cp $CONFIG $INSTALL_LOC/Files/conf.cfg.bak
 	mv conf.cfg $INSTALL_LOC/Files/
 	mv BSCC /usr/bin/
+	chmod +x /usr/bin/BSCC
 #Grab old info and replace in new conf.cfg
 	source $INSTALL_LOC/Files/conf.cfg.bak
 	sed -i "s/MCVERSION=.*/MCVERSION=$MCVERSION/g" $CONFIG
