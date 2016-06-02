@@ -4,7 +4,6 @@ red='\e[0;31m'
 green='\e[1;32m'
 yellow='\e[1;33m'
 source /opt/BSCC/Files/conf.cfg
-chown -R $USER:$USER $INSTALL_LOC/Files/
 
 INTERACTIVE=True
 ASK_TO_REBOOT=0
