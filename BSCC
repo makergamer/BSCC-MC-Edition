@@ -49,9 +49,9 @@ else
         echo "An Updated Version was found, Grabbing files"
         sleep 4
         wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/upgrade
-        mv upgrade Files/
         chmod +x upgrade
-        sudo /opt/BSCC/Files/upgrade
+        mv upgrade Files/
+        /opt/BSCC/Files/upgrade
 fi
 }
 
