@@ -1,4 +1,4 @@
-#!/bin/bash  -ex
+#!/bin/bash
 #Add Color for help list
 red='\e[0;31m'
 green='\e[1;32m'
