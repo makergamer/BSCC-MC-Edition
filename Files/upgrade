@@ -6,11 +6,14 @@ cd $INSTALL_LOC
 #All checks cleared.. Update
 do_update() {
 	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/BSCC
+	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/servers.py
 	clear
 	cp $CONFIG $INSTALL_LOC/Files/conf.cfg.bak
 	mv conf.cfg $INSTALL_LOC/Files/
 	mv BSCC /usr/bin/
+	mv servers.py $INSTALL_LOC/Files/
 	chmod +x /usr/bin/BSCC
+	chmod +x $INSTALL_LOC/Files/servers.py
 #Grab old info and replace in new conf.cfg
 	source $INSTALL_LOC/Files/conf.cfg.bak
 	sed -i "s/MCVERSION=.*/MCVERSION=$MCVERSION/g" $CONFIG
