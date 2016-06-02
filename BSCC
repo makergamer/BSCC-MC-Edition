@@ -51,7 +51,7 @@ else
         wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/upgrade
         mv upgrade Files/
         chmod +x upgrade
-        /opt/BSCC/Files/upgrade
+        sudo /opt/BSCC/Files/upgrade
 fi
 }
 
