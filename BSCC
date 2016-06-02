@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash  -ex
 #Add Color for help list
 red='\e[0;31m'
 green='\e[1;32m'
@@ -50,7 +50,7 @@ else
         sleep 4
         wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/upgrade
         chmod +x upgrade
-        mv upgrade Files/
+	mv upgrade Files/
         /opt/BSCC/Files/upgrade
 fi
 }
@@ -344,6 +344,11 @@ screen -S Minecraft -p 0 -X stuff "`printf "$INPUT\r"`";
 fi
 
 }
+if [ -f /opt/BSCC/minecraft_server/logs/latest.log ]; then
+log="/opt/BSCC/minecraft_server/logs/latest.log"
+else
+log="/opt/BSCC/minecraft_server/server.log"
+fi
 
 while :
 do
@@ -359,7 +364,7 @@ then
 else
         echo ${green}"PRESS C TO TYPE IN CONSOLE, OR Q TO EXIT (Might need to hit twice!)"
 	tput sgr0
-        cat /opt/BSCC/minecraft_server/logs/latest.log | tail -20
+        cat $log | tail -20
         read -t 1 -n 1 key
         if [[ $key = q ]]
 then
@@ -377,20 +382,16 @@ USERMAX=$(whiptail --inputbox "Please select a MAXMEM Default is 512M" 8 78 $MAX
 exitstatus=$?
 if [ $exitstatus = 0 ]; then
     sed -i 's/MAXMEM=.*/MAXMEM='$USERMAX'/g' $CONFIG
-echo "Maxram set to $USERMAX"
 else
     sed -i 's/MAXMEM=.*/MAXMEM=512M/g' $CONFIG
-echo "Maxram set to 512M"
 fi
 
 USERMIN=$(whiptail --inputbox "Please select a MINMEM Default is 128M. (MUST BE LOWER THEN MAXMEM)" 8 78 $MINMEM --title "Setting MINMEM" 3>&1 1>&2 2>&3)
 exitstatus=$?
 if [ $exitstatus = 0 ]; then
     sed -i 's/MINMEM=.*/MINMEM='$USERMIN'/g' $CONFIG
-echo "Minram set to $USERMIN"
 else
     sed -i 's/MINMEM=.*/MINMEM=128M/g' $CONFIG
-echo "Minram set to 128M"
 fi
 }
 
@@ -474,32 +475,58 @@ fi
 #########################
 #Select Version of Minecraft and download.
 do_vanilla() {
-#Present User with selected Vanilla servers from list.
-vanilla_list=`cut -d "=" -f 1 $INSTALL_LOC/Files/vanilla.list | awk '{print $1 " |"}'`
-vanilla_list=(${vanilla_list[@]})
-vanilla_servers=$(whiptail --menu "Select Your Vanilla server." 20 60 10 ${vanilla_list[@]} 3>&1 1>&2 2>&3)
+if [ ! -d $INSTALL_LOC/Files/versions ]; then
+mkdir $INSTALL_LOC/Files/versions
+fi
+cd $INSTALL_LOC/Files
+python servers.py $> /dev/null
+
+##Place list's into an arrey
+list=$(ls -1t versions/1.* | awk '{print $1}' | cut -d "j" -f1 | awk '{print $1 " |"}' | sort -nr > $INSTALL_LOC/Files/vanilla.list)
+
+#Clean up old non running versions.
+sed -i '/1.0.*/d' $INSTALL_LOC/Files/vanilla.list
+sed -i '/1.1.*/d' $INSTALL_LOC/Files/vanilla.list
+sed -i '/1.2.1/d' $INSTALL_LOC/Files/vanilla.list
+sed -i '/1.2.2/d' $INSTALL_LOC/Files/vanilla.list
+sed -i '/1.2.3/d' $INSTALL_LOC/Files/vanilla.list
+sed -i '/1.2.4/d' $INSTALL_LOC/Files/vanilla.list
+
+var=$(cat vanilla.list | tr '/' ' ' | awk '{print $2 " |"}')
+var=(${var[@]})
+vanilla_select=$(whiptail --menu "Please Select your Version." 20 80 10 ${var[@]} 3>&1 1>&2 2>&3)
+dl_link=$(cat $INSTALL_LOC/Files/versions/$vanilla_select\json | grep /server | grep url | awk '{print $2}' | cut -d "\"" -f2)
+
 RET=$?
-  if [ $RET -eq 1 ]; then
-    exit 1
-  elif [ $RET -eq 0 ]; then
-dl_link=`cat $INSTALL_LOC/Files/vanilla.list | grep "$vanilla_servers" | awk '{print $2}'`
-echo $dl_link
+wget --spider $dl_link
+if [ $? -eq 0 ]; then
+clear
+echo "Checking Download link: $dl_link"
+sleep 2
+echo "Verifying the Link"
+sleep 2
+echo "Link Confirmed good, Downloading"
+sleep 2
+else
+whiptail --msgbox --fb "Download not found!. Please report this message on Youtube or the Forum and provide this link. \n
+Attempting to download: $dl_link" 20 60 0
+exit 1
+fi
+
 #Check the download and if failed remove the file.
 clear
-r=`wget -O $DIR/$vanilla_servers.jar $dl_link`
-echo $vanilla_servers.jar
+r=`wget -O $DIR/$vanilla_select\jar $dl_link`
 if [ $? -ne 0 ]; then
-rm $DIR/$vanilla_servers.jar
+rm $DIR/$vanilla_servers\jar
 whiptail --msgbox --clear --fb "Download failed!, check your internet and the link.\
 sed -i 's/SERVERJAR=.*/SERVERJAR=/g' $CONFIG
 The current link is: $dl_link" 20 60
   else
-sed -i 's/MCVERSION=.*/MCVERSION='$vanilla_servers'/g' $CONFIG
-sed -i 's/SERVERJAR=.*/SERVERJAR='$vanilla_servers.jar'/g' $CONFIG
+sed -i 's/MCVERSION=.*/MCVERSION='$vanilla_select'/g' $CONFIG
+sed -i 's/SERVERJAR=.*/SERVERJAR='$vanilla_select\jar'/g' $CONFIG
 do_ram
 do_first_run
 exit 0
-fi
 fi
 }
 
@@ -558,29 +585,122 @@ fi
 }
 
 do_ftb() {
-FTB_list=`cut -d "=" -f 1 $INSTALL_LOC/Files/FTB.list | awk '{print $1 " |"}'`
-FTB_list=(${FTB_list[@]})
-FTB_servers=$(whiptail --menu "Select Your FTB server." 20 60 10 ${FTB_list[@]} 3>&1 1>&2 2>&3)
-RET=$?
-  if [ $RET -eq 1 ]; then
-    exit 1
-  elif [ $RET -eq 0 ]; then
-dl_link=`cat $INSTALL_LOC/Files/FTB.list | grep "$FTB_servers" | awk '{print $2}'`
+# this will get all the ftb server names...
+if [ ! -f /opt/BSCC/Files/modpacks.xml ]; then
+cd /opt/BSCC/Files/
+wget http://ftb.cursecdn.com/FTB2/static/modpacks.xml
 fi
-#Check the download and if failed remove the file.
-clear
 
-r=`wget -O $DIR/$FTB_servers.zip $dl_link`
-if [ $? -ne 0 ]; then
-rm $DIR/$FTB_servers.zip
-whiptail --msgbox --clear --fb "Download failed!, check your internet and the link.\
-The current link is: $dl_link" 20 60
- else
-sed -i 's/MCVERSION=.*/MCVERSION='$FTB_servers'/g' $CONFIG
+unset server
+server=$(cat /opt/BSCC/Files/modpacks.xml | grep -o serverPack.* | grep url | awk '{print $1}' | cut -d "=" -f2 | cut -d "\"" -f2 | grep .zip | awk '{print $1}' | grep -v '^$' | awk '{print $1 " |"}')
+#echo $server
+server=(${server[@]})
+
+#List all the servers by thier Server name.
+unset var
+var=$(whiptail --menu "Please Select your FTB Server" 20 80 10 ${server[@]} 3>&1 1>&2 2>&3)
+echo $var
+RET=$?
+if [ $RET -eq 0 ]; then
+name1=$(awk -v var="$var" 'BEGIN {print var}' | awk -F 'Server|server|[-]' '{print $1}')
+name2=$(awk -v var="$var" 'BEGIN {print var}' | awk -F 'Server|server|[_-]' '{print $1}')
+echo $name1
+############################################
+#######Dirty fix for older Versions ########  
+####### Of FTB                      ########
+############################################
+if [ $name1 = RetroSMP_ ]; then
+name1=FTBRETROSMP
 fi
+if [ $name1 = TechWorld_ ]; then
+name1=Tech_World
+fi
+if [ $name1 = MagicWorld_ ]; then
+name1=Magic_World
+fi
+if [ $name1 = MagicWorld2 ]; then
+name1=Magic_World_2
+fi
+if [ $name1 = Direwolf20_ ]; then
+name1=Direwolf20
+fi
+if [ $name1 = Direwolf20 ]; then
+name1=Direwolf20_1_6_4
+fi
+###########################################
+###########################################
+###########################################
+
+#Ask what Version they would like to download
+unset old
+old=$(cat /opt/BSCC/Files/modpacks.xml| grep $var | grep -o oldVersions.* | cut -d "=" -f2 | tr ';' ' | ' | cut -d "\"" -f2 | tr " " "\n" | awk '{print $1 " |"}')
+old=(${old[@]})
+##Check if the server only has a repo build!###
+check=$(awk -v var="$old" 'BEGIN {print var}' | cut -d "|" -f1)
+if [[ -z "$check" ]]; then
+old=$(cat /opt/BSCC/Files/modpacks.xml | grep $var | grep -o repo.* | cut -d "=" -f2 | cut -d "\"" -f2 | awk '{print $1 " |"}')
+fi
+elif [ $RET -eq 1 ]; then
+return $RET
+exit 0
+fi
+
+version_select=$(whiptail --menu --fb "Pick your Version  Please" 20 60 10 ${old[@]} 3>&1 1>&2 2>&3)
+RET=$?
+if [ $RET -eq 0 ]; then
+#use this to get the version
+version=$(awk -v var="$version_select" 'BEGIN {print var}' | sed 's/\./_/g')
+
+
+#Check for download and attempt the name change.
+dl_link="http://ftb.cursecdn.com/FTB2/modpacks/$name1/$version/$var"
+wget --spider $dl_link
+if [ $? -eq 0 ]; then
+clear
+echo "Checking Download link: $dl_link"
+#sleep 2
+echo "Verifying the Link"
+#sleep 2
+echo "Link Confirmed good, Downloading"
+#sleep 2
+else
+echo "Bad link attempting 2nd one"
+dl_link="http://ftb.cursecdn.com/FTB2/modpacks/$name2/$version/$var"
+wget --spider $dl_link
+if [ $? -eq 0 ]; then
+clear
+echo "Checking Download link (2nd): $dl_link"
+#sleep 2
+echo "Verifying the Link"
+#sleep 2
+echo "Link Confirmed good, Downloading"
+#sleep 2
+else
+whiptail --msgbox --fb "Download not found!. Please report this message on Youtube or the Forum and provide this link. \n
+Attempting to download: $dl_link" 20 60 0
+exit 1
+fi
+fi
+
+##Download link works pull it down.
+wget -O $DIR/$var $dl_link
+sed -i 's/MCVERSION=.*/MCVERSION='$var'/g' $CONFIG
 do_ram
 cd $DIR
-unzip $FTB_servers
+if ! unzip $var; then
+    whiptail --msgbox --fb "Download file didn't extract properly, Clearing Server folder!" 20 60 0
+    rm -rf $DIR/*
+    clear
+    echo "Please check your internet and maybe the link on another machine. Link: $dl_link"
+    exit 1
+fi
+
+#Some OLD FTB used this directory
+if [ -d $DIR/Feed\ The\ Beast\ Insanity\ Co-op/ ]; then
+mv $DIR/Feed\ The\ Beast\ Insanity\ Co-op/* $DIR
+rm -rf $DIR/Feed\ The\ Beast\ Insanity\ Co-op/
+fi
+
 if [ -f $DIR/FTBInstall.sh ]; then
 sh FTBInstall.sh
 
@@ -591,7 +711,12 @@ else
   do_fallback
 fi
 else
-echo "FTB start script is missing..."
+#Older version of FTB server.
+whiptail --msgbox --fb "FTB install script not found! \n
+This could be for a number of reasons but we will attempt to find a server.jar. \n
+If this is an older server the eula may fail this is ok just try and run the server anyways." 20 60 0
+do_fallback
+rm $INSTALL_LOC/Files/modpacks.xml
 fi
 #EULA Needs to be accepted by the user
 do_eula
@@ -599,7 +724,9 @@ touch $INSTALL_LOC/Files/player.list
 do_Qboot
 whiptail --msgbox --fb "Ok everything should now be ready for you to start. Please use (BSCC menu) also these servers could load slowly...give it some time \n
 Also a big THANK YOU to all of the effort from MODS/DEVS involved in the FTB servers and maintenance" 20 60 0
+rm $INSTALL_LOC/Files/modpacks.xml
 exit 0
+fi
 }
 
 do_forge() {
