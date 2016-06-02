@@ -16,6 +16,12 @@ else
 	USER="$(whoami)"
 fi
 
+########################################
+#######  Check for Dependencies  #######
+########################################
+apt-get install screen python2.7 git wget rsync unzip
+
+
 do_warning() {
 if (whiptail --fb --title "Erase Everything??" --yesno "If you choose to do a clean install it will erase your Minecraft Server If you've made one already using this script.. Are you 100% sure? \
 
