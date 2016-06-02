@@ -21,7 +21,6 @@ fi
 ########################################
 apt-get install screen python2.7 git wget rsync unzip
 
-
 do_warning() {
 if (whiptail --fb --title "Erase Everything??" --yesno "If you choose to do a clean install it will erase your Minecraft Server If you've made one already using this script.. Are you 100% sure? \
 
@@ -106,6 +105,7 @@ If you agree Please, continue." 15 60) then
 	mkdir $INSTALL_LOC/archive
         mkdir $INSTALL_LOC/Files
 	mkdir $INSTALL_LOC/minecraft_server
+	mkdir $INSTALL_LOC/Files/versions
         cp Files/* $INSTALL_LOC/Files
         echo XXX
         sleep 5
@@ -119,7 +119,8 @@ If you agree Please, continue." 15 60) then
         echo 60
         echo "Moving main to /usr/bin/"
         cp BSCC /usr/bin/
-        echo XXX
+        cp Files/servers.py $INSTALL_LOC/Files/
+	echo XXX
         sleep 2
         echo XXX
         echo 80
@@ -136,7 +137,7 @@ If you agree Please, continue." 15 60) then
         sleep 2
 ) | whiptail --gauge "Gathering info" 8 40 0
 	whiptail --fb --msgbox "Ok everything is in order and you should now be able to run (BSCC) and start your server builds." 20 60
-#	clear
+	clear
 	echo "Ok everything is in order and you should now be able to run (BSCC) and start your server builds."
 else
         exit 0
