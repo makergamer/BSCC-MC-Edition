@@ -25,6 +25,7 @@ do_update() {
 	sed -i "s/startonboot=.*/startonboot=$startonboot/g" $CONFIG
 	sed -i "s/MCSREEN=.*/MCSCREEN=$MCSCREEN/g" $CONFIG
 	source $INSTALL_LOC/Files/conf.cfg
+	chown -R $SUDO_USER:$SUDO_USER $INSTALL_LOC/Files/
 whiptail --msgbox --fb "Ok everything should be up to date now.\n
 Please exit BSCC and relaunch it to make sure everything works.\n
 Your new version is: $BSCC_VERSION" 20 60 0
