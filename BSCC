@@ -18,7 +18,7 @@ exec 2>&1
 fi
 
 do_debug() {
-Qdebug=$(whiptail --fb --inputbox "Enable debug? on/off" 8 78 $_DEBUG --title "DEBUG on/off" 3>&1 1>&2 2>&3)
+Qdebug=$(whiptail --fb --inputbox "Enable debug? on/off" 10 80 $_DEBUG --title "DEBUG on/off" 3>&1 1>&2 2>&3)
 exitstatus=$?
 if [ $exitstatus = 0 ]; then
     sed -i 's/_DEBUG=.*/_DEBUG='${Qdebug}'/g' $INSTALL_LOC/Files/conf.cfg
@@ -275,9 +275,9 @@ fi
 
 do_stats() {
 screen -S Minecraft -p 0 -X stuff "say "$RAM\B" Ram free out of "$RAM_TOTAL\B" $(printf \\r)"
-screen -S Minecraft -p 0 -X stuff "say This server is now "$TOTAL\B" in size & $HDDUSED filled. $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "say This server is now "$TOTAL\B" in size & "$HDDFREE\B" Free. $(printf \\r)"
 screen -S Minecraft -p 0 -X stuff "say The CPU is currently running at "$CPU\%" $(printf \\r)"
-screen -S Minecraft -p 0 -X stuff "say Server Uptime & load (1M 5M 15M) $UPTIME $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "say Uptime & load (1M 5M 15M) $UPTIME $(printf \\r)"
 }
 
 do_rdiff() {
@@ -357,7 +357,7 @@ do_console() {
         do_admin
   fi
 do_command() {
-INPUT=$(whiptail --fb --inputbox "Simple chat link to console." 8 78 --title "Chat Log" 3>&1 1>&2 2>&3)
+INPUT=$(whiptail --fb --inputbox "Enter a console command or chat here:" 10 80 --title "Full Console Control" 3>&1 1>&2 2>&3)
 RET=$?
 if [ $RET -eq 0 ]; then
 screen -S Minecraft -p 0 -X stuff "`printf "$INPUT\r"`";
@@ -871,7 +871,7 @@ fi
 }
 
 do_chat() {
-INPUT=$(whiptail --fb --inputbox "You can chat here. No commands!." 8 78 --title "Chat Log" 3>&1 1>&2 2>&3)
+INPUT=$(whiptail --fb --inputbox "You can chat here. No commands!." 10 80 --title "Chat Log" 3>&1 1>&2 2>&3)
 RET=$?
 if [ $RET -eq 0 ]; then
 screen -S Minecraft -p 0 -X stuff "`printf "say $INPUT\r"`";
@@ -880,7 +880,7 @@ fi
 }
 
 do_msg() {
-INPUT=$(whiptail --fb --inputbox "Full Concole control (Commands/say)" 8 78 --title "Chat Log" 3>&1 1>&2 2>&3)
+INPUT=$(whiptail --fb --inputbox "Enter your random message here." 10 80  --title "Greeting MSG" 3>&1 1>&2 2>&3)
 RET=$?
 if [ $RET -eq 0 ]; then
 #Restart checks
@@ -905,7 +905,7 @@ if [ ${#PROP[@]} -eq 0 ]; then
 fi
 
 IFS=$'\r\n' GLOBIGNORE='*' command eval 'PROP=(${PROP[@]})'
-SELECTED_PROP=$(whiptail --menu "Select target disk, Or Cancel to Leave" 20 80 10 ${PROP[@]} 3>&1 1>&2 2>&3)
+SELECTED_PROP=$(whiptail --fb --menu "Select target disk, Or Cancel to Leave" 20 80 10 ${PROP[@]} 3>&1 1>&2 2>&3)
 RET=$?
 if [ $RET -eq 0 ]; then
 #User has selected something.. time to edit
@@ -937,14 +937,16 @@ do_op() {
   oplist=`cat $DIR/ops.json | grep name | awk '{print $2}' | tr -d "\"" | cut -d "," -f1`
   oplist=(${oplist[@]})
   unset selected_player
-  selected_player=$(whiptail --menu "Select the user you would like to Op" 20 60 10  ${playarr[@]} 3>&1 1>&2 2>&3)
+  selected_player=$(whiptail --fb --menu "Select the user you would like to Op" 20 60 10  ${playarr[@]} 3>&1 1>&2 2>&3)
+  RET=$?
+  if [ $RET -eq 0 ]; then
   if [[ " ${oplist[*]} " == *" $selected_player "* ]]; then
   whiptail --msgbox --fb "This user is already Oped, moving to DeOp...." 20 60 0
     do_Qdeop 
   else
     screen -S Minecraft -p 0 -X stuff "`printf "/op $selected_player\r"`";
   fi
-exit 1
+fi
 }
 
 do_deop() {
@@ -956,10 +958,12 @@ if [[ -z "$oplist" ]]; then
 whiptail --msgbox --fb "You don't have any Oped players." 10 60 0
 else
 unset selected_player
-selected_player=$(whiptail --menu "Select the user you would like to DeOp" 20 60 10  ${oplist[@]} 3>&1 1>&2 2>&3)
-do_Qdeop
+selected_player=$(whiptail --fb --menu "Select the user you would like to DeOp" 20 60 10  ${oplist[@]} 3>&1 1>&2 2>&3)
+  RET=$?
+  if [ $RET -eq 0 ]; then
+  do_Qdeop
 fi
-exit 1
+fi
 }
 
 
@@ -1052,13 +1056,13 @@ Do you agree?" 20 60 2 \
 
 do_op_menu() {
   while true; do
-    FUN=$(whiptail --fb --title "Op/DeOP" --menu "Select Your option"  --cancel-button Exit --ok-button Select 20 80 6 \
+    FUN=$(whiptail --fb --title "Op/DeOP" --menu "Select Your option"  --cancel-button Back --ok-button Select 20 80 6 \
       "1 Op" "[Op a user]" \
       "2 DeOp" "[DeOp a user]" \
       3>&1 1>&2 2>&3)
     RET=$?
     if [ $RET -eq 1 ]; then
-       exit 1
+    do_admin
     elif [ $RET -eq 0 ]; then
       case "$FUN" in
         1\ *) do_op ;;
@@ -1071,12 +1075,12 @@ do_op_menu() {
 
 do_admin_backupmenu() {
 while true; do
-  FUN=$(whiptail --fb --title "Backup/Restore" --menu "WARNING!!!"  --cancel-button Exit --ok-button Select 20 80 4 \
+  FUN=$(whiptail --fb --title "Backup/Restore" --menu "WARNING!!!"  --cancel-button Back --ok-button Select 20 80 4 \
     "1 Restore Server" "[Restore the server from a Archive Backup.]" \
     3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
-    exit 1
+    do_admin
   elif [ $RET -eq 0 ]; then
     case "$FUN" in
       1\ *) do_restore ;;
@@ -1103,7 +1107,7 @@ ARCHIVE=[How often a archive should be done.] \n
 RESTART=[how often a restart should be done.] \n
 REMOVE=[Clear all crontab jobs.]" 20 90 0
 
-list=$(whiptail --menu --fb "testing as usual" 20 60 0 ${varr[@]} 3>&1 1>&2 2>&3)
+list=$(whiptail --menu --fb "Select your task" 20 60 0 ${varr[@]} 3>&1 1>&2 2>&3)
 if [ "$list" = REMOVE ]; then
 whiptail --yesno --fb "This will remove all of your Cron Jobs!. Continue?" 20 60 0 \
   --yes-button Yes --no-button No
@@ -1182,9 +1186,9 @@ do_finish() {
 
 do_admin() {
 while true; do
-  FUN=$(whiptail --fb --title "Admin Area" --menu "Server Controls"  --cancel-button Exit --ok-button Select 20 80 6 \
+  FUN=$(whiptail --fb --title "Admin Area" --menu "Server Controls"  --cancel-button Exit --ok-button Select 20 80 7 \
     "1 Console" "[Send/view console.]" \
-    "2 Random MSG" "Random Greating/Leaving MSG" \
+    "2 Random MSG" "Random Greating MSG" \
     "3 Op/Deop" "[Select users to Op or DeOp]" \
     "4 Server Properties" "[Modify Server Properties]" \
     "5 Start on boot" "[Start the server on boot?]" \
