@@ -1,3 +1,11 @@
+bscc-mc-edition (1.2) STABLE; urgency=medium
+
+  * Added Op/Deop Menu (Admin menu)
+  * Added a Debug option to make a log for troubleshooting. (/opt/BSCC/Files/debug_log)
+  * First boot asks if you want Debug or not....It will look weird if you choose this...see video!.
+
+ --  <kicker22004@not.given>  Wed, 22 Jun 2016 23:44:42 -0700
+
 bscc-mc-edition (1.1) STABLE; urgency=medium
 
   * Major Update
