@@ -7,8 +7,6 @@ sleep 2
 source conf.cfg
 SERVERLOG="$DIR/logs/latest.log"
 PLAYER_LIST="players.list"
-ONLINE_LIST="online.list"
-tmp="online.bak"
 
 IFS=$'\r\n' command eval 'MSG=($(cat RandomMSG.txt))'
 
@@ -25,11 +23,8 @@ sleep 2
         if [ $PLAYER ]; then
                 if [ "$(grep $PLAYER $PLAYER_LIST)" != $PLAYER ]; then
                         echo "$PLAYER" >> $PLAYER_LIST
-                        echo $PLAYER >> $ONLINE_LIST
                         screen -S Minecraft -p 0 -X stuff "msg $PLAYER Welcome to the server. $(printf \\r)"
                 else
-                        echo "Your in"
-                        grep -q -F $PLAYER $ONLINE_LIST || echo $PLAYER >> $ONLINE_LIST
                         screen -S Minecraft -p 0 -X stuff "msg $PLAYER $MSG $(printf \\r)"
                 fi
 	fi
