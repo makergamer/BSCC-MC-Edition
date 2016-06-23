@@ -20,10 +20,17 @@ fi
 do_debug() {
 Qdebug=$(whiptail --fb --inputbox "Enable debug? on/off" 10 80 $_DEBUG --title "DEBUG on/off" 3>&1 1>&2 2>&3)
 exitstatus=$?
+#Check if debug was toggled
+if [ ! $Qdebug = $_DEBUG ]; then
 if [ $exitstatus = 0 ]; then
     sed -i 's/_DEBUG=.*/_DEBUG='${Qdebug}'/g' $INSTALL_LOC/Files/conf.cfg
+    clear
+    echo "Please relaunch BSCC, Debug toggled."
+    exit 0
+fi
 fi
 }
+
 ###################################################
 #To view Debug log correctly use this command on it
 #sed -i '/K$/d' debug_log #
