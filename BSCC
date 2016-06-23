@@ -5,6 +5,31 @@ green='\e[1;32m'
 yellow='\e[1;33m'
 source /opt/BSCC/Files/conf.cfg
 
+######################
+###Add Debug checks###
+######################
+function DEBUG()
+{
+ [ "$_DEBUG" == "on" ] &&  $@
+}
+if [ $_DEBUG = "on" ];then
+exec > >(tee -i $INSTALL_LOC/Files/debug_log)
+exec 2>&1
+fi
+
+do_debug() {
+Qdebug=$(whiptail --fb --inputbox "Enable debug? on/off" 8 78 $_DEBUG --title "DEBUG on/off" 3>&1 1>&2 2>&3)
+exitstatus=$?
+if [ $exitstatus = 0 ]; then
+    sed -i 's/_DEBUG=.*/_DEBUG='${Qdebug}'/g' $INSTALL_LOC/Files/conf.cfg
+fi
+}
+###################################################
+#To view Debug log correctly use this command on it
+#sed -i '/K$/d' debug_log #
+###################################################
+DEBUG set -x
+
 INTERACTIVE=True
 ASK_TO_REBOOT=0
 CONFIG=$INSTALL_LOC/Files/conf.cfg
@@ -40,7 +65,7 @@ fi
         source /opt/BSCC/Files/conf.cfg
         echo "Currently Installed Version: $BSCC_VERSION"
         sleep 3
-if [ $find = $BSCC_VERSION ]; then 
+if [ $find = $BSCC_VERSION ]; then
         whiptail --msgbox --fb "You are up to date." 15 50 0
         rm conf.*
         rm tmp
@@ -82,8 +107,6 @@ do_no_menu_start() {
 
 do_no_menu_stop() {
   if screen -list | grep -q "Minecraft"; then
-    screen -ls | grep WATCH | cut -d. -f1 | awk '{print $1}' | xargs kill
-    rm $INSTALL_LOC/Files/online.list 2>/dev/null
     sed -i 's/check=.*/check=false/g' $CONFIG
     do_save
     sleep 2
@@ -118,7 +141,7 @@ then
   cd $INSTALL_LOC/Files/
   $WATCH
 else
-  echo "Not needed"
+  echo "Set Onboot was not selected"
 fi
 exit 0
 }
@@ -192,7 +215,6 @@ do_rollback() {
 if ! screen -list | grep -q "Minecraft"; then
 sed -i 's/check=.*/check=false/g' $CONFIG
 rm -rf $DIR/*
-rm $INSTALL_LOC/Files/online.list
 rsync -r -t $RDIFF/* $DIR
 cd $DIR
 $START
@@ -272,7 +294,7 @@ do_inventory() {
 clear
 #Check that the mods are actually installed...
 if [ -f $DIR/mods/OpenB* ]; then
-echo "it's there"
+echo "Found Openblocks?"
 else
 whiptail --msgbox --fb "You don't have Openblocks and OpenModsLib installed, Please install it to use this feature." 20 60 0
 exit 1
@@ -292,7 +314,6 @@ new_playarr=`ls -1t $INVENTORY_DIR | grep "inventory-$selected_player" | grep "d
 new_playarr=(${new_playarr[@]})
 else
 if [ $RET -eq 1 ]; then
-echo "leaveing"
 do_menu
 fi
 fi
@@ -307,7 +328,6 @@ screen -S Minecraft -p 0 -X stuff "/ob_inventory restore $selected_player $res_p
 else
 if [ $RET -eq 1 ]; then
 do_inventory
-echo "it's the end"
 fi
 fi
 }
@@ -429,7 +449,6 @@ do_first_run() {
 	      done
         #If server doesn't go down, Force it.
         screen -ls | grep Minecraft | cut -d. -f1 | awk '{print $1}' | xargs kill 2>/dev/null
-        screen -ls | grep WATCH | cut -d. -f1 | awk '{print $1}' | xargs kill 2>/dev/null
         echo XXX
         echo 80
         echo "Searching for User Agreements"
@@ -444,9 +463,11 @@ do_first_run() {
 #eula.txt Should be there. If not then something went wrong and should say so now.
 if [ ! -f $DIR/eula.txt ]; then
      whiptail --msgbox --fb "Something is wrong here, there is no eula.txt file to be found." 20 60
+#Make a point to see if java is present or not
+	java -version
+	ls -l $DIR/
         rm -rf $DIR/*
         screen -ls | grep Minecraft | cut -d. -f1 | awk '{print $1}' | xargs kill
-        screen -ls | grep WATCH | cut -d. -f1 | awk '{print $1}' | xargs kill
         sed -i 's/SERVERJAR=.*/SERVERJAR=/g' $CONFIG
         exit 0
 fi
@@ -478,23 +499,20 @@ do_vanilla() {
 if [ ! -d $INSTALL_LOC/Files/versions ]; then
 mkdir $INSTALL_LOC/Files/versions
 fi
-cd $INSTALL_LOC/Files
-python servers.py $> /dev/null
+cd $INSTALL_LOC/Files/
+python servers.py
+cd versions/
+rm 1.0.* 1.1.json 1.2.1.json 1.2.2.json 1.2.3.json 1.2.4.json
+cd ..
 
 ##Place list's into an arrey
-list=$(ls -1t versions/1.* | awk '{print $1}' | cut -d "j" -f1 | awk '{print $1 " |"}' | sort -nr > $INSTALL_LOC/Files/vanilla.list)
-
-#Clean up old non running versions.
-sed -i '/1.0.*/d' $INSTALL_LOC/Files/vanilla.list
-sed -i '/1.1.*/d' $INSTALL_LOC/Files/vanilla.list
-sed -i '/1.2.1/d' $INSTALL_LOC/Files/vanilla.list
-sed -i '/1.2.2/d' $INSTALL_LOC/Files/vanilla.list
-sed -i '/1.2.3/d' $INSTALL_LOC/Files/vanilla.list
-sed -i '/1.2.4/d' $INSTALL_LOC/Files/vanilla.list
+list=$(ls -1t versions/1.* | awk '{print $1}' | cut -d "j" -f1 | awk '{print $1 " |"}' > $INSTALL_LOC/Files/tmp.list)
+list=$(sort -Vr tmp.list > vanilla.list)
+rm $INSTALL_LOC/Files/tmp.list
 
 var=$(cat vanilla.list | tr '/' ' ' | awk '{print $2 " |"}')
 var=(${var[@]})
-vanilla_select=$(whiptail --menu "Please Select your Version." 20 80 10 ${var[@]} 3>&1 1>&2 2>&3)
+vanilla_select=$(whiptail --menu "Please Select your Version." 20 60 10 ${var[@]} 3>&1 1>&2 2>&3)
 dl_link=$(cat $INSTALL_LOC/Files/versions/$vanilla_select\json | grep /server | grep url | awk '{print $2}' | cut -d "\"" -f2)
 
 RET=$?
@@ -606,7 +624,7 @@ name1=$(awk -v var="$var" 'BEGIN {print var}' | awk -F 'Server|server|[-]' '{pri
 name2=$(awk -v var="$var" 'BEGIN {print var}' | awk -F 'Server|server|[_-]' '{print $1}')
 echo $name1
 ############################################
-#######Dirty fix for older Versions ########  
+#######Dirty fix for older Versions ########
 ####### Of FTB                      ########
 ############################################
 if [ $name1 = RetroSMP_ ]; then
@@ -853,33 +871,30 @@ fi
 }
 
 do_chat() {
-INPUT=$(whiptail --fb --inputbox "Simple chat link to console." 8 78 "say " --title "Chat Log" 3>&1 1>&2 2>&3)
+INPUT=$(whiptail --fb --inputbox "You can chat here. No commands!." 8 78 --title "Chat Log" 3>&1 1>&2 2>&3)
 RET=$?
 if [ $RET -eq 0 ]; then
-screen -S Minecraft -p 0 -X stuff "`printf "$INPUT\r"`";
+screen -S Minecraft -p 0 -X stuff "`printf "say $INPUT\r"`";
 do_chat
 fi
 }
 
 do_msg() {
-INPUT=$(whiptail --fb --inputbox "Simple chat link to console." 8 78 --title "Chat Log" 3>&1 1>&2 2>&3)
+INPUT=$(whiptail --fb --inputbox "Full Concole control (Commands/say)" 8 78 --title "Chat Log" 3>&1 1>&2 2>&3)
 RET=$?
 if [ $RET -eq 0 ]; then
 #Restart checks
 if ! screen -list | grep -q "WATCH"; then
-    echo "should be starting"
     cd $INSTALL_LOC/Files
     screen -dmS "WATCH" ./Greeting
 else
     screen -X -S WATCH quit
-    echo "you are leaving"
     echo $INPUT >> $INSTALL_LOC/Files/RandomMSG.txt
     echo "script found running"
     cd $INSTALL_LOC/Files
     screen -dmS "WATCH" ./Greeting
 fi
 fi
-echo "finished"
 }
 
 do_prop() {
@@ -908,13 +923,51 @@ do_admin
 fi
 }
 
+do_Qdeop() {
+if (whiptail --title "DeOp Confirmation." --yesno "Are you sure you want to deOp $selected_player?" 8 78) then
+    echo "User selected Yes, Deoping"
+    screen -S Minecraft -p 0 -X stuff "`printf "/deop $selected_player\r"`";
+fi
+}
+
+do_op() {
+  unset playarr
+  playarr=`cat $PLAYERS | awk '{print $1 " |"}'`
+  playarr=(${playarr[@]})
+  oplist=`cat $DIR/ops.json | grep name | awk '{print $2}' | tr -d "\"" | cut -d "," -f1`
+  oplist=(${oplist[@]})
+  unset selected_player
+  selected_player=$(whiptail --menu "Select the user you would like to Op" 20 60 10  ${playarr[@]} 3>&1 1>&2 2>&3)
+  if [[ " ${oplist[*]} " == *" $selected_player "* ]]; then
+  whiptail --msgbox --fb "This user is already Oped, moving to DeOp...." 20 60 0
+    do_Qdeop 
+  else
+    screen -S Minecraft -p 0 -X stuff "`printf "/op $selected_player\r"`";
+  fi
+exit 1
+}
+
+do_deop() {
+unset oplist
+oplist=`cat $DIR/ops.json | grep name | awk '{print $2}' | tr -d "\"" | cut -d "," -f1 | awk '{print $1 " |"}'`
+oplist=(${oplist[@]})
+#check if there are any Oped players first.
+if [[ -z "$oplist" ]]; then
+whiptail --msgbox --fb "You don't have any Oped players." 10 60 0
+else
+unset selected_player
+selected_player=$(whiptail --menu "Select the user you would like to DeOp" 20 60 10  ${oplist[@]} 3>&1 1>&2 2>&3)
+do_Qdeop
+fi
+exit 1
+}
+
+
 do_Qstop() {
  whiptail --fb --yesno "Did you want to stop the server?" 20 60 2 \
     --yes-button Yes --no-button No
   RET=$?
   if [ $RET -eq 0 ]; then
-    screen -ls | grep WATCH | cut -d. -f1 | awk '{print $1}' | xargs kill
-    rm $INSTALL_LOC/Files/online.list
     sed -i 's/check=.*/check=false/g' $CONFIG
     screen -S Minecraft -p 0 -X stuff "stop $(printf \\r)"
     whiptail --fb --msgbox "Stopping Server.." 20 60 1
@@ -995,6 +1048,25 @@ Do you agree?" 20 60 2 \
     echo "no"
     exit 0
   fi
+}
+
+do_op_menu() {
+  while true; do
+    FUN=$(whiptail --fb --title "Op/DeOP" --menu "Select Your option"  --cancel-button Exit --ok-button Select 20 80 6 \
+      "1 Op" "[Op a user]" \
+      "2 DeOp" "[DeOp a user]" \
+      3>&1 1>&2 2>&3)
+    RET=$?
+    if [ $RET -eq 1 ]; then
+       exit 1
+    elif [ $RET -eq 0 ]; then
+      case "$FUN" in
+        1\ *) do_op ;;
+	2\ *) do_deop ;;
+        *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
+      esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
+  fi
+  done
 }
 
 do_admin_backupmenu() {
@@ -1113,10 +1185,11 @@ while true; do
   FUN=$(whiptail --fb --title "Admin Area" --menu "Server Controls"  --cancel-button Exit --ok-button Select 20 80 6 \
     "1 Console" "[Send/view console.]" \
     "2 Random MSG" "Random Greating/Leaving MSG" \
-    "3 Server Properties" "[Modify Server Properties]" \
-    "4 Start on boot" "[Start the server on boot?]" \
-    "5 Backup/Restore" "[For Restoring the server.]" \
-    "6 Advanced menu" "Upgrade & Delete servers" \
+    "3 Op/Deop" "[Select users to Op or DeOp]" \
+    "4 Server Properties" "[Modify Server Properties]" \
+    "5 Start on boot" "[Start the server on boot?]" \
+    "6 Backup/Restore" "[For Restoring the server.]" \
+    "7 Advanced menu" "Upgrade & Delete servers" \
     3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
@@ -1125,10 +1198,11 @@ while true; do
     case "$FUN" in
       1\ *) do_console ;;
       2\ *) do_msg ;;
-      3\ *) do_prop ;;
-      4\ *) do_Qboot ;;
-      5\ *) do_admin_backupmenu ;;
-      6\ *) do_admin_advanced ;;
+      3\ *) do_op_menu ;;
+      4\ *) do_prop ;;
+      5\ *) do_Qboot ;;
+      6\ *) do_admin_backupmenu ;;
+      7\ *) do_admin_advanced ;;
       *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
 fi
@@ -1194,11 +1268,18 @@ fi
 clear
 }
 
+
+
 #####################################################################
 #Actually the beginning of this huge mess..also a catch for problems..
 ######################################################################
- if [ ! -f $DIR/$SERVERJAR ]; then
-    do_version_option
+if [ ! -f $DIR/$SERVERJAR ]; then
+if [ $_DEBUG = on ]; then
+do_version_option
+else
+do_debug
+do_version_option
+fi
 fi
 
 #Extra Functions for cronjobs and debug (Down the road)
@@ -1270,10 +1351,24 @@ case "$1" in
     do_help
     exit 0
     ;;
+  (ops)
+   do_op
+    exit 0
+   ;;
+  (deop)
+   do_deop
+   exit 0
+   ;;
+  (debug)
+   do_debug
+   exit 0
+   ;;
   (*)
   echo -e "${yellow}Usage:${green} $0 ${red}{command}"
   echo -e "${yellow}For a list of commands use ${red}./Main help"
   tput sgr0
     exit 2
     ;;
-esac
+esac 
+DEBUG set +x
+
