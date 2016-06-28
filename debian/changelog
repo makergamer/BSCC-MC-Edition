@@ -1,3 +1,9 @@
+bscc-mc-edition (1.5) STABLE; urgency=medium
+
+  * Fix server properties not saving user input.
+
+ --  <kicker22004@not.given>  Tue, 28 Jun 2016 14:51:37 -0700
+
 bscc-mc-edition (1.4) STABLE; urgency=medium
 
   * Version Bump
