@@ -907,11 +907,11 @@ fi
 
 do_prop() {
 #Check to make sure the arrey isn't present, Stops duplicates..
+unset PROP
 if [ ${#PROP[@]} -eq 0 ]; then
     PROP=`cat $SERVER_PROP | grep "=" | awk '{print $1 " |"}'`
     echo "No arrey found, Building"
 fi
-
 IFS=$'\r\n' GLOBIGNORE='*' command eval 'PROP=(${PROP[@]})'
 SELECTED_PROP=$(whiptail --fb --menu "Select target disk, Or Cancel to Leave" 20 80 10 ${PROP[@]} 3>&1 1>&2 2>&3)
 RET=$?
