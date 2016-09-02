@@ -19,7 +19,9 @@ fi
 ########################################
 #######  Check for Dependencies  #######
 ########################################
-apt-get install screen python2.7 git wget rsync unzip
+apt-get install screen git wget rsync unzip
+#Grab JSON.sh from Dominictarr's Github. Thank you for this tool!!
+wget https://raw.githubusercontent.com/dominictarr/JSON.sh/master/JSON.sh
 
 do_warning() {
 if (whiptail --fb --title "Erase Everything??" --yesno "If you choose to do a clean install it will erase your Minecraft Server If you've made one already using this script.. Are you 100% sure? \
@@ -119,6 +121,7 @@ If you agree Please, continue." 15 60) then
         echo 60
         echo "Moving main to /usr/bin/"
         cp BSCC /usr/bin/
+	mv JSON.sh $INSTALL_LOC/Files/
         cp Files/servers.py $INSTALL_LOC/Files/
 	echo XXX
         sleep 2
@@ -127,6 +130,7 @@ If you agree Please, continue." 15 60) then
         echo "Setting Permissions"
         chown -R $USER:$USER $INSTALL_LOC
 	chmod +x $INSTALL_LOC/Files/Greeting
+	chmod +x $INSTALL_LOC/Files/JSON.sh
 	chmod +x /usr/bin/BSCC
         echo XXX
         sleep 2
