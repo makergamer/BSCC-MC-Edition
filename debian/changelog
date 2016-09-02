@@ -1,3 +1,33 @@
+bscc-mc-edition (1.6) STABLE; urgency=medium
+
+  * Install.sh 
+   - Added JSON.sh
+   - Removed Python2.7 from dependancies
+
+  * BSCC
+   - Removed Python
+   - Improved compatibility for Vanilla list.
+   - Redesigned Ram menu to show available Ram.
+   - Fixed Uptime in Info Menu
+   - Added Load average in Info Menu
+   - Optimized Info Menu
+
+  * conf.cfg
+   - Cleanup Tools section
+
+  * Removed server.py
+
+  * Added BETA MENU
+   - Beta section for ideas and testing, You have been warned..
+   - Location (Admin > Advanced > BETA)
+   - Vanilla inventory restore ( No mods) BETA...
+
+  * Ram menu added
+   - Allow for changes in original ram settings.
+   - Location (Admin > Advanced > Ram)
+
+ --  <kicker22004@not.given>  Fri, 02 Sep 2016 06:34:42 +0000
+
 bscc-mc-edition (1.5) STABLE; urgency=medium
 
   * Fix server properties not saving user input.
