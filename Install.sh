@@ -21,7 +21,7 @@ fi
 ########################################
 apt-get install screen git wget rsync unzip
 #Grab JSON.sh from Dominictarr's Github. Thank you for this tool!!
-wget https://raw.githubusercontent.com/dominictarr/JSON.sh/master/JSON.sh
+wget https://raw.githubusercontent.com/dominictarr/JSON.sh/master/JSON.sh -O JSON.sh
 
 do_warning() {
 if (whiptail --fb --title "Erase Everything??" --yesno "If you choose to do a clean install it will erase your Minecraft Server If you've made one already using this script.. Are you 100% sure? \
@@ -122,7 +122,6 @@ If you agree Please, continue." 15 60) then
         echo "Moving main to /usr/bin/"
         cp BSCC /usr/bin/
 	mv JSON.sh $INSTALL_LOC/Files/
-        cp Files/servers.py $INSTALL_LOC/Files/
 	echo XXX
         sleep 2
         echo XXX
