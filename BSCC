@@ -405,7 +405,7 @@ done
 do_ram() {
 ##Setting up Memory alocation to the server
 #################################
-USERMAX=$(whiptail --inputbox "Please select a MAXMEM Default is 512M" 8 78 $MAXMEM --title "Example Dialog" 3>&1 1>&2 2>&3)
+USERMAX=$(whiptail --inputbox "Please select a MAXMEM Default is 512M" 8 78 $MAXMEM --title "Total Ram Available:$RAM" 3>&1 1>&2 2>&3)
 exitstatus=$?
 if [ $exitstatus = 0 ]; then
     sed -i 's/MAXMEM=.*/MAXMEM='$USERMAX'/g' $CONFIG
@@ -413,7 +413,7 @@ else
     sed -i 's/MAXMEM=.*/MAXMEM=512M/g' $CONFIG
 fi
 
-USERMIN=$(whiptail --inputbox "Please select a MINMEM Default is 128M. (MUST BE LOWER THEN MAXMEM)" 8 78 $MINMEM --title "Setting MINMEM" 3>&1 1>&2 2>&3)
+USERMIN=$(whiptail --inputbox "Please select a MINMEM Default is 128M. (MUST BE LOWER THEN MAXMEM)" 8 78 $MINMEM --title "Total Ram Available:$RAM" 3>&1 1>&2 2>&3)
 exitstatus=$?
 if [ $exitstatus = 0 ]; then
     sed -i 's/MINMEM=.*/MINMEM='$USERMIN'/g' $CONFIG
@@ -507,8 +507,17 @@ if [ ! -d $INSTALL_LOC/Files/versions ]; then
 mkdir $INSTALL_LOC/Files/versions
 fi
 cd $INSTALL_LOC/Files/
-python servers.py
-cd versions/
+#Download Manifest
+wget https://launchermeta.mojang.com/mc/game/version_manifest.json -O versions.json
+
+#Grab the Json's for the versions and orginize them.
+clear
+echo "DOWNLOAD BEGINNING!!"
+cat versions.json | ./JSON.sh -l | grep -o https.* | cut -d "\"" -f1 > versions/url.txt
+cd versions
+cat url.txt | xargs -n 1 -P 20 wget -nc -q
+echo "DOWNLOAD COMPLETE!!"
+sleep 2
 rm 1.0.* 1.1.json 1.2.1.json 1.2.2.json 1.2.3.json 1.2.4.json
 cd ..
 
@@ -1159,13 +1168,38 @@ clear
 fi
 }
 
+vanilla_inventory() {
+clear
+echo "So this is here and we have no idea what we are going to be able to use it for yet.."
+exit 0
+}
+
+do_beta() {
+while true; do
+  FUN=$(whiptail --fb --title "BETA AREA!!!" --menu "Think Tank"  --cancel-button Exit --ok-button Select 20 80 1 \
+    "1 VanillaRestore" "[Don't try this yet..]" \
+    3>&1 1>&2 2>&3)
+  RET=$?
+  if [ $RET -eq 1 ]; then
+     exit 1
+  elif [ $RET -eq 0 ]; then
+    case "$FUN" in
+      1\ *) vanilla_inventory ;;
+      *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
+    esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
+fi
+done
+}
+
 do_admin_advanced() {
 while true; do
-  FUN=$(whiptail --fb --title "Admin Advanced menu" --menu "WARNING!!!"  --cancel-button Back --ok-button Select 20 80 4 \
+  FUN=$(whiptail --fb --title "Admin Advanced menu" --menu "WARNING!!!"  --cancel-button Back --ok-button Select 20 80 6 \
     "1 Crontab" "[Setup jobs for autostart and other things]" \
     "2 Forge Installer" "[Very much in beta]" \
-    "3 DELETE SERVER" "[DELETES YOUR SERVER!!]" \
-    "4 Uninstall BSCC" "[This will remove BSCC completely]" \
+    "3 Ram settings" "[Change your ram settings]" \
+    "4 BETA" "[Think tank and testing]" \
+    "5 DELETE SERVER" "[DELETES YOUR SERVER!!]" \
+    "6 Uninstall BSCC" "[This will remove BSCC completely]" \
     3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
@@ -1174,8 +1208,10 @@ while true; do
     case "$FUN" in
       1\ *) do_cron ;;
       2\ *) do_forge ;;
-      3\ *) do_delete ;;
-      4\ *) do_uninstall ;;
+      3\ *) do_ram ;;
+      4\ *) do_beta ;;
+      5\ *) do_delete ;;
+      6\ *) do_uninstall ;;
       *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
 fi
@@ -1257,7 +1293,10 @@ server_port=$(cat $DIR/server.properties | grep "server-port" | cut -d "=" -f2)
 on_now=$(ss -t | grep -o "$server_port" | wc -l)
 max_on=$(cat /opt/BSCC/minecraft_server/server.properties | grep "max-players" | cut -d "=" -f2)
 CPU=$(top -bn 1 | awk 'NR>7{s+=$9} END {print s/4}')
+UPTIME=$(uptime | awk '{print $1}')
+LOAD=$(uptime | grep -o "load average.*")
 RAM=$(free -mh | grep Mem | cut -c 37-40)
+TOTAL=$(du -sh /opt/BSCC/minecraft_server | awk '{print $1}')
 HDD_TOTAL=$(df -kh . | grep / | awk '{print $4}')
 JAVA_VERSION=$(java -version 2>&1 |awk 'NR==1{ gsub(/"/,""); print $3 }')
 whiptail --fb --title "Current server stats" --yesno --yes-button REFRESH --no-button Back \
@@ -1267,12 +1306,16 @@ Server Version: $MCVERSION \n
 Current Players Online: $on_now/$max_on \n
 CPU Usage is: $CPU% \n
 Server Uptime: $UPTIME \n
-Ram Available: "$RAM\B"/"$RAM_TOTAL\B" \n
-Server size on disk (used/left): $TOTAL/$HDD_TOTAL \n
+$LOAD \n
+Ram Available: "$RAM\B"(Free/Total)"$RAM_TOTAL\B" \n
+Server size on disk: $TOTAL(Used/Free)$HDD_TOTAL \n
 Your Java Version is: $JAVA_VERSION" 30 45 10
 CHOICES=$?
+unset TOTAL
 unset on_list
 unset CPU
+unset LOAD
+unset UPTIME
 unset RAM
   if [ $CHOICES -eq 0 ]; then
    	do_info
