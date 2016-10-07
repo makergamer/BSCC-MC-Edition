@@ -62,7 +62,7 @@ else
         USER="$(whoami)"
 fi
 	cd $INSTALL_LOC
-        wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/conf.cfg
+        wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/conf.cfg -O conf.cfg
         source conf.cfg
         find=$(grep "BSCC_VERSION" conf.cfg > tmp)
         find=$(cat tmp | cut -d "=" -f2)
@@ -78,6 +78,8 @@ if [ $find = $BSCC_VERSION ]; then
         rm tmp
         rm upgrade
 else
+	rm conf.*
+	rm tmp
         echo "An Updated Version was found, Grabbing files"
         sleep 4
         wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/upgrade
