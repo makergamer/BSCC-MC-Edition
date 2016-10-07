@@ -9,16 +9,15 @@ cd $INSTALL_LOC/Files
 
 #All checks cleared.. Update
 do_update() {
-	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/BSCC
-	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/watch_login
-	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/watch_logout
-	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/ingame_control
-	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/conf.cfg
+	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/BSCC -O BSCC
+	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/watch_login -O watch_login
+	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/watch_logout -O watch_logout
+	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/ingame_control -O ingame_control
+	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/conf.cfg -O conf.cfg
 	clear
 	cp $CONFIG $INSTALL_LOC/Files/conf.cfg.bak
 	mv BSCC /usr/bin/
 	rm Greeting
-	rm watch_login
 	chmod +x /usr/bin/BSCC
 	chmod +x $INSTALL_LOC/Files/watch_login
 	chmod +x $INSTALL_LOC/Files/watch_logout
