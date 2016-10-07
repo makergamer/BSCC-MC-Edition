@@ -1,19 +1,29 @@
 #!/bin/bash
 INSTALL_LOC=/opt/BSCC/
 CONFIG=$INSTALL_LOC/Files/conf.cfg
+###############################
+### Version 1.6-1.7 upgrade ###
+###############################
 
 cd $INSTALL_LOC
+mkdir tmp
+cd tmp
 #All checks cleared.. Update
 do_update() {
 	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/BSCC
-	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/servers.py
+	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/watch_login
+	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/watch_logout
+	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/ingame_control
+	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/conf.cfg
 	clear
 	cp $CONFIG $INSTALL_LOC/Files/conf.cfg.bak
 	mv conf.cfg $INSTALL_LOC/Files/
 	mv BSCC /usr/bin/
 	mv servers.py $INSTALL_LOC/Files/
 	chmod +x /usr/bin/BSCC
-	chmod +x $INSTALL_LOC/Files/servers.py
+	chmod +x $INSTALL_LOC/Files/watch_login
+	chmod +x $INSTALL_LOC/Files/watch_logout
+	chmod +x $INSTALL_LOC/Files/ingame_control
 #Grab old info and replace in new conf.cfg
 	source $INSTALL_LOC/Files/conf.cfg.bak
 	sed -i "s/MCVERSION=.*/MCVERSION=$MCVERSION/g" $CONFIG
@@ -39,5 +49,6 @@ else
 	clear
 	echo "No conf.cfg found in /opt/BSCC/Files/" ; exit 1
 fi
-rm tmp
+cd $INSTALL_LOC
+rm -rf tmp
 exit 0
