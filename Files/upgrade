@@ -1,5 +1,5 @@
 #!/bin/bash
-INSTALL_LOC=/opt/BSCC/
+INSTALL_LOC=/opt/BSCC
 CONFIG=$INSTALL_LOC/Files/conf.cfg
 ###############################
 ### Version 1.6-1.7 upgrade ###
