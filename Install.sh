@@ -142,6 +142,7 @@ If you agree Please, continue." 15 60) then
         echo XXX
         sleep 2
 ) | whiptail --gauge "Gathering info" 8 40 0
+	chown -R $SUDO_USER:$SUDO_USER $INSTALL_LOC/*
 	whiptail --fb --msgbox "Ok everything is in order and you should now be able to run (BSCC) and start your server builds." 20 60
 	clear
 	echo "Ok everything is in order and you should now be able to run (BSCC) and start your server builds."
