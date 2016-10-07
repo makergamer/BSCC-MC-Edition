@@ -5,9 +5,8 @@ CONFIG=$INSTALL_LOC/Files/conf.cfg
 ### Version 1.6-1.7 upgrade ###
 ###############################
 
-cd $INSTALL_LOC
-mkdir tmp
-cd tmp
+cd $INSTALL_LOC/Files
+
 #All checks cleared.. Update
 do_update() {
 	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/BSCC
@@ -17,9 +16,7 @@ do_update() {
 	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/conf.cfg
 	clear
 	cp $CONFIG $INSTALL_LOC/Files/conf.cfg.bak
-	mv conf.cfg $INSTALL_LOC/Files/
 	mv BSCC /usr/bin/
-	mv servers.py $INSTALL_LOC/Files/
 	chmod +x /usr/bin/BSCC
 	chmod +x $INSTALL_LOC/Files/watch_login
 	chmod +x $INSTALL_LOC/Files/watch_logout
@@ -49,6 +46,4 @@ else
 	clear
 	echo "No conf.cfg found in /opt/BSCC/Files/" ; exit 1
 fi
-cd $INSTALL_LOC
-rm -rf tmp
 exit 0
