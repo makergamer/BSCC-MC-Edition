@@ -21,6 +21,7 @@ do_update() {
 	clear
 	mv BSCC /usr/bin/
 	rm Greeting
+	touch Allowed.list
 	chmod +x /usr/bin/BSCC
 	chmod +x $INSTALL_LOC/Files/watch_login
 	chmod +x $INSTALL_LOC/Files/watch_logout
