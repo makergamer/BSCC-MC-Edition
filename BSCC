@@ -514,16 +514,16 @@ do_first_run() {
         #Allow time for the server to load and crash due to eula.
         for ((i=120;i>0;i=i-1)); do
  	        clear
-	      if screen -list | grep -q "Minecraft"; then
+	       if [ ! -f $DIR/eula.txt ]; then
   	       clear
   	       echo -n "Time Remaining $i seconds"
   	       sleep 1
 	      else
+	       screen -X -S Minecraft quit
   	       break
 	      fi
 	      done
         #If server doesn't go down, Force it.
-        screen -ls | grep Minecraft | cut -d. -f1 | awk '{print $1}' | xargs kill 2>/dev/null
         echo XXX
         echo 80
         echo "Searching for User Agreements"
