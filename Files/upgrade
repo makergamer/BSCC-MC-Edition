@@ -17,6 +17,8 @@ do_update() {
 	clear
 	cp $CONFIG $INSTALL_LOC/Files/conf.cfg.bak
 	mv BSCC /usr/bin/
+	rm Greeting
+	rm watch_login
 	chmod +x /usr/bin/BSCC
 	chmod +x $INSTALL_LOC/Files/watch_login
 	chmod +x $INSTALL_LOC/Files/watch_logout
