@@ -9,6 +9,9 @@ cd $INSTALL_LOC/Files
 
 #All checks cleared.. Update
 do_update() {
+	rm -rf $INSTALL_LOC/rdiff-backup
+	mkdir $INSTALL_LOC/PD_Backup
+	mkdir $INSTALL_LOC/rsync_backup
 	cp $CONFIG $INSTALL_LOC/Files/conf.cfg.bak
 	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/BSCC -O BSCC
 	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/watch_login -O watch_login
