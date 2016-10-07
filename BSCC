@@ -40,7 +40,7 @@ DEBUG set -x
 INTERACTIVE=True
 ASK_TO_REBOOT=0
 CONFIG=$INSTALL_LOC/Files/conf.cfg
-RDIFF=$INSTALL_LOC/rdiff-backup
+RSYNC=$INSTALL_LOC/rsync_backup
 ARCHIVE=$INSTALL_LOC/archive
 
 #Extra Functions for Cronjobs and Debugs (Down the road)
@@ -56,7 +56,7 @@ if [ $UID != 0 ]; then
         exit $?
 fi
 # get real username
-if [ $UID = 0 ] && [ ! -z "$SUDO_USER" ]; then
+if [ UID = 0 ] && [ ! -z "$SUDO_USER" ]; then
         USER="$SUDO_USER"
 else
         USER="$(whoami)"
@@ -103,9 +103,13 @@ do_no_menu_start() {
      cd $INSTALL_LOC/Files/
      $WATCH
   fi
+  if ! screen -list | grep -q "IN_GAME"; then
+     $IN_GAME
+  fi
   if ! screen -list | grep -q "Minecraft"; then
      cd $DIR
      $START
+     sed -i 's/STATUS=.*/STATUS=ONLINE/g' $CONFIG
      sed -i 's/check=.*/check=true/g' $CONFIG
   else
      echo "Server was found running... close it before running this"
@@ -118,6 +122,10 @@ do_no_menu_stop() {
     do_save
     sleep 2
     screen -S Minecraft -p 0 -X stuff "stop $(printf \\r)"
+    screen -X -S WATCH_LOGIN quit
+    screen -X -S WATCH_LOGOUT quit
+    screen -X -S IN_GAME quit
+    sed -i 's/STATUS=.*/STATUS=OFFLINE/g' $CONFIG
   else
      echo "No server was found to be running...did you start on?"
   fi
@@ -174,16 +182,19 @@ exit 0
 
 do_restart() {
 sed -i 's/check=.*/check=false/g' $CONFIG
-do_rdiff
 screen -S Minecraft -p 0 -X stuff "save-all $(printf \\r)"
 screen -S Minecraft -p 0 -X stuff "say Restart in 1 Minutes..WHY ARE YOU STILL HERE!!! $(printf \\r)"
-sleep 50s
+#sleep 50
 screen -S Minecraft -p 0 -X stuff "say 10 seconds.. $(printf \\r)"
-sleep 10s
+#sleep 10
 screen -S Minecraft -p 0 -X stuff "stop $(printf \\r)"
 sleep 3
-cd $DIR
+screen -X -S WATCH_LOGIN quit
+screen -X -S WATCH_LOGOUT quit
 sleep 10
+cd $INSTALL_LOC/Files/
+$WATCH
+cd $DIR
 $START
 sed -i 's/check=.*/check=true/g' $CONFIG
 exit 0
@@ -191,7 +202,6 @@ exit 0
 
 do_restart_now() {
 sed -i 's/check=.*/check=false/g' $CONFIG
-do_rdiff
 screen -S Minecraft -p 0 -X stuff "say Server is going down.... Please log NOW! $(printf \\r)"
 screen -S Minecraft -p 0 -X stuff "save-all $(printf \\r)"
 sleep 10
@@ -211,8 +221,7 @@ if ! screen -list | grep -q "Minecraft"; then
 else
   cd $ARCHIVE
   screen -S Minecraft -p 0 -X stuff "say Creating Archive of the server, Sorry for any lag. $(printf \\r)"
-  do_rdiff
-  tar -zcvf "$today".tar.gz -C $RDIFF .
+  tar -zcvf "$today".tar.gz -C $RSYNC .
   rm `ls -t | awk 'NR>8'` 2>/dev/null
   screen -S Minecraft -p 0 -X stuff "say Archive complete, carry on... :( $(printf \\r)"
 fi
@@ -222,7 +231,7 @@ do_rollback() {
 if ! screen -list | grep -q "Minecraft"; then
 sed -i 's/check=.*/check=false/g' $CONFIG
 rm -rf $DIR/*
-rsync -r -t $RDIFF/* $DIR
+rsync -r -t $RSYNC/* $DIR
 cd $DIR
 $START
 sed -i 's/check=.*/check=true/g' $CONFIG
@@ -281,32 +290,89 @@ fi
 }
 
 do_stats() {
+UPTIME=$(uptime | awk '{print $1}')
+LOAD=$(uptime | grep -o "load average.*" | awk '{print $3,$4,$5}')
+TOTAL=$(du -sh $INSTALL_LOC | awk '{print $1}')
+##Put CPU usage on call instead of conf.cfg, Fix for slow Menu load##
+#####################################################################
+cpufree=$(mpstat 1 1 | tail -n 1 | awk '{printf $12}')
+CPU=$(echo "scale=1; x=100-$cpufree; if(x<1) print 0; x" | bc)
+
 screen -S Minecraft -p 0 -X stuff "say "$RAM\B" Ram free out of "$RAM_TOTAL\B" $(printf \\r)"
 screen -S Minecraft -p 0 -X stuff "say This server is now "$TOTAL\B" in size & "$HDDFREE\B" Free. $(printf \\r)"
 screen -S Minecraft -p 0 -X stuff "say The CPU is currently running at "$CPU\%" $(printf \\r)"
-screen -S Minecraft -p 0 -X stuff "say Uptime & load (1M 5M 15M) $UPTIME $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "say Uptime: $UPTIME $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "say Load Average (1M 5M 15M): $LOAD $(printf \\r)"
 }
 
-do_rdiff() {
+do_rsync() {
 if ! screen -list | grep -q "Minecraft"; then
 echo "no server running"
 else
 do_save
 sleep 1
-rsync -r -t $DIR/* $RDIFF
+screen -S Minecraft -p 0 -X stuff "say Backup was requested, starting up Rsync now. $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "say Running rsync just incase something goes wrong!, Backing up... $(printf \\r)"
+rsync -r -t $DIR/* $RSYNC
+screen -S Minecraft -p 0 -X stuff "say rsync completed. $(printf \\r)"
+fi
+}
+
+do_vanilla_inventory() {
+WORLD=$(cat /opt/BSCC/minecraft_server/server.properties | grep -o "level-name.*" | cut -d "=" -f2)
+PLAYERDATA="/opt/BSCC/minecraft_server/$WORLD/playerdata/"
+ALLTIME="/opt/BSCC/Files/Alltimeusers.list"
+ON="/opt/BSCC/Files/onlineusers.list"
+VPLAYER_BACKUP="/opt/BSCC/PD_Backup/"
+VPLAYER=$(cat $VPLAYERS | awk '{print $1 " |"}')
+
+unset vanilla_player res_playarr
+vanilla_player=$(whiptail --menu "Vanilla Inventory recovery" 20 60 7 ${VPLAYER[@]} 3>&1 1>&2 2>&3)
+RET=$?
+if [ $RET -eq 0 ]; then
+selected_backup=$(ls -lh1t $VPLAYER_BACKUP$vanilla_player | awk '{print $9,$5}' | head -36)
+UUID=$(cat $ALLTIME | grep "$vanilla_player" | cut -d "=" -f2)
+else
+if [ $RET -eq 1 ]; then
+do_menu
+fi
+fi
+
+##########################################
+### Got user and should have the list. ###
+##########################################
+res_playarr=$(whiptail --menu "Newest Deaths up top! (YYMMDD-HHMMSS)" 20 60 7 ${selected_backup[@]} 3>&1 1>&2 2>&3)
+RET=$?
+if [ $RET -eq 0 ]; then
+cd $VPLAYER_BACKUP$vanilla_player
+if [ $vanilla_player ]; then
+                if [ "$(grep $vanilla_player $ON)" = $vanilla_player ]; then
+                        echo "this player is in this list"
+                        screen -S Minecraft -p 0 -X stuff "tell $vanilla_player Attempting to restore this data!, You will be kicked $(printf \\r)"
+                        sleep 4
+                        screen -S Minecraft -p 0 -X stuff "/kick $vanilla_player $(printf \\r)"
+                        while inotifywait -e create $PLAYERDATA$UUID.dat; do echo "it changed"; done
+                        cp $res_playarr $PLAYERDATA$UUID.dat
+                        cd /opt/BSCC/Files
+                else
+                        cp $res_playarr $PLAYERDATA$UUID.dat
+                        cd /opt/BSCC/Files
+                fi
+        fi
+echo "task completed"
 fi
 }
 
 do_inventory() {
 clear
 #Check that the mods are actually installed...
-if [ -f $DIR/mods/OpenB* ]; then
-echo "Found Openblocks?"
-else
-whiptail --msgbox --fb "You don't have Openblocks and OpenModsLib installed, Please install it to use this feature." 20 60 0
-exit 1
+if [ ! -f $DIR/mods/OpenB* ]; then
+if (whiptail --title  "Plugin Missing!" --fb --yesno "Openblocks not found!, Do you want to use vanilla recovery?" 12 78) then
+    sed -i 's/VANILLA=.*/VANILLA=true/g' $CONFIG
+    do_vanilla_inventory
 fi
-
+else
+sed -i 's/VANILLA=.*/VANILLA=false/g' $CONFIG
 #Grab User from player list.
 unset playarr
 playarr=`cat $PLAYERS | awk '{print $1 " |"}'`
@@ -335,6 +401,7 @@ screen -S Minecraft -p 0 -X stuff "/ob_inventory restore $selected_player $res_p
 else
 if [ $RET -eq 1 ]; then
 do_inventory
+fi
 fi
 fi
 }
@@ -433,7 +500,6 @@ do_first_run() {
         echo XXX
         echo 40
 	echo "Attemping to start server"
-	touch $INSTALL_LOC/Files/players.list
         echo XXX
         sleep 1
         echo XXX
@@ -558,6 +624,7 @@ The current link is: $dl_link" 20 60
   else
 sed -i 's/MCVERSION=.*/MCVERSION='$vanilla_select'/g' $CONFIG
 sed -i 's/SERVERJAR=.*/SERVERJAR='$vanilla_select\jar'/g' $CONFIG
+sed -i 's/VANILLA=.*/VANILLA=true/g' $CONFIG
 do_ram
 do_first_run
 exit 0
@@ -844,14 +911,14 @@ done
 
 do_help() {
 echo -e "${yellow}This is the list of commands"
-echo -e "To use these commands do ./Main command. example ./Main help"
+echo -e "To use these commands do ./BSCC command. example ./BSCC help"
 echo -e "${red}start ${green}[This will start your server without loading main menu.]"
 echo -e "${red}stop ${green}[Fast and easy way to stop your server.]"
 echo -e "${red}save ${green}[This runs minecrafts default save functions.]"
 echo -e "${red}restart ${green}[This will prompt the server to restart in 5 minutes...backing up also]"
 echo -e "${red}restart_now ${green}[Same as restart but only gives 10 second warning on restart.]"
 echo -e "${red}archive ${green}[Does what it says, Unlike save this actually makes a conpressed save of the server.. A true backup.]"
-echo -e "${red}rdiff ${green}[Because the server is ran in the RAM you need to pull it from the ram and save to the HDD often, Fastest way to make saves]"
+echo -e "${red}rsync ${green}[Because the server is ran in the RAM (If your using ramdisk) you need to pull it from the ram and save to the HDD often, Fastest way to make saves]"
 echo -e "${red}stats ${green}[Simple way to display information on the server about ram/cpu/storage/load]"
 echo -e "${red}inventory ${green}[Adds the ability to quickly recover lost inventory from a list of the last 5 deaths]"
 echo -e "${red}menu ${green}[Main Menu for core server controls.]"
@@ -863,15 +930,19 @@ tput sgr0
 #GUI Menu Starts here!
 
 do_start() {
- if ! screen -list | grep -q "WATCH"; then
-    cd $INSTALL_LOC/Files/
-    $WATCH
- fi
  if ! screen -list | grep -q "Minecraft"; then
     cd $DIR
     $START
     sed -i 's/check=.*/check=true/g' $CONFIG
     whiptail --fb --msgbox "Your Server is loading up please check the client after a minute or so..." 20 60 1
+    sed -i 's/STATUS=.*/STATUS=ONLINE/g' $CONFIG
+    if ! screen -list | grep -q "WATCH"; then
+    cd $INSTALL_LOC/Files/
+    $WATCH
+    if ! screen -list | grep -q "IN_GAME"; then
+    $IN_GAME
+fi
+fi
 else
     whiptail --fb --msgbox "Found a server running please stop it first!" 20 60 1
     do_Qstop
@@ -896,22 +967,9 @@ do_chat
 fi
 }
 
-do_msg() {
+do_random_msg() {
 INPUT=$(whiptail --fb --inputbox "Enter your random message here." 10 80  --title "Greeting MSG" 3>&1 1>&2 2>&3)
-RET=$?
-if [ $RET -eq 0 ]; then
-#Restart checks
-if ! screen -list | grep -q "WATCH"; then
-    cd $INSTALL_LOC/Files
-    screen -dmS "WATCH" ./Greeting
-else
-    screen -X -S WATCH quit
     echo $INPUT >> $INSTALL_LOC/Files/RandomMSG.txt
-    echo "script found running"
-    cd $INSTALL_LOC/Files
-    screen -dmS "WATCH" ./Greeting
-fi
-fi
 }
 
 do_prop() {
@@ -991,6 +1049,10 @@ do_Qstop() {
   if [ $RET -eq 0 ]; then
     sed -i 's/check=.*/check=false/g' $CONFIG
     screen -S Minecraft -p 0 -X stuff "stop $(printf \\r)"
+    screen -X -S WATCH_LOGIN quit
+    screen -X -S WATCH_LOGOUT quit
+    screen -X -S IN_GAME quit
+    sed -i 's/STATUS=.*/STATUS=OFFLINE/g' $CONFIG
     whiptail --fb --msgbox "Stopping Server.." 20 60 1
   fi
 }
@@ -1006,15 +1068,21 @@ if (whiptail --fb --yesno "YOUR ABOUT TO DELETE YOUR MINECRAFT SERVER...IF YOU D
 Think about those poor creepers when you pick your option here." --yes-button DELETE --no-button Leave_Now 20 60 ) then
 	(
         sleep 2
+	screen -X -S WATCH_LOGIN quit
+    	screen -X -S WATCH_LOGOUT quit
         echo XXX
         echo 20
         echo "Searching for poor pigs to kill"
 	rm -rf $DIR/*
         rm -rf $INSTALL_LOC/archive/*
-        rm -rf $INSTALL_LOC/rdiff-backup*
-        rm $INSTALL_LOC/Files/players.list
-	touch $INSTALL_LOC/Files/players.list
+        rm -rf $INSTALL_LOC/rsync_backup/*
+        rm -rf $INSTALL_LOC/PD_Backup/*
+        rm $INSTALL_LOC/Files/Alltimeusers.list
+	touch $INSTALL_LOC/Files/Alltimeusers.list
+	sed -i 's/MCVERSION=.*/MCVERSION=/g' $CONFIG
 	sed -i 's/SERVERJAR=.*/SERVERJAR=/g' $CONFIG
+	sed -i 's/VANILLA=.*/VANILLA=false/g' $CONFIG
+	sed -i 's/STATUS=.*/STATUS=OFFLINE/g' $CONFIG
         echo XXX
         sleep 2
         echo XXX
@@ -1066,7 +1134,6 @@ Do you agree?" 20 60 2 \
     sudo rm /usr/bin/BSCC
     whiptail --msgbox --fb "Everything is now removed. I hope you enjoyed using BSCC and please leave a comment as to why your leaving. Thank you." 20 60 0
   else
-    echo "no"
     exit 0
   fi
 }
@@ -1168,23 +1235,26 @@ clear
 fi
 }
 
-vanilla_inventory() {
-clear
-echo "So this is here and we have no idea what we are going to be able to use it for yet.."
-exit 0
+ingame_control() {
+if (whiptail --fb --title "Toggle External Server Controls" --yes-button "True" --no-button "False"  --yesno "Select if you would like to use External Server Controls or not." 10 60) then
+    sed -i 's/INGAME_CONTROL=.*/INGAME_CONTROL=true/g' $CONFIG
+else
+    sed -i 's/INGAME_CONTROL=.*/INGAME_CONTROL=false/g' $CONFIG
+    screen -X -S IN_GAME quit
+fi
 }
 
 do_beta() {
 while true; do
   FUN=$(whiptail --fb --title "BETA AREA!!!" --menu "Think Tank"  --cancel-button Exit --ok-button Select 20 80 1 \
-    "1 VanillaRestore" "[Don't try this yet..]" \
+    "1 External Server Controls" "[Toggle External Server controls]" \
     3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
      exit 1
   elif [ $RET -eq 0 ]; then
     case "$FUN" in
-      1\ *) vanilla_inventory ;;
+      1\ *) ingame_control ;;
       *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
 fi
@@ -1245,7 +1315,7 @@ while true; do
   elif [ $RET -eq 0 ]; then
     case "$FUN" in
       1\ *) do_console ;;
-      2\ *) do_msg ;;
+      2\ *) do_random_msg ;;
       3\ *) do_op_menu ;;
       4\ *) do_prop ;;
       5\ *) do_Qboot ;;
@@ -1259,14 +1329,15 @@ done
 
 do_menu() {
 while true; do
-  FUN=$(whiptail --fb --title "Main Menu, Build: $BSCC_VERSION" --menu "Server Controls"  --cancel-button Exit --ok-button Select 20 80 7 \
+  FUN=$(whiptail --fb --title "Main Menu, Build: $BSCC_VERSION" --menu "Server Controls"  --cancel-button Exit --ok-button Select 20 80 8 \
     "1 Admins only" "[Admin controls]" \
     "2 Start" "[Attempts to start the server]" \
     "3 Stop" "[Attempt to stop the server]" \
     "4 Inventory" "[Restore player's inventory]" \
     "5 Chat" "[Send chat directly to the server]" \
     "6 Info" "[Fast info about your device/server]" \
-    "7 Update BSCC" "[Update script to keep the fun rolling]" \
+    "7 Storage Info" "[Where is all my space?? Look here!]" \
+    "8 Update BSCC" "[Update script to keep the fun rolling]" \
     3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
@@ -1279,7 +1350,8 @@ while true; do
       4\ *) do_inventory ;;
       5\ *) do_chat ;;
       6\ *) do_info ;;
-      7\ *) do_update ;;
+      7\ *) do_storage ;;
+      8\ *) do_update ;;
       *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
   else
@@ -1288,19 +1360,30 @@ while true; do
 done
 }
 
+
 do_info(){
+STATUS=$(cat $CONFIG | grep -o "STATUS.*" | cut -d "=" -f2)
 server_port=$(cat $DIR/server.properties | grep "server-port" | cut -d "=" -f2)
 on_now=$(ss -t | grep -o "$server_port" | wc -l)
 max_on=$(cat /opt/BSCC/minecraft_server/server.properties | grep "max-players" | cut -d "=" -f2)
-CPU=$(top -bn 1 | awk 'NR>7{s+=$9} END {print s/4}')
+#Calculate accurate CPU usage.
+cpufree=$(mpstat 1 1 | tail -n 1 | awk '{printf $12}')
+CPU=$(echo "scale=1; x=100-$cpufree; if(x<1) print 0; x" | bc)
+#Gather Internal and External IP
+#Find Ethernet Device..
+ETHFIND=$(ifconfig | grep Link | awk '{print $1}' | sort | egrep -v 'inet6|lo')
+NETIF="$ETHFIND"
+EXTERNAL_IP=$(/usr/bin/curl -s http://mdrjr.net/ip.php)
+INTERNAL_IP=$(ifconfig $NETIF | grep 'inet addr:'| cut -d: -f2 | awk '{ print $1}')
 UPTIME=$(uptime | awk '{print $1}')
 LOAD=$(uptime | grep -o "load average.*")
-RAM=$(free -mh | grep Mem | cut -c 37-40)
+RAM=$(free -mh | grep Mem | awk '{print $4}')
 TOTAL=$(du -sh /opt/BSCC/minecraft_server | awk '{print $1}')
 HDD_TOTAL=$(df -kh . | grep / | awk '{print $4}')
 JAVA_VERSION=$(java -version 2>&1 |awk 'NR==1{ gsub(/"/,""); print $3 }')
-whiptail --fb --title "Current server stats" --yesno --yes-button REFRESH --no-button Back \
-"BSCC Version: $BSCC_VERSION \n
+whiptail --fb --clear --title "Current server stats" --yesno --yes-button REFRESH --no-button Back \
+"Server Status: $STATUS \n
+BSCC Version: $BSCC_VERSION \n
 Start on Boot: $startonboot \n
 Server Version: $MCVERSION \n
 Current Players Online: $on_now/$max_on \n
@@ -1309,20 +1392,42 @@ Server Uptime: $UPTIME \n
 $LOAD \n
 Ram Available: "$RAM\B"(Free/Total)"$RAM_TOTAL\B" \n
 Server size on disk: $TOTAL(Used/Free)$HDD_TOTAL \n
-Your Java Version is: $JAVA_VERSION" 30 45 10
+Your Java Version is: $JAVA_VERSION \n
+IP: $INTERNAL_IP|Remote IP: $EXTERNAL_IP" 35 55 10
 CHOICES=$?
-unset TOTAL
-unset on_list
-unset CPU
-unset LOAD
-unset UPTIME
-unset RAM
+unset TOTAL on_list CPU LOAD UPTIME RAM STATUS
   if [ $CHOICES -eq 0 ]; then
    	do_info
 fi
 clear
 }
 
+
+do_storage() {
+#Adjust this if you plan on placing your server in other directories!#
+
+WORLD_NAME=$(cat /opt/BSCC/minecraft_server/server.properties | grep -o "level-name.*" | cut -d "=" -f2)
+MC_SERVER_DIR=$(du -sh /opt/BSCC/minecraft_server/ | awk '{print $1}')
+WORLD=$(du -sh /opt/BSCC/minecraft_server/$WORLD_NAME | awk '{print $1}')
+ARCHIVE=$(du -sh /opt/BSCC/archive/ | awk '{print $1}')
+MAP=$(du -sh /opt/BSCC/mcmaps/ | awk '{print $1}')
+PD_VANILLA_BACKUP=$(du -sh /opt/BSCC/PD_Backup/ | awk '{print $1}')
+RSYNC_BACKUP=$(du -sh /opt/BSCC/rsync_backup | awk '{print $1}')
+TOTAL_SERVER=$(du -sh /opt/BSCC/ | awk '{print $1}')
+FREE_SPACE=$(df -kh . | grep / | awk '{print $4}')
+
+#Gathering up info for storage.. and displaying
+whiptail --fb --title "Current Server Storage" --msgbox \
+"This lists your storage usage..\n
+Minecraft server size: ${MC_SERVER_DIR}B \n
+World size: ${WORLD}B \n
+Backup size: ${RSYNC_BACKUP}B \n
+Archive size: ${ARCHIVE}B \n
+Map size: ${MAP}B \n
+Total BSCC size: ${TOTAL_SERVER}B \n
+Total HDD stoage free: ${FREE_SPACE}B"  25 50 8
+unset MC_SERVER_DIR WORLD ARCHIVE MAP PD_VANILLA_BACKUP RSYNC_BACKUP TOTAL_SERVER FREE_SPACE
+}
 
 
 #####################################################################
@@ -1377,8 +1482,8 @@ case "$1" in
     do_archive
     exit 0
     ;;
-  (rdiff)
-   do_rdiff
+  (rsync)
+   do_rsync
    exit 0
     ;;
   (rollback)
@@ -1412,7 +1517,7 @@ case "$1" in
    ;;
   (*)
   echo -e "${yellow}Usage:${green} $0 ${red}{command}"
-  echo -e "${yellow}For a list of commands use ${red}./Main help"
+  echo -e "${yellow}For a list of commands use ${red}./BSCC help"
   tput sgr0
     exit 2
     ;;
