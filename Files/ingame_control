@@ -1,0 +1,60 @@
+#!/bin/bash
+LOG="/opt/BSCC/minecraft_server/logs/latest.log"
+CHECK=$(cat conf.cfg | grep "INGAME_CONTROL=*" | cut -d "=" -f2)
+
+
+if [ $CHECK = false ]; then
+exit 1
+fi
+
+if [ ! -f Allowed.list ]; then
+touch Allowed.list
+fi
+
+check() {
+if [ ! -z "$RESTART" ]; then
+screen -S Minecraft -p 0 -X stuff "say Wish Granted! $(printf \\r)"
+sleep .5
+BSCC restart > 2&1
+fi
+if [ ! -z "$ARCHIVE" ]; then
+screen -S Minecraft -p 0 -X stuff "say Wish Granted! $(printf \\r)"
+sleep .5
+BSCC archive > 2&1
+fi
+if [ ! -z "$BACKUP" ]; then
+screen -S Minecraft -p 0 -X stuff "say Wish Granted! $(printf \\r)"
+sleep .5
+BSCC rsync > 2&1
+fi
+if [ ! -z "$STOP" ]; then
+screen -S Minecraft -p 0 -X stuff "say Wish Granted! $(printf \\r)"
+sleep .5
+BSCC stop > 2&1
+fi
+if [ ! -z "$STATS" ]; then
+screen -S Minecraft -p 0 -X stuff "say Wish Granted! $(printf \\r)"
+sleep .5
+BSCC stats > 2&>1
+fi
+
+}
+
+while true; do
+unset ALLOWED RESTART ARCHIVE BACKUP STOP STATS
+info="[Server thread/INFO]: [@]"
+OP="Allowed.list"
+ALL=$(cat $LOG | tail -n1 | grep -F "$info" | awk '{print $5}')
+if [ "$ALL" ]; then
+if [ "$(grep $ALL $OP)" = $ALL ]; then
+ALLOWED="$ALL"
+fi
+fi
+RESTART=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Wished for restart!")
+ARCHIVE=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Wished for an archive!")
+BACKUP=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Wished to backup!")
+STOP=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Wished to end this world!")
+STATS=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Wished for stats!")
+sleep 1
+check
+done
