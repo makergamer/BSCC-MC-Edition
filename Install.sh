@@ -19,7 +19,7 @@ fi
 ########################################
 #######  Check for Dependencies  #######
 ########################################
-apt-get install screen git wget rsync unzip
+apt-get install screen git wget rsync unzip sysstat inotify-tools
 #Grab JSON.sh from Dominictarr's Github. Thank you for this tool!!
 wget https://raw.githubusercontent.com/dominictarr/JSON.sh/master/JSON.sh -O JSON.sh
 
@@ -103,9 +103,10 @@ If you agree Please, continue." 15 60) then
         echo 20
         echo "Making Directories & Moving Files"
         mkdir $INSTALL_LOC
-	mkdir $INSTALL_LOC/rdiff-backup
+	mkdir $INSTALL_LOC/rsync_backup
 	mkdir $INSTALL_LOC/archive
         mkdir $INSTALL_LOC/Files
+	mkdir $INSTALL_LOC/PD_Backup
 	mkdir $INSTALL_LOC/minecraft_server
 	mkdir $INSTALL_LOC/Files/versions
         cp Files/* $INSTALL_LOC/Files
@@ -114,7 +115,7 @@ If you agree Please, continue." 15 60) then
         echo XXX
         echo 40
         echo "Touching files :)"
-        touch $INSTALL_LOC/Files/players.list
+	touch $INSTALL_LOC/Files/Allowed.list
         echo XXX
         sleep 2
         echo XXX
@@ -128,7 +129,9 @@ If you agree Please, continue." 15 60) then
         echo 80
         echo "Setting Permissions"
         chown -R $USER:$USER $INSTALL_LOC
-	chmod +x $INSTALL_LOC/Files/Greeting
+	chmod +x $INSTALL_LOC/Files/watch_login
+	chmod +x $INSTALL_LOC/Files/watch_logout
+	chmod +x $INSTALL_LOC/Files/ingame_control
 	chmod +x $INSTALL_LOC/Files/JSON.sh
 	chmod +x /usr/bin/BSCC
         echo XXX
