@@ -186,9 +186,9 @@ do_restart() {
 sed -i 's/check=.*/check=false/g' $CONFIG
 screen -S Minecraft -p 0 -X stuff "save-all $(printf \\r)"
 screen -S Minecraft -p 0 -X stuff "say Restart in 1 Minutes..WHY ARE YOU STILL HERE!!! $(printf \\r)"
-#sleep 50
+sleep 50
 screen -S Minecraft -p 0 -X stuff "say 10 seconds.. $(printf \\r)"
-#sleep 10
+sleep 10
 screen -S Minecraft -p 0 -X stuff "stop $(printf \\r)"
 sleep 3
 screen -X -S WATCH_LOGIN quit
