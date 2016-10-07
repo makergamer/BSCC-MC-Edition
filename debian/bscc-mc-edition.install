@@ -1,3 +1,0 @@
-#! /usr/bin/dh-exec
-BSCC /usr/bin/
-Files/* /opt/BSCC/Files/
