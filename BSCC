@@ -328,7 +328,7 @@ ON="/opt/BSCC/Files/onlineusers.list"
 VPLAYER_BACKUP="/opt/BSCC/PD_Backup/"
 VPLAYER=$(cat $ON | awk '{print $1 " |"}')
 
-unset vanilla_player res_playarr
+unset vanilla_player res_playarr selected_backup UUID
 vanilla_player=$(whiptail --menu "Vanilla Inventory recovery" 20 60 7 ${VPLAYER[@]} 3>&1 1>&2 2>&3)
 RET=$?
 if [ $RET -eq 0 ]; then
@@ -343,7 +343,7 @@ fi
 ##########################################
 ### Got user and should have the list. ###
 ##########################################
-res_playarr=$(whiptail --menu "Newest Deaths up top! (YYMMDD-HHMMSS)" 20 60 7 ${selected_backup[@]} 3>&1 1>&2 2>&3)
+res_playarr=$(whiptail --menu "Newest Inventory (YYMMDD-HHMMSS)" 20 60 7 ${selected_backup[@]} 3>&1 1>&2 2>&3)
 RET=$?
 if [ $RET -eq 0 ]; then
 cd $VPLAYER_BACKUP$vanilla_player
