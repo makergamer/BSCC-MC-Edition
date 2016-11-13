@@ -324,6 +324,7 @@ do_vanilla_inventory() {
 WORLD=$(cat /opt/BSCC/minecraft_server/server.properties | grep -o "level-name.*" | cut -d "=" -f2)
 PLAYERDATA="/opt/BSCC/minecraft_server/$WORLD/playerdata/"
 ALLTIME="/opt/BSCC/Files/Alltimeusers.list"
+ON="/opt/BSCC/Files/onlineusers.list"
 VPLAYER_BACKUP="/opt/BSCC/PD_Backup/"
 VPLAYER=$(cat $ALLTIME | cut -d "=" -f1 | awk '{print $1 " |"}')
 
