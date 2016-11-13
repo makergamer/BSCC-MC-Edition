@@ -19,7 +19,7 @@ fi
 ########################################
 #######  Check for Dependencies  #######
 ########################################
-apt-get install screen git wget rsync unzip sysstat inotify-tools
+apt-get install screen git wget rsync unzip sysstat inotify-tools bc
 #Grab JSON.sh from Dominictarr's Github. Thank you for this tool!!
 wget https://raw.githubusercontent.com/dominictarr/JSON.sh/master/JSON.sh -O JSON.sh
 
