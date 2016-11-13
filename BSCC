@@ -324,9 +324,8 @@ do_vanilla_inventory() {
 WORLD=$(cat /opt/BSCC/minecraft_server/server.properties | grep -o "level-name.*" | cut -d "=" -f2)
 PLAYERDATA="/opt/BSCC/minecraft_server/$WORLD/playerdata/"
 ALLTIME="/opt/BSCC/Files/Alltimeusers.list"
-ON="/opt/BSCC/Files/onlineusers.list"
 VPLAYER_BACKUP="/opt/BSCC/PD_Backup/"
-VPLAYER=$(cat $ON | awk '{print $1 " |"}')
+VPLAYER=$(cat $ALLTIME | cut -d "=" -f1 | awk '{print $1 " |"}')
 
 unset vanilla_player res_playarr selected_backup UUID
 vanilla_player=$(whiptail --menu "Vanilla Inventory recovery" 20 60 7 ${VPLAYER[@]} 3>&1 1>&2 2>&3)
