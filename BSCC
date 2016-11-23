@@ -1316,7 +1316,7 @@ whiptail --fb --yesno "This program needs a web server, Would you like to instal
   if [ $RET -eq 0 ]; then
 do_nginx
 else
-whiptail --msgbox --fb "Ok everything should be in working order, check your IP $INTERNAL_IP in a browser to see if it works. If you are going to use your own web server please link it to load from /opt/BSCC/mc$
+whiptail --msgbox --fb "Ok everything should be in working order, check your IP $INTERNAL_IP in a browser to see if it works. If you are going to use your own web server please link it to load from /opt/BSCC/mcmaps" 20 60 2
 fi
 crontabs="/var/spool/cron/crontabs"
 sudo sed -i".bak" '/BSCC map/d' $crontabs/$USER; (crontab -l 2>/dev/null; echo "0 */1 * * * BSCC map") | crontab -
