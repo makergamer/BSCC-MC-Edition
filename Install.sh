@@ -108,6 +108,7 @@ If you agree Please, continue." 15 60) then
         mkdir $INSTALL_LOC/Files
 	mkdir $INSTALL_LOC/PD_Backup
 	mkdir $INSTALL_LOC/minecraft_server
+	mkdir $INSTALL_LOC/mcmaps
 	mkdir $INSTALL_LOC/Files/versions
         cp Files/* $INSTALL_LOC/Files
         echo XXX
