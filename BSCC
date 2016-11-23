@@ -1245,7 +1245,7 @@ map_render() {
 ## Check Ram and run ##
 CHECK_RAM=$(echo $RAM | cut -d "M" -f1)
 clear
-if [ $CHECK_RAM -lt 1500 ]; then
+if [ $CHECK_RAM -lt 1000 ]; then
 echo "Low ram detected, render will take some time."
 SET_CPU="-p1"  ##This will slow down the render, but will not crash due to low ram.
 fi
@@ -1254,7 +1254,7 @@ fi
 if screen -list | grep -q "Overviewer"; then
 echo "Overviewer is currently running, Try again later"
 else
-nice -n 19 $HOME/Minecraft-Overviewer/overviewer.py $SET_CPU --config=$MAP_CONF
+nice -n 19 $MAP_DIR/Minecraft-Overviewer/overviewer.py $SET_CPU --config=$MAP_CONF
 chown -R $USER:$USER $MAP_DIR
 fi
 }
@@ -1286,6 +1286,7 @@ fi
 #Setup the world and render
 WORLD=$(cat $DIR/server.properties | grep "level-name" | cut -d "=" -f2)
 
+touch $MAP_CONF
 cat <<EOT > $MAP_CONF
 worlds["$WORLD"] = "$DIR/$WORLD"
 
@@ -1305,6 +1306,7 @@ renders["nighttime"] = {
 
 outputdir = "$MAP_DIR"
 EOT
+python setup.py build
 map_render
 fi
 if [ $RET -eq 1 ]; then
