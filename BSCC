@@ -1243,7 +1243,7 @@ fi
 
 map_render() {
 ## Check Ram and run ##
-CHECK_RAM=$(echo $RAM | cut -d "M" -f1)
+CHECK_RAM=$(echo $RAM | cut -d "G" -f1 | cut -d "M" -f1)
 clear
 if [ $CHECK_RAM -lt 1000 ]; then
 echo "Low ram detected, render will take some time."
@@ -1306,6 +1306,7 @@ renders["nighttime"] = {
 
 outputdir = "$MAP_DIR"
 EOT
+cd $MAP_DIR/ Minecraft-Overviewer
 python setup.py build
 map_render
 fi
