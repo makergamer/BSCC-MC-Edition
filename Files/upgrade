@@ -2,7 +2,7 @@
 INSTALL_LOC=/opt/BSCC
 CONFIG=$INSTALL_LOC/Files/conf.cfg
 ###############################
-### Version 1.6-1.7 upgrade ###
+### Version 1.7-1.8 upgrade ###
 ###############################
 
 cd $INSTALL_LOC/Files
@@ -14,18 +14,10 @@ do_update() {
 	mkdir $INSTALL_LOC/rsync_backup
 	cp $CONFIG $INSTALL_LOC/Files/conf.cfg.bak
 	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/BSCC -O BSCC
-	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/watch_login -O watch_login
-	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/watch_logout -O watch_logout
-	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/ingame_control -O ingame_control
 	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/conf.cfg -O conf.cfg
 	clear
 	mv BSCC /usr/bin/
-	rm Greeting
-	touch Allowed.list
 	chmod +x /usr/bin/BSCC
-	chmod +x $INSTALL_LOC/Files/watch_login
-	chmod +x $INSTALL_LOC/Files/watch_logout
-	chmod +x $INSTALL_LOC/Files/ingame_control
 #Grab old info and replace in new conf.cfg
 	source $INSTALL_LOC/Files/conf.cfg.bak
 	sed -i "s/MCVERSION=.*/MCVERSION=$MCVERSION/g" $CONFIG
