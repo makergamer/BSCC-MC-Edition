@@ -37,11 +37,15 @@ screen -S Minecraft -p 0 -X stuff "say Wish Granted! $(printf \\r)"
 sleep .5
 BSCC stats > 2&>1
 fi
-
+if [ ! -z "$MAPS" ]; then
+screen -S Minecraft -p 0 -X stuff "say Wish Granted! $(printf \\r)"
+sleep .5
+BSCC map > 2&>1 &
+fi
 }
 
 while true; do
-unset ALLOWED RESTART ARCHIVE BACKUP STOP STATS
+unset ALLOWED RESTART ARCHIVE BACKUP STOP STATS MAPS
 info="[Server thread/INFO]: [@]"
 OP="Allowed.list"
 ALL=$(cat $LOG | tail -n1 | grep -F "$info" | awk '{print $5}')
@@ -55,6 +59,7 @@ ARCHIVE=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Wished for an archive!")
 BACKUP=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Wished to backup!")
 STOP=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Wished to end this world!")
 STATS=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Wished for stats!")
+MAPS=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Wished for maps!")
 sleep 1
 check
 done
