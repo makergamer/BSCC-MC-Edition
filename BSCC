@@ -101,13 +101,6 @@ fi
 }
 
 do_no_menu_start() {
-  if ! screen -list | grep -q "WATCH"; then
-     cd $INSTALL_LOC/Files/
-     $WATCH
-  fi
-  if ! screen -list | grep -q "IN_GAME"; then
-     $IN_GAME
-  fi
   if ! screen -list | grep -q "Minecraft"; then
      cd $DIR
      $START
@@ -115,6 +108,13 @@ do_no_menu_start() {
      sed -i 's/check=.*/check=true/g' $CONFIG
   else
      echo "Server was found running... close it before running this"
+  fi
+  if ! screen -list | grep -q "IN_GAME"; then
+     $IN_GAME
+  fi
+  if ! screen -list | grep -q "WATCH"; then
+     cd $INSTALL_LOC/Files/
+     $WATCH
   fi
 }
 
