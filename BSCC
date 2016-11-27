@@ -678,7 +678,7 @@ whiptail --msgbox --clear --fb "Download failed!, check your internet and the li
 The current link is: $dl_link" 20 60
   else
 sed -i 's/MCVERSION=.*/MCVERSION='$bukkit_servers'/g' $CONFIG
-sed -i 's/SERVERJAR=.*/SERVERJAR='$bukkit_servers'/g' $CONFIG
+sed -i 's/SERVERJAR=.*/SERVERJAR='$bukkit_servers.jar'/g' $CONFIG
 do_ram
 do_first_run
 fi
