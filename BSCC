@@ -1000,7 +1000,7 @@ fi
 do_Qdeop() {
 if (whiptail --title "DeOp Confirmation." --yesno "Are you sure you want to deOp $selected_player?" 8 78) then
     echo "User selected Yes, Deoping"
-    screen -S Minecraft -p 0 -X stuff "`printf "/deop $selected_player\r"`";
+    screen -S Minecraft -p 0 -X stuff "`printf "deop $selected_player\r"`";
 fi
 }
 
@@ -1018,7 +1018,7 @@ do_op() {
   whiptail --msgbox --fb "This user is already Oped, moving to DeOp...." 20 60 0
     do_Qdeop 
   else
-    screen -S Minecraft -p 0 -X stuff "`printf "/op $selected_player\r"`";
+    screen -S Minecraft -p 0 -X stuff "`printf "op $selected_player\r"`";
   fi
 fi
 }
