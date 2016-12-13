@@ -1,49 +1,11 @@
-#!/bin/bash
-SERVER_DIR="/opt/BSCC/minecraft_server/"
+#!/bin/bash -x
+DIR="/opt/BSCC/Files"
+ALLTIME="$DIR/Alltimeusers.list"
+ON="$DIR/onlineusers.list"
 LOG="/opt/BSCC/minecraft_server/logs/latest.log"
-TARGET="/opt/BSCC/PD_Backup/"
-ON="onlineusers.list"
-ALLTIME="Alltimeusers.list"
+LOG_DIR="/opt/BSCC/minecraft_server/logs/"
 
-
-####################################
-### First loads need delay       ###
-####################################
-WORLD=$(cat /opt/BSCC/minecraft_server/server.properties | grep -o "level-name.*" | cut -d "=" -f2)
-for ((i=120;i>0;i=i-1)); do
-        if [ -z "$WORLD" ]; then
-        WORLD=$(cat /opt/BSCC/minecraft_server/server.properties | grep -o "level-name.*" | cut -d "=" -f2)
-        echo -n "Looking for Custom World folder $i seconds"
-        sleep 1
-else
-	DIR="$SERVER_DIR$WORLD/stats/"
-        PLAYERDATA="/opt/BSCC/minecraft_server/$WORLD/playerdata/"
-        break
-fi
-done
-
-####################################
-## Make file if they don't exist ###
-## Make clean Onlineuser *bug*   ###
-####################################
-rm $ON
-if [ ! -f "$ON" ]; then
-	touch $ON
-fi
-if [ ! -f "$ALLTIME" ]; then
-	touch $ALLTIME
-fi
-
-for ((i=120;i>0;i=i-1)); do
-        if [ ! -d "/opt/BSCC/minecraft_server/$WORLD" ]; then
-	echo -n "Waiting for World folder to populate."
-        sleep 1
-else
-	mkdir $DIR 2> /dev/null
-        break
-fi
-done
-
+##Add random messages##
 RANDOM_MSG() {
 #Adding Random Message over just one welcome message.
 	IFS=$'\r\n' command eval 'MSG=($(cat RandomMSG.txt))'
@@ -51,72 +13,53 @@ RANDOM_MSG() {
         MSG=${MSG[$GEN]}
 }
 
-#Check to see if the server screen is running.
-if ! screen -list | grep -q "Minecraft"; then
-echo "Server is not running"
-exit 0
-fi
 
-logout() {
-#Make sure the logout script stays alive..
-if ! screen -list | grep -q "WATCH_LOGOUT"; then
-	screen -dmS WATCH_LOGOUT ./watch_logout
+do_user() {
+NAME=$(echo $USER | cut -d "=" -f1)
+if [ $USER ]; then
+RANDOM_MSG
+        if [ "$(grep $USER $ALLTIME)" != $USER ]; then
+                grep -q "$USER" "$ALLTIME" || echo "$USER" >> "$ALLTIME"
+		grep -q "$NAME" "$ON" || echo "$NAME" >> "$ON"
+                screen -S Minecraft -p 0 -X stuff "say Welcome to the server $NAME $(printf \\r)"
+else
+		grep -q "$NAME" "$ON" || echo "$NAME" >> "$ON"
+                screen -S Minecraft -p 0 -X stuff "tell $NAME $MSG $(printf \\r)"
+
+ fi
 fi
 }
 
-Vanilla_backup() {
+do_out() {
+####change paths here####
+if [ $LEFT ]; then
+        if [ "$(grep $LEFT $ON)" != $ON ]; then
+              sed -i -e '/'$LEFT'/d' $ON
+   fi
+fi
+}
+
+do_check() {
+USER=$(tail -n 1 $LOG | grep -o "UUID of player.*" | awk '{print $4"="$6}')
+LEFT=$(tail -n 1 $LOG | grep -o ".*left the game" | cut -d " " -f4)
+if [ $USER ]; then
+do_user
+fi
+
+if [ $LEFT ]; then
+do_out
+fi
+}
+
+###Check for Vanilla server###
 VANILLA=$(cat conf.cfg | grep -o "VANILLA.*" | cut -d "=" -f2)
 if [ $VANILLA = true ]; then
-dt=$(date +"%Y_%m_%d-%H%M%S")
-cp $PLAYERDATA$PLAYERUUID.dat $TARGET$DECODEDUSERNAME/${DECODEDUSERNAME}_${dt}.dat
-cd $TARGET$DECODEDUSERNAME
-rm $(ls -1t $TARGET$DECODEDUSERNAME | tail -n +41) 2> /dev/null
-cd /opt/BSCC/Files/
-fi
-}
-
-Greeting() {
-	RANDOM_MSG
-	        if [ $DECODEDUSERNAME ]; then
-                if [ "$(grep $DECODEDUSERNAME $ON)" != $DECODEDUSERNAME ]; then
-                        grep -q "$DECODEDUSERNAME" "$ON" || echo "$DECODEDUSERNAME" >> "$ON"
-                        screen -S Minecraft -p 0 -X stuff "tell $DECODEDUSERNAME $MSG $(printf \\r)"
-			Vanilla_backup
-                fi
+	if ! screen -list | grep -q "WATCH_LOGOUT"; then
+		screen -dmS VANILLA_BACKUP ./vanilla_backup
 	fi
-}
-
-#############################################
-###	       Check Login                ###
-#############################################
-
-inotifywait -q -m "$DIR" --format '%w%f' -e create,access | 
-   while read stats; do
-#This will give us the Users UUID, we will use this to find the users name.
-	PLAYERUUID=$(echo $stats | grep -o "stats.*" | cut -d "/" -f2 | cut -d "." -f1)
-	CorrectUUID=$(echo $PLAYERUUID | sed 's/-//g')
-	DECODEDUSERNAME=$(cat $ALLTIME | grep "$PLAYERUUID" | cut -d "=" -f1)
-#Debugging options..##############
-#echo "Playeruuid is: $PLAYERUUID"
-#echo "CorrectUUID is :$CorrectUUID"
-###################################
-
-###################################
-### Is this a new user or old?  ###
-if [ ! -z "$DECODEDUSERNAME" ]; then
-logout
-Greeting
-else
-###################################################
-###		New User Section                ###
-###################################################
-#####################################
-#Figure out the user's actual name. #
-#####################################
-DECODEDUSERNAME=$(cat $LOG | grep "$PLAYERUUID" | tail -n1 | awk '{print $8}')
-grep -q "$DECODEDUSERNAME=$PLAYERUUID" "$ALLTIME" || echo "$DECODEDUSERNAME=$PLAYERUUID" >> "$ALLTIME"
-mkdir $TARGET$DECODEDUSERNAME
-logout
-Greeting
 fi
+
+inotifywait -q -m "$LOG_DIR" --format '%w%f' -e modify,move| 
+while read stats; do
+do_check
 done
