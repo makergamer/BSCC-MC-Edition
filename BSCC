@@ -124,7 +124,7 @@ do_no_menu_stop() {
     sleep 2
     screen -S Minecraft -p 0 -X stuff "stop $(printf \\r)"
     screen -X -S WATCH_LOGIN quit
-    screen -X -S WATCH_LOGOUT quit
+    screen -X -S VANILLA_BACKUP quit
     screen -X -S IN_GAME quit
   else
      echo "No server was found to be running...did you start on?"
@@ -190,7 +190,7 @@ sleep 10
 screen -S Minecraft -p 0 -X stuff "stop $(printf \\r)"
 sleep 3
 screen -X -S WATCH_LOGIN quit
-screen -X -S WATCH_LOGOUT quit
+screen -X -S VANILLA_BACKUP quit
 sleep 10
 cd $INSTALL_LOC/Files/
 $WATCH
@@ -1049,7 +1049,7 @@ do_Qstop() {
     sed -i 's/check=.*/check=false/g' $CONFIG
     screen -S Minecraft -p 0 -X stuff "stop $(printf \\r)"
     screen -X -S WATCH_LOGIN quit
-    screen -X -S WATCH_LOGOUT quit
+    screen -X -S VANILLA_BACKUP quit
     screen -X -S IN_GAME quit
     whiptail --fb --msgbox "Stopping Server.." 20 60 1
   fi
@@ -1067,7 +1067,7 @@ Think about those poor creepers when you pick your option here." --yes-button DE
 	(
         sleep 2
 	screen -X -S WATCH_LOGIN quit
-    	screen -X -S WATCH_LOGOUT quit
+    	screen -X -S VANILLA_BACKUP quit
         echo XXX
         echo 20
         echo "Searching for poor pigs to kill"
