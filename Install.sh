@@ -132,7 +132,6 @@ If you agree Please, continue." 15 60) then
         echo "Setting Permissions"
         chown -R $USER:$USER $INSTALL_LOC
 	chmod +x $INSTALL_LOC/Files/watch_login
-	chmod +x $INSTALL_LOC/Files/watch_logout
 	chmod +x $INSTALL_LOC/Files/ingame_control
 	chmod +x $INSTALL_LOC/Files/JSON.sh
 	chmod +x /usr/bin/BSCC
