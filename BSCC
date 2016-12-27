@@ -1075,7 +1075,8 @@ Think about those poor creepers when you pick your option here." --yes-button DE
         rm -rf $INSTALL_LOC/archive/*
         rm -rf $INSTALL_LOC/rsync_backup/*
         rm -rf $INSTALL_LOC/PD_Backup/*
-        rm $INSTALL_LOC/Files/Alltimeusers.list
+        rm -rf $INSTALL_LOC/mcmaps/*
+	rm $INSTALL_LOC/Files/Alltimeusers.list
 	touch $INSTALL_LOC/Files/Alltimeusers.list
 	sed -i 's/MCVERSION=.*/MCVERSION=/g' $CONFIG
 	sed -i 's/SERVERJAR=.*/SERVERJAR=/g' $CONFIG
