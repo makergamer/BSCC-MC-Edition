@@ -1271,6 +1271,14 @@ do_admin_advanced
 }
 
 do_overviewer() {
+## Make sure someone has entered the world once ##
+WORLD=$(cat $DIR/server.properties | grep -o "level-name.*" | cut -d "=" -f2)
+DATA="/opt/BSCC/minecraft_server/$WORLD/playerdata"
+if [ ! "$(ls -A $DATA)" ]; then
+clear
+echo "Overviewer can not be installed because you haven't logged anyone into the world yet. Please $
+exit 1
+fi
 whiptail --fb --yesno "Install Overviewer?" 20 60 2 \
     --yes-button Yes --no-button No
   RET=$?
