@@ -2,34 +2,31 @@
 INSTALL_LOC=/opt/BSCC
 CONFIG=$INSTALL_LOC/Files/conf.cfg
 ###############################
-### Version 1.7-1.8 upgrade ###
+### Version 1.8-1.9 upgrade ###
 ###############################
 
 cd $INSTALL_LOC/Files
 
 #All checks cleared.. Update
 do_update() {
-	rm -rf $INSTALL_LOC/rdiff-backup
-	mkdir $INSTALL_LOC/PD_Backup
-	mkdir $INSTALL_LOC/rsync_backup
-	cp $CONFIG $INSTALL_LOC/Files/conf.cfg.bak
+#	cp $CONFIG $INSTALL_LOC/Files/conf.cfg.bak
 	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/BSCC -O BSCC
-	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/conf.cfg -O conf.cfg
+#	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/conf.cfg -O conf.cfg
 	clear
 	mv BSCC /usr/bin/
 	chmod +x /usr/bin/BSCC
 #Grab old info and replace in new conf.cfg
-	source $INSTALL_LOC/Files/conf.cfg.bak
-	sed -i "s/MCVERSION=.*/MCVERSION=$MCVERSION/g" $CONFIG
-	sed -i "s/SERVERJAR=.*/SERVERJAR=$SERVERJAR/g" $CONFIG
-	sed -i "s/MINMEM=.*/MINMEM=$MINMEM/g" $CONFIG
-	sed -i "s/MAXMEM=.*/MAXMEM=$MAXMEM/g" $CONFIG
+#	source $INSTALL_LOC/Files/conf.cfg.bak
+#	sed -i "s/MCVERSION=.*/MCVERSION=$MCVERSION/g" $CONFIG
+#	sed -i "s/SERVERJAR=.*/SERVERJAR=$SERVERJAR/g" $CONFIG
+#	sed -i "s/MINMEM=.*/MINMEM=$MINMEM/g" $CONFIG
+#	sed -i "s/MAXMEM=.*/MAXMEM=$MAXMEM/g" $CONFIG
 #	sed -i "s/ARGUMENTS=.*/ARGUMENTS=$ARGUMENTS/g" $CONFIG
-	sed -i "s/check=.*/check=$check/g" $CONFIG
-	sed -i "s/startonboot=.*/startonboot=$startonboot/g" $CONFIG
-	sed -i "s/MCSREEN=.*/MCSCREEN=$MCSCREEN/g" $CONFIG
-	source $INSTALL_LOC/Files/conf.cfg
-	chown -R $SUDO_USER:$SUDO_USER $INSTALL_LOC/Files/
+#	sed -i "s/check=.*/check=$check/g" $CONFIG
+#	sed -i "s/startonboot=.*/startonboot=$startonboot/g" $CONFIG
+#	sed -i "s/MCSREEN=.*/MCSCREEN=$MCSCREEN/g" $CONFIG
+#	source $INSTALL_LOC/Files/conf.cfg
+#	chown -R $SUDO_USER:$SUDO_USER $INSTALL_LOC/Files/
 whiptail --msgbox --fb "Ok everything should be up to date now.\n
 Please exit BSCC and relaunch it to make sure everything works.\n
 Your new version is: $BSCC_VERSION" 20 60 0
