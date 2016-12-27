@@ -1172,18 +1172,19 @@ done
 }
 
 do_cron() {
-unset list
-unset commands
+unset list commands varr
 varr[0]='check |'
 varr[1]='stats |'
-varr[2]='archive |'
-varr[3]='restart |'
-varr[4]='REMOVE |'
+varr[2]='map |'
+varr[3]='archive |'
+varr[4]='restart |'
+varr[5]='REMOVE |'
 varr=(${varr[@]})
 crontabs="/var/spool/cron/crontabs"
 whiptail --msgbox --fb "The next menu will let you set times for basic functions \n
 CHECK=[How often the server should check if the server is up..if down it starts it.] \n
 STATS=[Display system stats to the minecraft console to display to users online.] \n
+MAP=[Overviewer refresh rate] \n
 ARCHIVE=[How often a archive should be done.] \n
 RESTART=[how often a restart should be done.] \n
 REMOVE=[Clear all crontab jobs.]" 20 90 0
@@ -1254,9 +1255,11 @@ fi
 if screen -list | grep -q "Overviewer"; then
 echo "Overviewer is currently running, Try again later"
 else
+screen -S Minecraft -p 0 -X stuff "say Updating Overviewer! $(printf \\r)"
 nice -n 19 $MAP_DIR/Minecraft-Overviewer/overviewer.py $SET_CPU --config=$MAP_CONF
 chown -R $USER:$USER $MAP_DIR
 fi
+screen -S Minecraft -p 0 -X stuff "Overviewer Completed. $(printf \\r)"
 }
 
 do_nginx() {
