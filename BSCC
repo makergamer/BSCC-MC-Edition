@@ -1256,10 +1256,10 @@ if screen -list | grep -q "Overviewer"; then
 echo "Overviewer is currently running, Try again later"
 else
 screen -S Minecraft -p 0 -X stuff "say Updating Overviewer! $(printf \\r)"
-nice -n 19 $MAP_DIR/Minecraft-Overviewer/overviewer.py $SET_CPU --config=$MAP_CONF
+screen -dmS Overviewer nice -n 19 $MAP_DIR/Minecraft-Overviewer/overviewer.py $SET_CPU --config=$MAP_CONF
 chown -R $USER:$USER $MAP_DIR
-fi
 screen -S Minecraft -p 0 -X stuff "Overviewer Completed. $(printf \\r)"
+fi
 }
 
 do_nginx() {
