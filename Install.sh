@@ -86,7 +86,7 @@ fi
 }
 
 #Check for java install.
-if [ ! -f /usr/bin/java ]; then
+if [ ! -d /opt/java_jdk ]; then
 do_java
 fi
 
