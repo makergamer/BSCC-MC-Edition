@@ -1258,7 +1258,7 @@ else
 screen -S Minecraft -p 0 -X stuff "say Updating Overviewer! $(printf \\r)"
 screen -dmS Overviewer nice -n 19 $MAP_DIR/Minecraft-Overviewer/overviewer.py $SET_CPU --config=$MAP_CONF
 chown -R $USER:$USER $MAP_DIR
-screen -S Minecraft -p 0 -X stuff "Overviewer Completed. $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "say Overviewer Completed. $(printf \\r)"
 fi
 }
 
