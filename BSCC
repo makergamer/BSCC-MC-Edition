@@ -481,7 +481,7 @@ then
         echo "Server not found...exiting"
         exit 1
 else
-        echo ${green}"PRESS C TO TYPE IN CONSOLE, OR Q TO EXIT (Might need to hit twice!)"
+        echo -e ${green}"PRESS C TO TYPE IN CONSOLE, OR Q TO EXIT (Might need to hit twice!)"
 	tput sgr0
         cat $log | tail -20
         read -t 1 -n 1 key
