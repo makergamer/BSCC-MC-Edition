@@ -21,7 +21,9 @@ RANDOM_MSG
         if [ "$(grep $USER $ALLTIME)" != $USER ]; then
                 grep -q "$USER" "$ALLTIME" || echo "$USER" >> "$ALLTIME"
 		grep -q "$NAME" "$ON" || echo "$NAME" >> "$ON"
+		export NAME
                 screen -S Minecraft -p 0 -X stuff "say Welcome to the server $NAME $(printf \\r)"
+		./kit
 else
 		grep -q "$NAME" "$ON" || echo "$NAME" >> "$ON"
                 screen -S Minecraft -p 0 -X stuff "tell $NAME $MSG $(printf \\r)"
