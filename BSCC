@@ -135,6 +135,31 @@ do_save() {
 screen -S Minecraft -p 0 -X stuff "save-all $(printf \\r)"
 }
 
+do_leveltype() {
+while true; do
+FUN=$(whiptail --fb --title "Level Type" --menu "Please select a Level Type"  --cancel-button Exit --ok-button Select 20 80 4 \
+        "1 DEFAULT" "[Standard world with hills, valleys, water, etc.]" \
+        "2 FLAT" "[A flat world with no features, meant for building.]" \
+        "3 LARGEBIOMES" "[Same as default but all biomes are larger.]" \
+        "4 AMPLIFIED" "[Same as default but world-generation height limit is increased.]" \
+        3>&1 1>&2 2>&3)
+RET=$?
+if [ $RET -eq 1 ]; then
+    break
+  elif [ $RET -eq 0 ]; then
+    case "$FUN" in
+      1\ *) echo "level-type=DEFAULT" > $SERVER_PROP; break ;;
+      2\ *) echo "level-type=FLAT" > $SERVER_PROP; break ;;
+      3\ *) echo "level-type=LARGEBIOMES" > $SERVER_PROP; break ;;
+      4\ *) echo "level-type=AMPLIFIED" > $SERVER_PROP; break ;;
+      *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
+      esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
+  else
+    exit 1
+fi
+done
+}
+
 do_Qboot() {
 crontabs="/var/spool/cron/crontabs"
 ##Setup on boot requests.
@@ -548,6 +573,7 @@ fi
 #EULA Needs to be accepted by the user
 do_eula
 do_Qboot
+do_leveltype
 #All done here
 whiptail --fb --title "YOUR ALL SETUP!!!" --msgbox "Well if your seeing this it means that there is a good chance that your server is all setup and read to go. Give it some time to load and enjoy. Run BSCC for more info" 20 60
 exit 0
@@ -979,7 +1005,7 @@ if [ ${#PROP[@]} -eq 0 ]; then
     echo "No arrey found, Building"
 fi
 IFS=$'\r\n' GLOBIGNORE='*' command eval 'PROP=(${PROP[@]})'
-SELECTED_PROP=$(whiptail --fb --menu "Select target disk, Or Cancel to Leave" 20 80 10 ${PROP[@]} 3>&1 1>&2 2>&3)
+SELECTED_PROP=$(whiptail --fb --menu "Server.Properties" 20 80 10 ${PROP[@]} 3>&1 1>&2 2>&3)
 RET=$?
 if [ $RET -eq 0 ]; then
 #User has selected something.. time to edit
