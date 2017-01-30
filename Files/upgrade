@@ -2,7 +2,7 @@
 INSTALL_LOC=/opt/BSCC
 CONFIG=$INSTALL_LOC/Files/conf.cfg
 ###############################
-### Version 1.8-1.9 upgrade ###
+### Version 1.9-1.9.1 upgrade ###
 ###############################
 
 cd $INSTALL_LOC/Files
@@ -12,9 +12,12 @@ do_update() {
 	cp $CONFIG $INSTALL_LOC/Files/conf.cfg.bak
 	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/BSCC -O BSCC
 	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/conf.cfg -O conf.cfg
+	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/kit -O kit
 	clear
 	mv BSCC /usr/bin/
+	mv kit /opt/BSCC/Files/
 	chmod +x /usr/bin/BSCC
+	chmod +x /opt/BSCC/Files/kit
 #Grab old info and replace in new conf.cfg
 	source $INSTALL_LOC/Files/conf.cfg.bak
 	sed -i "s/MCVERSION=.*/MCVERSION=$MCVERSION/g" $CONFIG
