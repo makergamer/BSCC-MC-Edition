@@ -1,0 +1,14 @@
+#!/bin/bash
+###This secion you will grant new users a gift package on their first time joining your Server.
+###If you don't want your users to have a kit, just delete this file for now.
+
+##Examples are of wooden tools. Change the () area in this [give $NAME (wooden_shovel) $(printf \\r)"]
+screen -S Minecraft -p 0 -X stuff "give $NAME wooden_shovel $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "give $NAME wooden_sword $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "give $NAME wooden_pickaxe $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "give $NAME wooden_axe $(printf \\r)"
+
+
+##Examples of food and a some torches.
+screen -S Minecraft -p 0 -X stuff "give $NAME torch 20 $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "give $NAME carrot 5 $(printf \\r)"
