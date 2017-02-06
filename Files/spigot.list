@@ -1,4 +1,5 @@
-Version_1.11= https://ci.mcadmin.net/job/Spigot/113/artifact/spigot-1.11.jar
+Version_1.11.2= https://ci.mcadmin.net/job/Spigot/lastSuccessfulBuild/artifact/spigot-1.11.2.jar 
+Version_1.11= https://ci.mcadmin.net/job/Spigot/118/artifact/spigot-1.11.jar
 Version_1.9.2= http://getspigot.org/jenkins/job/Spigot/57/artifact/spigot-1.9.2.jar
 Version_1.9= http://getspigot.org/jenkins/job/Spigot/49/artifact/spigot-1.9.jar
 Version_1.8.8= http://getspigot.org/jenkins/job/Spigot/17/artifact/spigot-1.8.8.jar
