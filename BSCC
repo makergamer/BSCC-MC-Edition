@@ -246,7 +246,7 @@ if ! screen -list | grep -q "Minecraft"; then
 else
   cd $ARCHIVE
   screen -S Minecraft -p 0 -X stuff "say Creating Archive of the server, Sorry for any lag. $(printf \\r)"
-  tar -zcvf "$today".tar.gz -C $RSYNC .
+  tar -zcvf "$today".tar.gz -C $DIR .
   rm `ls -t | awk 'NR>8'` 2>/dev/null
   screen -S Minecraft -p 0 -X stuff "say Archive complete, carry on... :( $(printf \\r)"
 fi
