@@ -29,8 +29,6 @@ do_update() {
 	sed -i "s/check=.*/check=$check/g" $CONFIG
 	sed -i "s/startonboot=.*/startonboot=$startonboot/g" $CONFIG
 	sed -i "s/MCSREEN=.*/MCSCREEN=$MCSCREEN/g" $CONFIG
-	source $INSTALL_LOC/Files/conf.cfg
-	chown -R $USER:$USER $INSTALL_LOC/Files/
 	exit 0
 }
 
