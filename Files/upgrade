@@ -13,11 +13,9 @@ do_update() {
 	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/BSCC -O BSCC
 	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/conf.cfg -O conf.cfg
 	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/kit -O kit
-	https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/watch_login -O watch_login
+	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/watch_login -O watch_login
 	clear
 	sudo mv BSCC /usr/bin/
-	mv -f kit /opt/BSCC/Files/
-	mv -f watch_login /opt/BSCC/Files/
 	sudo chmod +x /usr/bin/BSCC
 	chmod +x /opt/BSCC/Files/kit
 	chmod +x /opt/BSCC/Files/watch_login
