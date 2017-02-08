@@ -16,8 +16,8 @@ do_update() {
 	https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/watch_login -O watch_login
 	clear
 	sudo mv BSCC /usr/bin/
-	mv kit /opt/BSCC/Files/
-	mv watch_login /opt/BSCC/Files/
+	mv -f kit /opt/BSCC/Files/
+	mv -f watch_login /opt/BSCC/Files/
 	sudo chmod +x /usr/bin/BSCC
 	chmod +x /opt/BSCC/Files/kit
 	chmod +x /opt/BSCC/Files/watch_login
