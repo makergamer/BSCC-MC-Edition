@@ -13,11 +13,14 @@ do_update() {
 	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/BSCC -O BSCC
 	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/conf.cfg -O conf.cfg
 	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/kit -O kit
+	https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/watch_login -O watch_login
 	clear
 	mv BSCC /usr/bin/
 	mv kit /opt/BSCC/Files/
+	mv watch_login /opt/BSCC/Files/
 	chmod +x /usr/bin/BSCC
 	chmod +x /opt/BSCC/Files/kit
+	chmod +x /opt/BSCC/Files/watch_login
 #Grab old info and replace in new conf.cfg
 	source $INSTALL_LOC/Files/conf.cfg.bak
 	sed -i "s/MCVERSION=.*/MCVERSION=$MCVERSION/g" $CONFIG
