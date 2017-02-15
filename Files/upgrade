@@ -7,6 +7,27 @@ CONFIG=$INSTALL_LOC/Files/conf.cfg
 
 cd $INSTALL_LOC/Files
 
+do_servertype() {
+while true; do
+  FUN=$(whiptail --fb --title "User input needed" --menu "Please tell me what version you are currently running with BSCC."  --cancel-button Exit --ok-button Select 20 80 7 \
+    "1 Vanilla" "|" \
+    "2 Spigot" "|" \
+    "3 FTB" "|" \
+    3>&1 1>&2 2>&3)
+  RET=$?
+  if [ $RET -eq 1 ]; then
+     exit 1
+  elif [ $RET -eq 0 ]; then
+    case "$FUN" in
+      1\ *)  sed -i "s/SERVER_TYPE=.*/SERVER_TYPE=VANILLA/g" $CONFIG; break ;;
+      2\ *)  sed -i "s/SERVER_TYPE=.*/SERVER_TYPE=SPIGOT/g" $CONFIG; break ;;
+      3\ *)  sed -i "s/SERVER_TYPE=.*/SERVER_TYPE=FTB/g" $CONFIG;break ;;
+      *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
+    esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
+fi
+done
+}
+
 #All checks cleared.. Update
 do_update() {
 	cp $CONFIG $INSTALL_LOC/Files/conf.cfg.bak
@@ -19,6 +40,7 @@ do_update() {
 	sudo chmod +x /usr/bin/BSCC
 	chmod +x /opt/BSCC/Files/kit
 	chmod +x /opt/BSCC/Files/watch_login
+	chmod +x /opt/BSCC/Files/update.sh
 #Grab old info and replace in new conf.cfg
 	source $INSTALL_LOC/Files/conf.cfg.bak
 	sed -i "s/MCVERSION=.*/MCVERSION=$MCVERSION/g" $CONFIG
@@ -29,7 +51,12 @@ do_update() {
 	sed -i "s/check=.*/check=$check/g" $CONFIG
 	sed -i "s/startonboot=.*/startonboot=$startonboot/g" $CONFIG
 	sed -i "s/MCSREEN=.*/MCSCREEN=$MCSCREEN/g" $CONFIG
-	exit 0
+	chown -R $USER:$USER $INSTALL_LOC/Files/
+        if [ -z $SERVER_TYPE ]; then
+        whiptail --fb --msgbox "This update is a large update and bringing many new features, One of them is something many of you have asked me about. Server upgrading!, \
+Well i'm glad to say it's been implemented (still betaish) but will require you to tell me what server you are currently running on BSCC. Thank you and I hope you enjoy." 20 60 0
+        do_servertype
+        fi
 }
 
 if [ -f /opt/BSCC/Files/conf.cfg ]; then
