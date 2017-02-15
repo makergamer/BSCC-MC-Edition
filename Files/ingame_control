@@ -1,11 +1,11 @@
 #!/bin/bash
+
+#####This script will now be ran by default, It will allow you to control the server in many ways but i've outlined a few here. ####
+#####How to use!, Create a Command block down and enter one of the few commands listed below. #####
+
+#### Examples command: say @p Wished for an archive! (This would trigger the archive as long as you are an allowed user, Check /opt/BSCC/Files/Allowed.list###
+
 LOG="/opt/BSCC/minecraft_server/logs/latest.log"
-CHECK=$(cat conf.cfg | grep "INGAME_CONTROL=*" | cut -d "=" -f2)
-
-
-if [ $CHECK = false ]; then
-exit 1
-fi
 
 if [ ! -f Allowed.list ]; then
 touch Allowed.list
