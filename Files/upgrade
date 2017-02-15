@@ -69,7 +69,7 @@ do_update() {
 	sed -i "s/check=.*/check=$check/g" $CONFIG
 	sed -i "s/startonboot=.*/startonboot=$startonboot/g" $CONFIG
 	sed -i "s/MCSREEN=.*/MCSCREEN=$MCSCREEN/g" $CONFIG
-	chown -R $USER:$USER $INSTALL_LOC/Files/
+	chown -R $SUDO_USER:$SUDO_USER $INSTALL_LOC/Files/
         if [ -z $SERVER_TYPE ]; then
         whiptail --fb --msgbox "This update is a large update and bringing many new features, One of them is something many of you have asked me about. Server upgrading!, \
 Well i'm glad to say it's been implemented (still betaish) but will require you to tell me what server you are currently running on BSCC. Thank you and I hope you enjoy." 20 60 0
@@ -80,6 +80,8 @@ Well i'm glad to say it's been implemented (still betaish) but will require you 
 if [ -f /opt/BSCC/Files/conf.cfg ]; then
 	do_changelog
 	do_update
+	source /opt/BSCC/Files/conf.cfg
+        /usr/bin/BSCC menu
 else
 	whiptail --msgbox --fb "Sorry it seems that your BSCC installation is not complete. Leaving." 20 60 0
 	clear
