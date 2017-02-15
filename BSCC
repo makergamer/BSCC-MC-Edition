@@ -671,7 +671,7 @@ RET=$?
   if [ $RET -eq 1 ]; then
     exit 1
   elif [ $RET -eq 0 ]; then
-dl_link=`cat $INSTALL_LOC/Files/spigot.list | grep "$spigot_servers" | awk '{print $2}'`
+dl_link=`cat $INSTALL_LOC/Files/spigot.list | grep "$spigot_servers\=" | awk '{print $2}'`
 
 #Check the download and if failed remove the file.
 clear
