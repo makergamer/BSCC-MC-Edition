@@ -80,8 +80,6 @@ Well i'm glad to say it's been implemented (still betaish) but will require you 
 if [ -f /opt/BSCC/Files/conf.cfg ]; then
 	do_changelog
 	do_update
-	source /opt/BSCC/Files/conf.cfg
-        /usr/bin/BSCC menu
 else
 	whiptail --msgbox --fb "Sorry it seems that your BSCC installation is not complete. Leaving." 20 60 0
 	clear
