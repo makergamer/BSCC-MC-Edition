@@ -2,7 +2,7 @@
 INSTALL_LOC=/opt/BSCC
 CONFIG=$INSTALL_LOC/Files/conf.cfg
 ###############################
-### Version 1.9-1.9.1 upgrade ###
+### Version 1.9.1-2.0 upgrade ###
 ###############################
 
 cd $INSTALL_LOC/Files
