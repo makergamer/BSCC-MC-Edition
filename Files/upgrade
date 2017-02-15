@@ -7,6 +7,23 @@ CONFIG=$INSTALL_LOC/Files/conf.cfg
 
 cd $INSTALL_LOC/Files
 
+do_changelog() {
+        cat <<EOF >> changelog
+1. Place in-game controls to always being on.
+2. Add backup/restore menu.
+3. Create upgrade path for servers (by server type).
+4. Create automatic updates for BSCC.
+5. Add user allow list (For in-game controls).
+6. Add conf settings to archives for easier recovery.
+7. Make server upgrade path based on server type.
+8. Remove forge installers.
+9. Remove Bukket installers.
+10. Allow backups to be saved to user defined location.
+EOF
+whiptail --fb --title "BSCC 2.0 Changelog" --textbox changelog 20 60
+rm changelog
+}
+
 do_servertype() {
 while true; do
   FUN=$(whiptail --fb --title "User input needed" --menu "Please tell me what version you are currently running with BSCC."  --cancel-button Exit --ok-button Select 20 80 7 \
@@ -60,6 +77,7 @@ Well i'm glad to say it's been implemented (still betaish) but will require you 
 }
 
 if [ -f /opt/BSCC/Files/conf.cfg ]; then
+	do_changelog
 	do_update
 else
 	whiptail --msgbox --fb "Sorry it seems that your BSCC installation is not complete. Leaving." 20 60 0
