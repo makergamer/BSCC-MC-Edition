@@ -47,46 +47,7 @@ ARCHIVE=$INSTALL_LOC/archive
 clear
 
 do_update() {
-# Make sure we run with root privileges
-if [ $UID != 0 ]; then
-# not root, use sudo
-        echo "This script needs root privileges, rerunning it now using sudo!"
-        sleep 3
-        sudo "${SHELL}" "$0" $* menu
-        exit $?
-fi
-# get real username
-if [ UID = 0 ] && [ ! -z "$SUDO_USER" ]; then
-        USER="$SUDO_USER"
-else
-        USER="$(whoami)"
-fi
-	cd $INSTALL_LOC
-        wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/conf.cfg -O conf.cfg
-        source conf.cfg
-        find=$(grep "BSCC_VERSION" conf.cfg > tmp)
-        find=$(cat tmp | cut -d "=" -f2)
-        clear
-        echo "Version found online: $find"
-        unset BSCC_VERSION
-        source /opt/BSCC/Files/conf.cfg
-        echo "Currently Installed Version: $BSCC_VERSION"
-        sleep 3
-if [ $find = $BSCC_VERSION ]; then
-        whiptail --msgbox --fb "You are up to date." 15 50 0
-        rm conf.*
-        rm tmp
-        rm upgrade
-else
-	rm conf.*
-	rm tmp
-        echo "An Updated Version was found, Grabbing files"
-        sleep 4
-        wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/upgrade
-        chmod +x upgrade
-	mv upgrade Files/
-        /opt/BSCC/Files/upgrade
-fi
+$INSTALL_LOC/Files/update.sh
 }
 
 do_adminpass() {
@@ -107,9 +68,6 @@ do_no_menu_start() {
      sed -i 's/check=.*/check=true/g' $CONFIG
   else
      echo "Server was found running... close it before running this"
-  fi
-  if ! screen -list | grep -q "IN_GAME"; then
-     $IN_GAME
   fi
   if ! screen -list | grep -q "WATCH"; then
      cd $INSTALL_LOC/Files/
@@ -239,17 +197,21 @@ exit 0
 }
 
 do_archive() {
+  ###Create a save prior, without this the world wont be up to date.
+  do_save
+  ##Grab conf file for restores..
+  rm $DIR/conf.cfg
+  cp $INSTALL_LOC/Files/conf.cfg $DIR/conf.cfg
   today=$(date '+%Y-%mM-%dD_%HH_%MM_%SS')
-if ! screen -list | grep -q "Minecraft"; then
-  echo "Backup failed due to no running server found"
-  echo "=================================================="
-else
   cd $ARCHIVE
   screen -S Minecraft -p 0 -X stuff "say Creating Archive of the server, Sorry for any lag. $(printf \\r)"
+  clear
+  echo -e ${green}"Making archive...Please wait 5 seconds."
+  tput sgr0
+  sleep 4
   tar -zcvf "$today".tar.gz -C $DIR .
   rm `ls -t | awk 'NR>8'` 2>/dev/null
   screen -S Minecraft -p 0 -X stuff "say Archive complete, carry on... :( $(printf \\r)"
-fi
 }
 
 do_rollback() {
@@ -279,12 +241,19 @@ if [ "$(ls -A $INSTALL_LOC/archive)" ]; then
 if ! screen -list | grep -q "Minecraft"; then
   sed -i 's/check=.*/check=false/g' $CONFIG
   selected_restore=$(whiptail --menu --fb "Select your restore point" 20 60 10 ${restore[@]} 3>&1 1>&2 2>&3)
+  RET=$?
+  if [ $RET -eq 1 ]; then
+  break
+  fi
   rm -rf $DIR/*
   cp $INSTALL_LOC/archive/$selected_restore $DIR/restore.tar.gz
   cd $DIR
   tar -xvf restore.tar.gz
   rm restore.tar.gz
-  $START
+  rm $INSTALL_LOC/Files/conf.cfg
+  mv $DIR/conf.cfg $INSTALL_LOC/Files/
+  source /opt/BSCC/Files/conf.cfg
+  do_start
   sed -i 's/check=.*/check=true/g' $CONFIG
 
 #Just incase something went really bad...
@@ -292,6 +261,7 @@ if [ ! -f $DIR/$SERVERJAR ]; then
     do_fallback
 fi
   whiptail --msgbox --fb "Your server should now be restored and loading up.." 20 50 0
+  exit 0
 else
   sed -i 's/check=.*/check=false/g' $CONFIG
   screen -S Minecraft -p 0 -X stuff "say Going down for rollback! $(printf \\r)"
@@ -312,6 +282,37 @@ fi
 else
 whiptail --msgbox --fb "No Archives found.." 10 60 0
 fi
+}
+
+do_user_backup() {
+UBACKUP=$(whiptail --fb --inputbox "Where whould you like to save an archive to?" 8 78 $HOME/ --title "User Backups" 3>&1 1>&2 2>&3)
+RET=$?
+if [ $RET -eq 1 ]; then
+  break
+fi
+  whiptail --fb --msgbox "This will take a second to do and will also stop your server, Don't hit Ok until your ready for your server to go down." 20 60 0
+  do_save  
+  do_no_menu_stop
+for ((i=120;i>0;i=i-1)); do
+        clear
+        if screen -list | grep -q "Minecraft"; then
+        clear
+        echo -n "Waiting for Minecraft to stop for a clean backup!. Time Remaining $i seconds"
+        sleep 1
+        else
+  cd $UBACKUP
+  rm -f USERBSCCWORLDBACKUP.tar.gz
+  rm $DIR/conf.cfg
+  cp $INSTALL_LOC/Files/conf.cfg $DIR/conf.cfg
+  tar -zcvf USERBSCCWORLDBACKUP.tar.gz -C $DIR .
+  whiptail --fb --msgbox "You should now have a file called USERBSCCWORLDBACKUP.tar.gz in this location: $UBACKUP You can use this for restores on different systems later on." 20 60 0
+  break
+  fi
+done
+  #Last check to see if it's failed..
+  if screen -list | grep -q "Minecraft"; then
+  whiptail --fb --msgbox "This server never stopped!, A user defined backup wont' be ran. Please try stopping it first." 20 60 0
+  fi
 }
 
 do_stats() {
@@ -336,10 +337,9 @@ echo "no server running"
 else
 do_save
 sleep 1
-screen -S Minecraft -p 0 -X stuff "say Backup was requested, starting up Rsync now. $(printf \\r)"
-screen -S Minecraft -p 0 -X stuff "say Running rsync just incase something goes wrong!, Backing up... $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "say Backup was requested, Backing up... $(printf \\r)"
 rsync -r -t $DIR/* $RSYNC
-screen -S Minecraft -p 0 -X stuff "say rsync completed. $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "say Backup completed. $(printf \\r)"
 fi
 }
 
@@ -576,6 +576,10 @@ do_Qboot
 do_leveltype
 #All done here
 whiptail --fb --title "YOUR ALL SETUP!!!" --msgbox "Well if your seeing this it means that there is a good chance that your server is all setup and read to go. Give it some time to load and enjoy. Run BSCC for more info" 20 60
+##Check for upgrade path##
+if [ -d /opt/BSCC/upgrade_backup ]; then
+	do_upgrade
+fi
 exit 0
 }
 
@@ -651,13 +655,14 @@ The current link is: $dl_link" 20 60
 sed -i 's/MCVERSION=.*/MCVERSION='$vanilla_select'/g' $CONFIG
 sed -i 's/SERVERJAR=.*/SERVERJAR='$vanilla_select\jar'/g' $CONFIG
 sed -i 's/VANILLA=.*/VANILLA=true/g' $CONFIG
+sed -i 's/SERVER_TYPE.*/SERVER_TYPE=VANILLA/g' $CONFIG
 do_ram
 do_first_run
-exit 0
 fi
 }
 
 do_spigot() {
+unset spigot_list spigot_servers r dl_link
 #Present User with selected Spigot servers from list.
 spigot_list=`cut -d "=" -f 1 $INSTALL_LOC/Files/spigot.list | awk '{print $1 " |"}'`
 spigot_list=(${spigot_list[@]})
@@ -678,33 +683,7 @@ The current link is: $dl_link" 20 60
  else
 sed -i 's/MCVERSION=.*/MCVERSION='$spigot_servers'/g' $CONFIG
 sed -i 's/SERVERJAR=.*/SERVERJAR='$spigot_servers.jar'/g' $CONFIG
-do_ram
-do_first_run
-fi
-fi
-}
-
-do_bukkit() {
-#Present User with selected Bukkit servers from list.
-bukkit_list=`cut -d "=" -f 1 $INSTALL_LOC/Files/bukkit.list | awk '{print $1 " |"}'`
-bukkit_list=(${bukkit_list[@]})
-bukkit_servers=$(whiptail --menu "Select Your Bukkit server." 20 60 10 ${bukkit_list[@]} 3>&1 1>&2 2>&3)
-RET=$?
-  if [ $RET -eq 1 ]; then
-    exit 1
-  elif [ $RET -eq 0 ]; then
-dl_link=`cat $INSTALL_LOC/Files/bukkit.list | grep "$bukkit_servers" | awk '{print $2}'`
-
-#Check the download and if failed remove the file.
-clear
-r=`wget -O $DIR/$bukkit_servers.jar $dl_link`
-if [ $? -ne 0 ]; then
-rm $DIR/$bukkit_servers.jar
-whiptail --msgbox --clear --fb "Download failed!, check your internet and the link.\
-The current link is: $dl_link" 20 60
-  else
-sed -i 's/MCVERSION=.*/MCVERSION='$bukkit_servers'/g' $CONFIG
-sed -i 's/SERVERJAR=.*/SERVERJAR='$bukkit_servers.jar'/g' $CONFIG
+sed -i 's/SERVER_TYPE.*/SERVER_TYPE=SPIGOT/g' $CONFIG
 do_ram
 do_first_run
 fi
@@ -812,6 +791,7 @@ fi
 ##Download link works pull it down.
 wget -O $DIR/$var $dl_link
 sed -i 's/MCVERSION=.*/MCVERSION='$var'/g' $CONFIG
+sed -i 's/SERVER_TYPE.*/SERVER_TYPE=FTB/g' $CONFIG
 do_ram
 cd $DIR
 if ! unzip $var; then
@@ -852,70 +832,38 @@ do_Qboot
 whiptail --msgbox --fb "Ok everything should now be ready for you to start. Please use (BSCC menu) also these servers could load slowly...give it some time \n
 Also a big THANK YOU to all of the effort from MODS/DEVS involved in the FTB servers and maintenance" 20 60 0
 rm $INSTALL_LOC/Files/modpacks.xml
-exit 0
 fi
 }
 
-do_forge() {
-if [ ! -d $DIR/world ]; then
-  whiptail --msgbox --fb "You are missing the $DIR/world folder... have you ran the server yet?" 20 60 0
-clear
-echo -e ${red} "Please attempt to start the server at least once."
-tput sgr0
-exit 1
-fi
-unset forge_list
-forge_list=`cut -d "=" -f 1 $INSTALL_LOC/Files/forge.list | awk '{print $1 " |"}'`
-forge_list=(${forge_list[@]})
-unset forge_servers
-forge_servers=$(whiptail --menu "Your current minecraft is $MCVERSION." 20 60 10 ${forge_list[@]} 3>&1 1>&2 2>&3)
-RET=$?
-  if [ $RET -eq 1 ]; then
-    exit 1
-  elif [ $RET -eq 0 ]; then
-unset dl_link
-dl_link=`cat $INSTALL_LOC/Files/forge.list | grep "$forge_servers" | awk '{print $2}'`
-
-#Make sure that the user is sure..
-if (whiptail --title "sellected $forge_servers, your running $MCVERSION" --fb --yesno "You can seriously mess up your server if you mess this up... Are you sure?" 20 70) then
-	echo "User choose to test the beta..."
-else
-	break
-fi
-r=`wget -O $DIR/forgeinstaller.jar $dl_link`
-if [ $? -ne 0 ]; then
-rm $DIR/forgeinstaller.jar
-whiptail --msgbox --clear --fb "Download failed!, check your internet and the link.\
-The current link is: $dl_link" 20 60
-else
-
-#Check if the server is currently live
-if screen -list | grep -q "Minecraft"; then
-screen -S Minecraft -p 0 -X stuff "stop $(printf \\r)"
-fi
-
-cd $DIR
-java -Xmx$MAXMEM -Xms$MINMEM -jar forgeinstaller.jar --installServer > $DIR/forgeinstall.log
-rm forgeinstaller.jar
-forge=`tail -n 2 $DIR/forgeinstall.log | awk '{print $14}'`
-sed -i 's/SERVERJAR=.*/SERVERJAR='$forge'/g' $CONFIG
-whiptail --msgbox --fb "Your server was updated and should now start with $forge.\
-To install mods you should look here: $DIR/" 20 60 0
-rm $DIR/forgeinstall.log
-exit 0
-fi
+do_ingame() {
+  ALLTIME="/opt/BSCC/Files/Alltimeusers.list"
+  unset playarr
+  playarr=`cat $ALLTIME | cut -d "=" -f1 | awk '{print $1 " |"}'`
+  playarr=(${playarr[@]})
+  allowlist=`cat /opt/BSCC/Files/Allowed.list`
+  allowlist=(${allowlist[@]})
+  echo $oplist
+  unset selected_player
+  selected_player=$(whiptail --fb --menu "Select the user you would like to Allow Ingame Commands" 20 60 10  ${playarr[@]} 3>&1 1>&2 2>&3)
+  RET=$?
+  if [ $RET -eq 0 ]; then
+  if [[ " ${allowlist[*]} " == *" $selected_player "* ]]; then
+  whiptail --msgbox --fb "This user is already allowed, Removing them now." 20 60 0
+    sed -i '/'$selected_player'/d' $INSTALL_LOC/Files/Allowed.list
+  else
+    echo $selected_player >> $INSTALL_LOC/Files/Allowed.list
+  fi
 fi
 }
-
 
 do_version_option() {
+unset VAR
 while true; do
 VER=$(whiptail --title "Select Minecraft Version" --menu "Please selct what version of Minecraft you wish to run" 15 80 5 \
 "1 Vanilla Minecraft" "[Stright from Mojang.(Latest Version)]" \
 "2 Spigot" "[Fast lightwaight Bucket style server.(Latest Version)]" \
-"3 Bukkit" "[Bukkit also known as Craftbukkit]" \
-"4 FTB" "[This will allow you to run a FTB server.]" \
-"5 Restore" "[Attempt to restore a server from an archive.]" \
+"3 FTB" "[This will allow you to run a FTB server.]" \
+"4 Restore" "[Attempt to restore a server from an archive.]" \
  3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
@@ -924,9 +872,8 @@ VER=$(whiptail --title "Select Minecraft Version" --menu "Please selct what vers
     case "$VER" in
       1\ *) do_vanilla ;;
       2\ *) do_spigot ;;
-      3\ *) do_bukkit ;;
-      4\ *) do_ftb ;;
-      5\ *) do_restore ;;
+      3\ *) do_ftb ;;
+      4\ *) do_restore ;;
       *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $VER" 20 60 1
   else
@@ -1184,14 +1131,20 @@ do_op_menu() {
 do_admin_backupmenu() {
 while true; do
   FUN=$(whiptail --fb --title "Backup/Restore" --menu "WARNING!!!"  --cancel-button Back --ok-button Select 20 80 4 \
-    "1 Restore Server" "[Restore the server from a Archive Backup.]" \
+    "1 Archive Server" "[The best way to save your server!]" \
+    "2 Backup Server" "[Create a 1:1 copy of your server.]" \
+    "3 Restore Server" "[Restore the server from a Archive Backup.]" \
+    "4 User backup" "[Let's you define where to save a copy of your world]" \
     3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
     do_admin
   elif [ $RET -eq 0 ]; then
     case "$FUN" in
-      1\ *) do_restore ;;
+      1\ *) do_archive; whiptail --fb --msgbox "Your archive was created." 20 60 0 ;;
+      2\ *) do_rsync; whiptail --fb --msgbox "Your backup was created." 20 60 0 ;;
+      3\ *) do_restore ;;
+      4\ *) do_user_backup ;;
       *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
 fi
@@ -1260,12 +1213,90 @@ clear
 fi
 }
 
-ingame_control() {
-if (whiptail --fb --title "Toggle External Server Controls" --yes-button "True" --no-button "False"  --yesno "Select if you would like to use External Server Controls or not." 10 60) then
-    sed -i 's/INGAME_CONTROL=.*/INGAME_CONTROL=true/g' $CONFIG
-else
-    sed -i 's/INGAME_CONTROL=.*/INGAME_CONTROL=false/g' $CONFIG
-    screen -X -S IN_GAME quit
+do_upgrade_backup() {
+        do_save
+        do_no_menu_stop
+for ((i=120;i>0;i=i-1)); do
+        clear
+        if screen -list | grep -q "Minecraft"; then
+        clear
+        echo -n "Waiting for Minecraft to stop for a clean backup!. Time Remaining $i seconds"
+        sleep 1
+        else
+  cd $INSTALL_LOC/archive/
+  rm -f UPGRADE_ROLLBACK.tar.gz
+  rm $DIR/conf.cfg
+  cp $INSTALL_LOC/Files/conf.cfg $DIR/conf.cfg
+  tar -zcvf UPGRADE_ROLLBACK.tar.gz -C $DIR .
+  break
+  fi
+done
+}
+
+do_upgrade() {
+UPGRADE_TMP="/opt/BSCC/upgrade_backup"
+source /opt/BSCC/Files/conf.cfg
+if [ "$SERVER_TYPE" = "VANILLA" ]; then
+	if [ -d $UPGRADE_TMP ]; then
+	mv $UPGRADE_TMP/* $DIR
+        do_no_menu_start
+        whiptail --fb --msgbox "Your upgrade is now complete, Your server should be loading up now. \
+In case it failed DO NOT RUN UPGRADE!!!. Run a restore first and restore the backup created called UPGRADE_ROLLBACK.tar.gz. \
+This will roll you back to before your upgrade." 20 60 0
+        rm -r $UPGRADE_TMP
+	exit 0
+	fi
+	echo "a vanilla server was found!"
+	sleep 3
+        do_upgrade_backup
+        mkdir $UPGRADE_TMP
+        cd $DIR
+        mv world ops.json server.properties $UPGRADE_TMP/
+        rm -r *
+        do_vanilla
+fi
+if [ "$SERVER_TYPE" = "SPIGOT" ]; then
+        if [ -d $UPGRADE_TMP ]; then
+        mv $UPGRADE_TMP/* $DIR
+        do_no_menu_start
+        whiptail --fb --msgbox "Your upgrade is now complete, Your server should be loading up now. \
+In case it failed DO NOT RUN UPGRADE!!!. Run a restore first and restore the backup created called UPGRADE_ROLLBACK.tar.gz. \
+This will roll you back to before your upgrade." 20 60 0
+        rm -r $UPGRADE_TMP
+        exit 0
+        fi
+        echo "A Spigot server was found!"
+        sleep 3
+        do_upgrade_backup
+        mkdir $UPGRADE_TMP
+        cd $DIR
+        mv world ops.json server.properties $UPGRADE_TMP/
+        rm -r *
+        do_spigot
+fi
+if [ "$SERVER_TYPE" = "FTB" ]; then
+	echo "a FTB server was found!."
+	sleep 3
+        do_upgrade_backup
+        mkdir $UPGRADE_TMP
+        cd $DIR
+        mv world ops.json server.properties $UPGRADE_TMP/
+        rm -r *
+        do_ftb
+        mv $UPGRADE_TMP/* $DIR
+        do_no_menu_start
+        whiptail --fb --msgbox "Your upgrade is now complete, Your server should be loading up now. \
+In case it failed DO NOT RUN UPGRADE!!!. Run a restore first and restore the backup created called UPGRADE_ROLLBACK.tar.gz. \
+This will roll you back to before your upgrade." 20 60 0
+        rm -r $UPGRADE_TM
+	screen -S Minecraft -p 0 -X stuff "/fml confirm $(printf \\r)"
+        echo "it's in gods hands now"
+	rm -r $UPGRADE_TMP
+	exit 0
+fi
+if [ -z $SERVER_TYPE]; then
+        echo "Nothing found!"
+        exit 0
 fi
 }
 
@@ -1376,16 +1407,14 @@ sudo sed -i".bak" '/BSCC map/d' $crontabs/$USER; (crontab -l 2>/dev/null; echo "
 do_beta() {
 while true; do
   FUN=$(whiptail --fb --title "BETA AREA!!!" --menu "Think Tank"  --cancel-button Exit --ok-button Select 20 80 2 \
-    "1 External Server Controls" "[Toggle External Server controls]" \
-    "2 Overviewer" "[Overviewer is a web based map for Minecraft]" \
+    "1 Overviewer" "[Overviewer is a web based map for Minecraft]" \
     3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
      exit 1
   elif [ $RET -eq 0 ]; then
     case "$FUN" in
-      1\ *) ingame_control ;;
-      2\ *) do_overviewer ;;
+      1\ *) do_overviewer ;;
       *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
 fi
@@ -1396,11 +1425,12 @@ do_admin_advanced() {
 while true; do
   FUN=$(whiptail --fb --title "Admin Advanced menu" --menu "WARNING!!!"  --cancel-button Back --ok-button Select 20 80 6 \
     "1 Crontab" "[Setup jobs for autostart and other things]" \
-    "2 Forge Installer" "[Very much in beta]" \
-    "3 Ram settings" "[Change your ram settings]" \
-    "4 BETA" "[Think tank and testing]" \
-    "5 DELETE SERVER" "[DELETES YOUR SERVER!!]" \
-    "6 Uninstall BSCC" "[This will remove BSCC completely]" \
+    "2 Upgrade" "[Will allow you to upgrade your server.jar]" \
+    "3 Ingame Commands" "[Select users for Ingame Commands!]" \
+    "4 Ram settings" "[Change your ram settings]" \
+    "5 BETA" "[Think tank and testing]" \
+    "6 DELETE SERVER" "[DELETES YOUR SERVER!!]" \
+    "7 Uninstall BSCC" "[This will remove BSCC completely]" \
     3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
@@ -1408,11 +1438,12 @@ while true; do
   elif [ $RET -eq 0 ]; then
     case "$FUN" in
       1\ *) do_cron ;;
-      2\ *) do_forge ;;
-      3\ *) do_ram ;;
-      4\ *) do_beta ;;
-      5\ *) do_delete ;;
-      6\ *) do_uninstall ;;
+      2\ *) do_upgrade ;;
+      3\ *) do_ingame ;;
+      4\ *) do_ram ;;
+      5\ *) do_beta ;;
+      6\ *) do_delete ;;
+      7\ *) do_uninstall ;;
       *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
 fi
@@ -1459,6 +1490,8 @@ done
 }
 
 do_menu() {
+do_update
+source /opt/BSCC/Files/conf.cfg
 while true; do
   FUN=$(whiptail --fb --title "Main Menu, Build: $BSCC_VERSION" --menu "Server Controls"  --cancel-button Exit --ok-button Select 20 80 8 \
     "1 Admins only" "[Admin controls]" \
