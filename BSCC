@@ -837,6 +837,11 @@ whiptail --msgbox --fb "Ok everything should now be ready for you to start. Plea
 Also a big THANK YOU to all of the effort from MODS/DEVS involved in the FTB servers and maintenance" 20 60 0
 rm $INSTALL_LOC/Files/modpacks.xml
 fi
+
+##Check for upgrade in progress..
+if [ ! -d $INSTALL_LOC/upgrade_backup ]; then
+exit 0
+fi
 }
 
 do_ingame() {
