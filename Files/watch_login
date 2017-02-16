@@ -53,6 +53,18 @@ do_out
 fi
 }
 
+##Gives the server a chance to startup
+for ((i=120;i>0;i=i-1)); do
+        clear
+        if [ ! -f $LOG ]; then
+        clear
+        echo -n "Minecraft latest.log not found yet. Time Remaining $i seconds"
+        sleep 1
+        else
+  break
+  fi
+done
+
 ###Check for Vanilla server###
 VANILLA=$(cat conf.cfg | grep -o "VANILLA.*" | cut -d "=" -f2)
 if [ $VANILLA = true ]; then
