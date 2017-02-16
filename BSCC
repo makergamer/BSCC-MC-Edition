@@ -1444,7 +1444,7 @@ done
 
 do_admin_advanced() {
 while true; do
-  FUN=$(whiptail --fb --title "Admin Advanced menu" --menu "WARNING!!!"  --cancel-button Back --ok-button Select 20 80 6 \
+  FUN=$(whiptail --fb --title "Admin Advanced menu" --menu "WARNING!!!"  --cancel-button Back --ok-button Select 20 80 7 \
     "1 Crontab" "[Setup jobs for autostart and other things]" \
     "2 Upgrade" "[Will allow you to upgrade your server.jar]" \
     "3 Ingame Commands" "[Select users for Ingame Commands!]" \
