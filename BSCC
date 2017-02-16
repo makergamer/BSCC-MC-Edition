@@ -1249,11 +1249,6 @@ if [ "$SERVER_TYPE" = "VANILLA" ]; then
         whiptail --fb --msgbox "Your upgrade is now complete, Your server should be loading up now. \
 In case it failed DO NOT RUN UPGRADE!!!. Run a restore first and restore the backup created called UPGRADE_ROLLBACK.tar.gz. \
 This will roll you back to before your upgrade." 20 60 0
-	##Give the server a chance to load so WATCH can find logs..
-	if ! screen -list | grep -q "WATCH"; then
-     		cd $INSTALL_LOC/Files/
-     		$WATCH
-     	fi
         rm -r $UPGRADE_TMP
 	exit 0
 	fi
@@ -1273,11 +1268,6 @@ if [ "$SERVER_TYPE" = "SPIGOT" ]; then
         whiptail --fb --msgbox "Your upgrade is now complete, Your server should be loading up now. \
 In case it failed DO NOT RUN UPGRADE!!!. Run a restore first and restore the backup created called UPGRADE_ROLLBACK.tar.gz. \
 This will roll you back to before your upgrade." 20 60 0
-##Give the server a chance to load so WATCH can find logs..
-	if ! screen -list | grep -q "WATCH"; then
-     		cd $INSTALL_LOC/Files/
-     		$WATCH
-     	fi
 	sleep 2
 	rm -r $UPGRADE_TMP
         exit 0
@@ -1307,11 +1297,6 @@ if [ "$SERVER_TYPE" = "FTB" ]; then
 In case it failed DO NOT RUN UPGRADE!!!. Run a restore first and restore the backup created called UPGRADE_ROLLBACK.tar.gz. \
 This will roll you back to before your upgrade." 20 60 0
 	screen -S Minecraft -p 0 -X stuff "/fml confirm $(printf \\r)"
-	##Give the server a chance to load so WATCH can find logs..
-	if ! screen -list | grep -q "WATCH"; then
-     		cd $INSTALL_LOC/Files/
-     		$WATCH
-     	fi
 	rm -r $UPGRADE_TMP
 	exit 0
 fi
