@@ -62,6 +62,7 @@ fi
 }
 
 do_no_menu_start() {
+  source /opt/BSCC/Files/conf.cfg
   if ! screen -list | grep -q "Minecraft"; then
      cd $DIR
      $START
