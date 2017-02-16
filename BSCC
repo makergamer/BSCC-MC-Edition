@@ -1464,12 +1464,12 @@ do_admin() {
 while true; do
   FUN=$(whiptail --fb --title "Admin Area" --menu "Server Controls"  --cancel-button Exit --ok-button Select 20 80 7 \
     "1 Console" "[Send/view console.]" \
-    "2 Random MSG" "Random Greating MSG" \
+    "2 Random MSG" "[Random Greating MSG]" \
     "3 Op/Deop" "[Select users to Op or DeOp]" \
     "4 Server Properties" "[Modify Server Properties]" \
     "5 Start on boot" "[Start the server on boot?]" \
     "6 Backup/Restore" "[For Restoring the server.]" \
-    "7 Advanced menu" "Upgrade & Delete servers" \
+    "7 Advanced menu" "[Upgrade & Delete servers]" \
     3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
