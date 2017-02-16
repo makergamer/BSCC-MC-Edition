@@ -862,7 +862,7 @@ fi
 do_version_option() {
 unset VAR
 while true; do
-VER=$(whiptail --title "Select Minecraft Version" --menu "Please selct what version of Minecraft you wish to run" 15 80 5 \
+VER=$(whiptail --title "Select Minecraft Version" --menu "Please select what version of Minecraft you wish to run" 15 80 5 \
 "1 Vanilla Minecraft" "[Stright from Mojang.(Latest Version)]" \
 "2 Spigot" "[Fast lightwaight Bucket style server.(Latest Version)]" \
 "3 FTB" "[This will allow you to run a FTB server.]" \
