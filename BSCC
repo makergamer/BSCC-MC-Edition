@@ -1034,6 +1034,9 @@ do_Qstop() {
 do_delete() {
 if screen -list | grep -q "Minecraft"; then
 screen -S Minecraft -p 0 -X stuff "stop $(printf \\r)"
+screen -X -S WATCH_LOGIN quit
+screen -X -S VANILLA_BACKUP quit
+screen -X -S IN_GAME quit
 sleep 3
 fi
 if (whiptail --fb --yesno "YOUR ABOUT TO DELETE YOUR MINECRAFT SERVER...IF YOU DO THIS THERE IS NO GOING BACK! \
