@@ -73,6 +73,9 @@ do_no_menu_start() {
      cd $INSTALL_LOC/Files/
      $WATCH
   fi
+  if ! screen -list | grep -q "IN_GAME"; then
+    $IN_GAME
+fi
 }
 
 do_no_menu_stop() {
