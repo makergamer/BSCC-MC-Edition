@@ -1289,7 +1289,6 @@ if [ "$SERVER_TYPE" = "FTB" ]; then
         whiptail --fb --msgbox "Your upgrade is now complete, Your server should be loading up now. \
 In case it failed DO NOT RUN UPGRADE!!!. Run a restore first and restore the backup created called UPGRADE_ROLLBACK.tar.gz. \
 This will roll you back to before your upgrade." 20 60 0
-        rm -r $UPGRADE_TMP
 	screen -S Minecraft -p 0 -X stuff "/fml confirm $(printf \\r)"
 	rm -r $UPGRADE_TMP
 	exit 0
