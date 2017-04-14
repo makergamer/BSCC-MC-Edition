@@ -149,6 +149,8 @@ If you agree Please, continue." 15 60) then
 	chmod +x $INSTALL_LOC/Files/watch_login
 	chmod +x $INSTALL_LOC/Files/ingame_control
 	chmod +x $INSTALL_LOC/Files/JSON.sh
+	chmod +x $INSTALL_LOC/Files/kit
+	chmod +x $INSTALL_LOC/Files/update.sh
 	chmod +x /usr/bin/BSCC
         echo XXX
         sleep 2
