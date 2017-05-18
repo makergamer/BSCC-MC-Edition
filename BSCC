@@ -679,7 +679,7 @@ dl_link=`cat $INSTALL_LOC/Files/spigot.list | grep "$spigot_servers\=" | awk '{p
 
 #Check the download and if failed remove the file.
 clear
-r=`wget -O $DIR/$spigot_servers.jar $dl_link`
+r=`wget --no-check-certificate -O $DIR/$spigot_servers.jar $dl_link`
 if [ $? -ne 0 ]; then
 rm $DIR/$spigot_servers.jar
 whiptail --msgbox --clear --fb "Download failed!, check your internet and the link.\
