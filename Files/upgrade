@@ -2,25 +2,16 @@
 INSTALL_LOC=/opt/BSCC
 CONFIG=$INSTALL_LOC/Files/conf.cfg
 ###############################
-### Version 1.9.1-2.0 upgrade ###
+### Version 2.0-2.0.1 upgrade ###
 ###############################
 
 cd $INSTALL_LOC/Files
 
 do_changelog() {
         cat <<EOF >> changelog
-1. Place in-game controls to always being on.
-2. Add backup/restore menu.
-3. Create upgrade path for servers (by server type).
-4. Create automatic updates for BSCC.
-5. Add user allow list (For in-game controls).
-6. Add conf settings to archives for easier recovery.
-7. Make server upgrade path based on server type.
-8. Remove forge installers.
-9. Remove Bukket installers.
-10. Allow backups to be saved to user defined location.
+1. Fix for spigot download failure.
 EOF
-whiptail --fb --title "BSCC 2.0 Changelog" --textbox changelog 20 60
+whiptail --fb --title "BSCC 2.0.1 Changelog" --textbox changelog 20 60
 rm changelog
 }
 
