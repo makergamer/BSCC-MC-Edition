@@ -52,7 +52,7 @@ CPUINFO=`lscpu | grep "Architecture" | awk '{print $2}'`
 #Install Java for Arm.
 do_arm() {
 if [[ "$CPUINFO" == arm* ]]; then
-wget -O java.tar.gz http://ftp.osuosl.org/pub/funtoo/distfiles/oracle-java/jdk-8u121-linux-arm32-vfp-hflt.tar.gz
+wget -O java.tar.gz http://ftp.osuosl.org/pub/funtoo/distfiles/oracle-java/jdk-8u144-linux-arm32-vfp-hflt.tar.gz
 mkdir /opt/java_jdk
 tar zxvf java.tar.gz -C /opt/java_jdk --strip-components=1
 rm java.tar.gz
@@ -63,7 +63,7 @@ fi
 
 do_arm64() {
 if [[ "$CPUINFO" == aarch64 ]]; then
-wget -O java.tar.gz http://ftp.osuosl.org/pub/funtoo/distfiles/oracle-java/jdk-8u121-linux-arm64-vfp-hflt.tar.gz
+wget -O java.tar.gz http://ftp.osuosl.org/pub/funtoo/distfiles/oracle-java/jdk-8u144-linux-arm64-vfp-hflt.tar.gz
 mkdir /opt/java_jdk
 tar zxvf java.tar.gz -C /opt/java_jdk --strip-components=1
 rm java.tar.gz
