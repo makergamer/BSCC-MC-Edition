@@ -2,7 +2,7 @@
 INSTALL_LOC=/opt/BSCC
 CONFIG=$INSTALL_LOC/Files/conf.cfg
 ###############################
-### Version 2.0.1-2.0.2 upgrade ###
+### Version 2.0.2-2.0.3 upgrade ###
 ###############################
 
 cd $INSTALL_LOC/Files
@@ -12,7 +12,7 @@ do_changelog() {
 1. Fix for spigot download again.
 2. Future plans to either build or remove spigot due to links.
 EOF
-whiptail --fb --title "BSCC 2.0.2 Changelog" --textbox changelog 20 60
+whiptail --fb --title "BSCC 2.0.3 Changelog" --textbox changelog 20 60
 rm changelog
 }
 
@@ -45,13 +45,13 @@ do_update() {
 	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/kit -O kit
 	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/watch_login -O watch_login
 	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/update.sh -O update.sh
-	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/spigot.list -O spigot.list
 	clear
 	sudo mv BSCC /usr/bin/
 	sudo chmod +x /usr/bin/BSCC
 	chmod +x /opt/BSCC/Files/kit
 	chmod +x /opt/BSCC/Files/watch_login
 	chmod +x /opt/BSCC/Files/update.sh
+	rm $INSTALL_LOC/Files/spigot.list
 #Grab old info and replace in new conf.cfg
 	source $INSTALL_LOC/Files/conf.cfg.bak
 	sed -i "s/MCVERSION=.*/MCVERSION=$MCVERSION/g" $CONFIG
