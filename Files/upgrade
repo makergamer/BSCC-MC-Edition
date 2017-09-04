@@ -12,7 +12,7 @@ do_changelog() {
 1. Fix for spigot download again.
 2. Future plans to either build or remove spigot due to links.
 EOF
-whiptail --fb --title "BSCC 2.0.1 Changelog" --textbox changelog 20 60
+whiptail --fb --title "BSCC 2.0.2 Changelog" --textbox changelog 20 60
 rm changelog
 }
 
