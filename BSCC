@@ -667,26 +667,27 @@ fi
 
 do_spigot() {
 unset spigot_list spigot_servers r dl_link
+wget https://yivesmirror.com/files/spigot.html -O $INSTALL_LOC/Files/spigot.html
+spigot_list=$(cat $INSTALL_LOC/Files/spigot.html | grep -wo "spigot.*" | cut -d "/" -f2 | cut -d '"' -f1 | awk 'NR>1' | awk '{print $1 " |" }')
 #Present User with selected Spigot servers from list.
-spigot_list=`cut -d "=" -f 1 $INSTALL_LOC/Files/spigot.list | awk '{print $1 " |"}'`
 spigot_list=(${spigot_list[@]})
 spigot_servers=$(whiptail --menu "Select Your Spigot server." 20 60 10 ${spigot_list[@]} 3>&1 1>&2 2>&3)
 RET=$?
   if [ $RET -eq 1 ]; then
     exit 1
   elif [ $RET -eq 0 ]; then
-dl_link=`cat $INSTALL_LOC/Files/spigot.list | grep "$spigot_servers\=" | awk '{print $2}'`
+dl_link=$(echo "https://yivesmirror.com/files/spigot/$spigot_servers")
 
 #Check the download and if failed remove the file.
 clear
-r=`wget --no-check-certificate -O $DIR/$spigot_servers.jar $dl_link`
+r=`wget $dl_link -O $DIR/$spigot_servers`
 if [ $? -ne 0 ]; then
-rm $DIR/$spigot_servers.jar
+rm $DIR/$spigot_servers
 whiptail --msgbox --clear --fb "Download failed!, check your internet and the link.\
 The current link is: $dl_link" 20 60
  else
 sed -i 's/MCVERSION=.*/MCVERSION='$spigot_servers'/g' $CONFIG
-sed -i 's/SERVERJAR=.*/SERVERJAR='$spigot_servers.jar'/g' $CONFIG
+sed -i 's/SERVERJAR=.*/SERVERJAR='$spigot_servers'/g' $CONFIG
 sed -i 's/SERVER_TYPE.*/SERVER_TYPE=SPIGOT/g' $CONFIG
 do_ram
 do_first_run
