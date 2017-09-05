@@ -13,43 +13,30 @@ RANDOM_MSG() {
         MSG=${MSG[$GEN]}
 }
 
-
-do_user() {
-NAME=$(echo $USER | cut -d "=" -f1)
-if [ $USER ]; then
-RANDOM_MSG
-        if [ "$(grep $USER $ALLTIME)" != $USER ]; then
-                grep -q "$USER" "$ALLTIME" || echo "$USER" >> "$ALLTIME"
-		grep -q "$NAME" "$ON" || echo "$NAME" >> "$ON"
-		export NAME
-                screen -S Minecraft -p 0 -X stuff "say Welcome to the server $NAME $(printf \\r)"
-		./kit
-else
-		grep -q "$NAME" "$ON" || echo "$NAME" >> "$ON"
-                screen -S Minecraft -p 0 -X stuff "tell $NAME $MSG $(printf \\r)"
-
- fi
-fi
-}
-
-do_out() {
-####change paths here####
-if [ $LEFT ]; then
-        if [ "$(grep $LEFT $ON)" != $ON ]; then
-              sed -i -e '/'$LEFT'/d' $ON
-   fi
-fi
-}
-
 do_check() {
 USER=$(tail -n 1 $LOG | grep -o "UUID of player.*" | awk '{print $4"="$6}')
 LEFT=$(tail -n 1 $LOG | grep -o ".*left the game" | cut -d " " -f4)
+NAME=$(echo $USER | cut -d "=" -f1)
+
 if [ $USER ]; then
-do_user
+        if [ -z $(grep -w "$NAME" "$ON") ]; then
+                grep -qw "$NAME" "$ON" || echo "$NAME" >> "$ON"
+RANDOM_MSG
+        if [ "$(grep $USER $ALLTIME)" != $USER ]; then
+                grep -qw "$USER" "$ALLTIME" || echo "$USER" >> "$ALLTIME"
+                export NAME
+                screen -S Minecraft -p 0 -X stuff "say Welcome to the server $NAME $(printf \\r)"
+                ./kit
+else
+                screen -S Minecraft -p 0 -X stuff "tell $NAME $MSG $(printf \\r)"
+        fi
+    fi
 fi
 
 if [ $LEFT ]; then
-do_out
+ if [ "$(grep $LEFT $ON)" != $ON ]; then
+              sed -i -e '/'$LEFT'/d' $ON
+ fi
 fi
 }
 
