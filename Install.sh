@@ -19,8 +19,13 @@ fi
 ########################################
 #######  Check for Dependencies  #######
 ########################################
-apt-get update
+apt-get -y update
 apt-get install -y screen git wget rsync unzip sysstat inotify-tools bc
+sudo apt-get -y upgrade
+sudo apt-get -y install npm node
+curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+sudo apt-get -y install nodejs
+npm install --global himalaya
 #Grab JSON.sh from Dominictarr's Github. Thank you for this tool!!
 wget https://raw.githubusercontent.com/dominictarr/JSON.sh/master/JSON.sh -O JSON.sh
 
