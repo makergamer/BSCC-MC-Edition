@@ -11,7 +11,7 @@ do_changelog() {
         cat <<EOF >> changelog
 1. Adding software for html2json.
 EOF
-whiptail --fb --title "BSCC 2.0.3 Changelog" --textbox changelog 20 60
+whiptail --fb --title "BSCC 2.0.4 Changelog" --textbox changelog 20 60
 rm changelog
 }
 
