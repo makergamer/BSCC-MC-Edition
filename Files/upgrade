@@ -39,6 +39,14 @@ done
 
 #All checks cleared.. Update
 do_update() {
+	#Doing a one time update for html2json software.
+	sudo apt-get -y update
+	sudo apt-get -y upgrade
+	sudo apt-get -y install npm node
+	curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+	sudo apt-get -y install nodejs
+	sudo npm install --global himalaya
+	#This should be out after this update!. Placing in the install script.
 	cp $CONFIG $INSTALL_LOC/Files/conf.cfg.bak
 	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/BSCC -O BSCC
 	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/conf.cfg -O conf.cfg
