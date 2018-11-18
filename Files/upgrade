@@ -2,15 +2,16 @@
 INSTALL_LOC=/opt/BSCC
 CONFIG=$INSTALL_LOC/Files/conf.cfg
 ###############################
-### Version 2.0.4-2.0.5 upgrade ###
+### Version 2.0.5-2.0.6 upgrade ###
 ###############################
 
 cd $INSTALL_LOC/Files
 
 do_changelog() {
         cat <<EOF >> changelog
-1. Adding software for html2json.
-2. Update Spigot support.
+1. Restored links for Vanilla MC.
+2. Corrections for changes in MC that stopped commands from BSCC.
+3. Added permissions for kits.
 EOF
 whiptail --fb --title "BSCC 2.0.5 Changelog" --textbox changelog 20 60
 rm changelog
