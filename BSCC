@@ -84,7 +84,7 @@ do_no_menu_stop() {
     sed -i 's/check=.*/check=false/g' $CONFIG
     do_save
     sleep 2
-    screen -S Minecraft -p 0 -X stuff "stop $(printf \\r)"
+    screen -S Minecraft -p 0 -X stuff "stop$(printf \\r)"
     screen -X -S WATCH_LOGIN quit
     screen -X -S VANILLA_BACKUP quit
     screen -X -S IN_GAME quit
@@ -94,7 +94,7 @@ do_no_menu_stop() {
 }
 
 do_save() {
-screen -S Minecraft -p 0 -X stuff "save-all $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "save-all$(printf \\r)"
 }
 
 do_leveltype() {
@@ -169,12 +169,12 @@ exit 0
 
 do_restart() {
 sed -i 's/check=.*/check=false/g' $CONFIG
-screen -S Minecraft -p 0 -X stuff "save-all $(printf \\r)"
-screen -S Minecraft -p 0 -X stuff "say Restart in 1 Minutes..WHY ARE YOU STILL HERE!!! $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "save-all$(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "say Restart in 1 Minutes..WHY ARE YOU STILL HERE!!!$(printf \\r)"
 sleep 50
-screen -S Minecraft -p 0 -X stuff "say 10 seconds.. $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "say 10 seconds..$(printf \\r)"
 sleep 10
-screen -S Minecraft -p 0 -X stuff "stop $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "stop$(printf \\r)"
 sleep 3
 screen -X -S WATCH_LOGIN quit
 screen -X -S VANILLA_BACKUP quit
@@ -189,10 +189,10 @@ exit 0
 
 do_restart_now() {
 sed -i 's/check=.*/check=false/g' $CONFIG
-screen -S Minecraft -p 0 -X stuff "say Server is going down.... Please log NOW! $(printf \\r)"
-screen -S Minecraft -p 0 -X stuff "save-all $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "say Server is going down.... Please log NOW!$(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "save-all$(printf \\r)"
 sleep 10
-screen -S Minecraft -p 0 -X stuff "stop $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "stop$(printf \\r)"
 sleep 10
 cd $DIR
 $START
@@ -208,14 +208,14 @@ do_archive() {
   cp $INSTALL_LOC/Files/conf.cfg $DIR/conf.cfg
   today=$(date '+%Y-%mM-%dD_%HH_%MM_%SS')
   cd $ARCHIVE
-  screen -S Minecraft -p 0 -X stuff "say Creating Archive of the server, Sorry for any lag. $(printf \\r)"
+  screen -S Minecraft -p 0 -X stuff "say Creating Archive of the server, Sorry for any lag.$(printf \\r)"
   clear
   echo -e ${green}"Making archive...Please wait 5 seconds."
   tput sgr0
   sleep 4
   tar -zcvf "$today".tar.gz -C $DIR .
   rm `ls -t | awk 'NR>8'` 2>/dev/null
-  screen -S Minecraft -p 0 -X stuff "say Archive complete, carry on... :( $(printf \\r)"
+  screen -S Minecraft -p 0 -X stuff "say Archive complete, carry on... :($(printf \\r)"
 }
 
 do_rollback() {
@@ -228,9 +228,9 @@ $START
 sed -i 's/check=.*/check=true/g' $CONFIG
 else
 sed -i 's/check=.*/check=false/g' $CONFIG
-screen -S Minecraft -p 0 -X stuff "say Going down for rollback! $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "say Going down for rollback!$(printf \\r)"
 sleep 10
-screen -S Minecraft -p 0 -X stuff "stop $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "stop$(printf \\r)"
 sleep 20
 do_rollback
 fi
@@ -268,10 +268,10 @@ fi
   exit 0
 else
   sed -i 's/check=.*/check=false/g' $CONFIG
-  screen -S Minecraft -p 0 -X stuff "say Going down for rollback! $(printf \\r)"
+  screen -S Minecraft -p 0 -X stuff "say Going down for rollback!$(printf \\r)"
   sleep 5
   whiptail --msgbox --fb "Server was found running.. Hit ok and wait up to 20 seconds to recheck." 20 50 0
-  screen -S Minecraft -p 0 -X stuff "stop $(printf \\r)"
+  screen -S Minecraft -p 0 -X stuff "stop$(printf \\r)"
 for ((i=20;i>0;i=i-1)); do
   clear
 if screen -list | grep -q "Minecraft"; then
@@ -328,11 +328,11 @@ TOTAL=$(du -sh $INSTALL_LOC | awk '{print $1}')
 cpufree=$(mpstat 1 1 | tail -n 1 | awk '{printf $12}')
 CPU=$(echo "scale=1; x=100-$cpufree; if(x<1) print 0; x" | bc)
 
-screen -S Minecraft -p 0 -X stuff "say "$RAM\B" Ram free out of "$RAM_TOTAL\B" $(printf \\r)"
-screen -S Minecraft -p 0 -X stuff "say This server is now "$TOTAL\B" in size & "$HDDFREE\B" Free. $(printf \\r)"
-screen -S Minecraft -p 0 -X stuff "say The CPU is currently running at "$CPU\%" $(printf \\r)"
-screen -S Minecraft -p 0 -X stuff "say Uptime: $UPTIME $(printf \\r)"
-screen -S Minecraft -p 0 -X stuff "say Load Average (1M 5M 15M): $LOAD $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "say "$RAM\B" Ram free out of "$RAM_TOTAL\B"$(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "say This server is now "$TOTAL\B" in size & "$HDDFREE\B" Free.$(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "say The CPU is currently running at "$CPU\%"$(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "say Uptime: $UPTIME$(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "say Load Average (1M 5M 15M): $LOAD$(printf \\r)"
 }
 
 do_rsync() {
@@ -341,9 +341,9 @@ echo "no server running"
 else
 do_save
 sleep 1
-screen -S Minecraft -p 0 -X stuff "say Backup was requested, Backing up... $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "say Backup was requested, Backing up...$(printf \\r)"
 rsync -r -t $DIR/* $RSYNC
-screen -S Minecraft -p 0 -X stuff "say Backup completed. $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "say Backup completed.$(printf \\r)"
 fi
 }
 
@@ -377,9 +377,9 @@ cd $VPLAYER_BACKUP$vanilla_player
 if [ $vanilla_player ]; then
                 if [ "$(grep $vanilla_player $ON)" = $vanilla_player ]; then
                         echo "this player is in this list"
-                        screen -S Minecraft -p 0 -X stuff "tell $vanilla_player Attempting to restore this data!, You will be kicked $(printf \\r)"
+                        screen -S Minecraft -p 0 -X stuff "tell $vanilla_player Attempting to restore this data!, You will be kicked$(printf \\r)"
                         sleep 4
-                        screen -S Minecraft -p 0 -X stuff "/kick $vanilla_player $(printf \\r)"
+                        screen -S Minecraft -p 0 -X stuff "/kick $vanilla_player$(printf \\r)"
                         while inotifywait -e create $PLAYERDATA$UUID.dat; do echo "it changed"; done
                         cp $res_playarr $PLAYERDATA$UUID.dat
                         cd /opt/BSCC/Files
@@ -425,8 +425,8 @@ res_playarr=$(whiptail --menu "Newest Deaths up top!" 20 60 5 ${new_playarr[@]} 
 RET=$?
 if [ $RET -eq 0 ]; then
 echo $res_playarr
-screen -S Minecraft -p 0 -X stuff "say Attempting to restore this data! $selected_player $(printf \\r)"
-screen -S Minecraft -p 0 -X stuff "/ob_inventory restore $selected_player $res_playarr $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "say Attempting to restore this data! $selected_player$(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "/ob_inventory restore $selected_player $res_playarr$(printf \\r)"
 else
 if [ $RET -eq 1 ]; then
 do_inventory
@@ -608,29 +608,43 @@ mkdir $INSTALL_LOC/Files/versions
 fi
 cd $INSTALL_LOC/Files/
 #Download Manifest
-wget https://launchermeta.mojang.com/mc/game/version_manifest.json -O versions.json
+#wget https://launchermeta.mojang.com/mc/game/version_manifest.json -O versions.json
+
 
 #Grab the Json's for the versions and orginize them.
 clear
 echo "DOWNLOAD BEGINNING!!"
 cat versions.json | ./JSON.sh -l | grep -o https.* | cut -d "\"" -f1 > versions/url.txt
 cd versions
+sed -i '/-pre/,+1 d' url.txt
+sed -i '/-Pre/,+1 d' url.txt
 cat url.txt | xargs -n 1 -P 20 wget -nc -q
 echo "DOWNLOAD COMPLETE!!"
-sleep 2
+#sleep 2
 rm 1.0.* 1.1.json 1.2.1.json 1.2.2.json 1.2.3.json 1.2.4.json
-cd ..
 
 ##Place list's into an arrey
-list=$(ls -1t versions/1.* | awk '{print $1}' | cut -d "j" -f1 | awk '{print $1 " |"}' > $INSTALL_LOC/Files/tmp.list)
-list=$(sort -Vr tmp.list > vanilla.list)
-rm $INSTALL_LOC/Files/tmp.list
-
-var=$(cat vanilla.list | tr '/' ' ' | awk '{print $2 " |"}')
+rm $INSTALL_LOC/Files/versions/tmp.list
+rm $INSTALL_LOC/Files/versions/this.tmp
+rm $INSTALL_LOC/Files/versions/vanilla.list
+rm $INSTALL_LOC/Files/versions/vanilla.tmp
+ls -1t 1.* | cut -d "j" -f1 > tmp.list
+sed 's/.$//' tmp.list > this.tmp
+cat this.tmp
+cat this.tmp | awk '{print $1 " |"}' > $INSTALL_LOC/Files/versions/vanilla.tmp
+cat vanilla.tmp
+cat vanilla.tmp | sort -Vr vanilla.tmp > $INSTALL_LOC/Files/versions/vanilla.list
+rm $INSTALL_LOC/Files/versions/tmp.list
+rm $INSTALL_LOC/Files/versions/vanilla.tmp
+rm $INSTALL_LOC/Files/versions/vanilla.tmp
+var=$(cat vanilla.list)
 var=(${var[@]})
 vanilla_select=$(whiptail --menu "Please Select your Version." 20 60 10 ${var[@]} 3>&1 1>&2 2>&3)
-dl_link=$(cat $INSTALL_LOC/Files/versions/$vanilla_select\json | grep /server | grep url | awk '{print $2}' | cut -d "\"" -f2)
-
+getlink=$(cat $INSTALL_LOC/Files/versions/$vanilla_select\.json | jq -r '.downloads | .server | .sha1' $vanilla_select\.json)
+dl_link=$(echo https://launcher.mojang.com/v1/objects/$getlink/server.jar)
+getsize=$(jq -r '.downloads | .server | .size' $vanilla_select\.json)
+dl_size=$(echo $getsize | awk '{ byte = $1 /1024/1024 ; print byte " MB"}')
+echo $dl_size
 RET=$?
 wget --spider $dl_link
 if [ $? -eq 0 ]; then
@@ -640,7 +654,10 @@ sleep 2
 echo "Verifying the Link"
 sleep 2
 echo "Link Confirmed good, Downloading"
-sleep 2
+echo "Download starting..."
+echo -e "Download size is:${yellow}$dl_size"
+tput sgr0
+sleep 3
 else
 whiptail --msgbox --fb "Download not found!. Please report this message on Youtube or the Forum and provide this link. \n
 Attempting to download: $dl_link" 20 60 0
@@ -1032,7 +1049,7 @@ do_Qstop() {
   RET=$?
   if [ $RET -eq 0 ]; then
     sed -i 's/check=.*/check=false/g' $CONFIG
-    screen -S Minecraft -p 0 -X stuff "stop $(printf \\r)"
+    screen -S Minecraft -p 0 -X stuff "stop$(printf \\r)"
     screen -X -S WATCH_LOGIN quit
     screen -X -S VANILLA_BACKUP quit
     screen -X -S IN_GAME quit
@@ -1042,7 +1059,7 @@ do_Qstop() {
 
 do_delete() {
 if screen -list | grep -q "Minecraft"; then
-screen -S Minecraft -p 0 -X stuff "stop $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "stop$(printf \\r)"
 screen -X -S WATCH_LOGIN quit
 screen -X -S VANILLA_BACKUP quit
 screen -X -S IN_GAME quit
@@ -1305,7 +1322,7 @@ if [ "$SERVER_TYPE" = "FTB" ]; then
         whiptail --fb --msgbox "Your upgrade is now complete, Your server should be loading up now. \
 In case it failed DO NOT RUN UPGRADE!!!. Run a restore first and restore the backup created called UPGRADE_ROLLBACK.tar.gz. \
 This will roll you back to before your upgrade." 20 60 0
-	screen -S Minecraft -p 0 -X stuff "/fml confirm $(printf \\r)"
+	screen -S Minecraft -p 0 -X stuff "/fml confirm$(printf \\r)"
 	rm -r $UPGRADE_TMP
 	exit 0
 fi
@@ -1328,7 +1345,7 @@ fi
 if screen -list | grep -q "Overviewer"; then
 echo "Overviewer is currently running, Try again later"
 else
-screen -S Minecraft -p 0 -X stuff "say Updating Overviewer! $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "say Updating Overviewer!$(printf \\r)"
 screen -dmS Overviewer nice -n 19 $MAP_DIR/Minecraft-Overviewer/overviewer.py $SET_CPU --config=$MAP_CONF
 chown -R $USER:$USER $MAP_DIR
 fi
@@ -1339,7 +1356,7 @@ if screen -list | grep -q "Overviewer"; then
 echo " " > /dev/null
 sleep 1
 else
-screen -S Minecraft -p 0 -X stuff "say Overviewer Completed. $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "say Overviewer Completed.$(printf \\r)"
 break
 fi
 done
@@ -1372,9 +1389,9 @@ cd $INSTALL_LOC/mcmaps
 git clone git://github.com/overviewer/Minecraft-Overviewer.git
 sudo apt-get install -y build-essential python-imaging python-dev python-numpy
 
-#Grab default textures for 1.11
-if [ ! -f ~/.minecraft/versions/1.11/1.11.jar ]; then
-wget https://s3.amazonaws.com/Minecraft.Download/versions/1.11/1.11.jar -P ~/.minecraft/versions/1.11/
+#Grab default textures for 1.12.2
+if [ ! -f ~/.minecraft/versions/1.12.2/1.12.2.jar ]; then
+wget https://s3.amazonaws.com/Minecraft.Download/versions/1.12.2/1.12.2.jar -P ~/.minecraft/versions/1.12.2/
 fi
 
 #Setup the world and render
