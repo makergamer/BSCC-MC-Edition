@@ -20,7 +20,7 @@ fi
 #######  Check for Dependencies  #######
 ########################################
 apt-get -y update
-apt-get install -y screen git wget rsync unzip sysstat inotify-tools bc
+apt-get install -y screen git wget rsync unzip sysstat inotify-tools bc jq
 sudo apt-get -y upgrade
 if [ ! -f /usr/bin/himalaya ]; then
 sudo apt-get -y install npm node
