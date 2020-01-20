@@ -2,18 +2,18 @@
 INSTALL_LOC=/opt/BSCC
 CONFIG=$INSTALL_LOC/Files/conf.cfg
 ###############################
-### Version 2.0.5-2.0.6 upgrade ###
+### Version 2.0.6-2.0.7 upgrade ###
 ###############################
 
 cd $INSTALL_LOC/Files
 
 do_changelog() {
         cat <<EOF >> changelog
-1. Restored links for Vanilla MC.
-2. Corrections for changes in MC that stopped commands from BSCC.
-3. Added permissions for kits.
+1. Removed all things related to maps.
+2. Shortened commands for BSCC via in-game chat.
+3. Sorry it's been so long, I will be reworking some of BSCC soon.
 EOF
-whiptail --fb --title "BSCC 2.0.5 Changelog" --textbox changelog 20 60
+whiptail --fb --title "BSCC 2.0.7 Changelog" --textbox changelog 20 60
 rm changelog
 }
 
@@ -40,29 +40,15 @@ done
 
 #All checks cleared.. Update
 do_update() {
-	#Doing a one time update for html2json software.
-	if [ ! -f /usr/bin/himalaya ]; then
-	sudo apt-get -y update
-	sudo apt-get -y upgrade
-	sudo apt-get -y install npm node
-	curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
-	sudo apt-get -y install nodejs
-	sudo npm install --global himalaya
-	fi
-	#This should be out after this update!. Placing in the install script.
 	cp $CONFIG $INSTALL_LOC/Files/conf.cfg.bak
 	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/BSCC -O BSCC
 	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/conf.cfg -O conf.cfg
-	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/kit -O kit
-	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/watch_login -O watch_login
 	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/update.sh -O update.sh
+	wet https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/ingame_control -O ingame_control
 	clear
 	sudo mv BSCC /usr/bin/
 	sudo chmod +x /usr/bin/BSCC
-	chmod +x /opt/BSCC/Files/kit
-	chmod +x /opt/BSCC/Files/watch_login
 	chmod +x /opt/BSCC/Files/update.sh
-	rm $INSTALL_LOC/Files/spigot.list
 #Grab old info and replace in new conf.cfg
 	source $INSTALL_LOC/Files/conf.cfg.bak
 	sed -i "s/MCVERSION=.*/MCVERSION=$MCVERSION/g" $CONFIG
