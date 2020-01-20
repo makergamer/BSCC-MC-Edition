@@ -13,53 +13,61 @@ fi
 
 check() {
 if [ ! -z "$RESTART" ]; then
-screen -S Minecraft -p 0 -X stuff "say Wish Granted! $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "tell $ALL Wish Granted! $(printf \\r)"
 sleep .5
-BSCC restart > 2&1
+BSCC restart
 fi
 if [ ! -z "$ARCHIVE" ]; then
-screen -S Minecraft -p 0 -X stuff "say Wish Granted! $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "tell $ALL Wish Granted! $(printf \\r)"
 sleep .5
-BSCC archive > 2&1
+BSCC archive
 fi
 if [ ! -z "$BACKUP" ]; then
-screen -S Minecraft -p 0 -X stuff "say Wish Granted! $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "tell $ALL Wish Granted! $(printf \\r)"
 sleep .5
-BSCC rsync > 2&1
+BSCC rsync
 fi
 if [ ! -z "$STOP" ]; then
-screen -S Minecraft -p 0 -X stuff "say Wish Granted! $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "tell $ALL Wish Granted! $(printf \\r)"
 sleep .5
-BSCC stop > 2&1
+BSCC stop
 fi
 if [ ! -z "$STATS" ]; then
-screen -S Minecraft -p 0 -X stuff "say Wish Granted! $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "tell $ALL Wish Granted! $(printf \\r)"
 sleep .5
-BSCC stats > 2&>1
+BSCC stats
 fi
-if [ ! -z "$MAPS" ]; then
-screen -S Minecraft -p 0 -X stuff "say Wish Granted! $(printf \\r)"
-sleep .5
-BSCC map > 2&>1 &
+if [ ! -z "$BSCC" ]; then
+screen -S Minecraft -p 0 -X stuff "tell $ALL Here are the list of commonds you can use on BSCC. $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "tell $ALL Restart: Restarts server. $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "tell $ALL Archive: Creates an archive. $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "tell $ALL Backup: Creates a backup of the server. $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "tell $ALL Stop: Stops the server. $(printf \\r)"
+screen -S Minecraft -p 0 -X stuff "tell $ALL Stats: Lists the states on the server. $(printf \\r)"
 fi
 }
 
 while true; do
-unset ALLOWED RESTART ARCHIVE BACKUP STOP STATS MAPS
-info="[Server thread/INFO]: [@]"
+unset ALLOWED RESTART ARCHIVE BACKUP STOP STATS
+info="[Server thread/INFO]:"
 OP="Allowed.list"
-ALL=$(cat $LOG | tail -n1 | grep -F "$info" | awk '{print $5}')
+ALL=$(cat $LOG | tail -n1 | grep -F "$info" | awk '{print $4}')
+
+#Remove the <> from the original log so that it matches the Allowed.list file used for other things.
+ALL=$(echo "$ALL" | sed 's/<*//' | sed 's/>//')
+
 if [ "$ALL" ]; then
 if [ "$(grep $ALL $OP)" = $ALL ]; then
-ALLOWED="$ALL"
+#Add <> for the newer versions of Minecraft logs
+ALLOWED="<$ALL>"
 fi
 fi
-RESTART=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Wished for restart!")
-ARCHIVE=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Wished for an archive!")
-BACKUP=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Wished to backup!")
-STOP=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Wished to end this world!")
-STATS=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Wished for stats!")
-MAPS=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Wished for maps!")
+RESTART=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Restart")
+ARCHIVE=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Archive")
+BACKUP=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Backup")
+STOP=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Stop")
+STATS=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Stats")
+BSCC=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED BSCC")
 sleep 1
 check
 done
