@@ -15,6 +15,25 @@ if [ $UID = 0 ] && [ ! -z "$SUDO_USER" ]; then
 else
 	USER="$(whoami)"
 fi
+clear
+echo "Thank you for choosing BSCC, This should only take a few minutes.."
+echo ""
+if type -p java; then
+    echo found java executable in PATH
+    _java=java
+elif [[ -n "$JAVA_HOME" ]] && [[ -x "$JAVA_HOME/bin/java" ]];  then
+    echo found java executable in JAVA_HOME
+    _java="$JAVA_HOME/bin/java"
+else
+    echo "Command 'java' not found, if you're on ubuntu/debian try installing one of the following:"
+    echo ""
+    echo "sudo apt install default-jre"
+    echo "sudo apt install openjdk-11-jre-headless"
+    echo "sudo apt install openjdk-8-jre-headless"
+    echo ""
+    echo "After you install java then run the Install script again..."
+    exit 1
+fi
 
 ########################################
 #######  Check for Dependencies  #######
@@ -24,12 +43,17 @@ apt-get install -y screen git wget rsync unzip sysstat inotify-tools bc jq
 sudo apt-get -y upgrade
 if [ ! -f /usr/bin/himalaya ]; then
 sudo apt-get -y install npm node
-curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+curl -sL https://deb.nodesource.com/setup_13.x | sudo -E bash -
 sudo apt-get -y install nodejs
 npm install --global himalaya
 fi
 #Grab JSON.sh from Dominictarr's Github. Thank you for this tool!!
 wget https://raw.githubusercontent.com/dominictarr/JSON.sh/master/JSON.sh -O JSON.sh
+###Place a few configs for faster loading later.
+EIP=$(curl https://ipinfo.io/ip)
+
+sed -i 's/EIP=.*/EIP='$EIP'/g' Files/conf.cfg
+
 
 do_warning() {
 if (whiptail --fb --title "Erase Everything??" --yesno "If you choose to do a clean install it will erase your Minecraft Server If you've made one already using this script.. Are you 100% sure? \
@@ -53,65 +77,6 @@ else
 fi
 }
 
-#Check PC specs to see if it's ARM or X86 and grab the correct java version.
-CPUINFO=`lscpu | grep "Architecture" | awk '{print $2}'`
-
-#Install Java for Arm.
-do_arm() {
-if [[ "$CPUINFO" == arm* ]]; then
-wget -O java.tar.gz http://ftp.osuosl.org/pub/funtoo/distfiles/oracle-java/jdk-8u144-linux-arm32-vfp-hflt.tar.gz
-mkdir /opt/java_jdk
-tar zxvf java.tar.gz -C /opt/java_jdk --strip-components=1
-rm java.tar.gz
-update-alternatives --install "/usr/bin/java" "java" "/opt/java_jdk/bin/java" 1
-update-alternatives --set java /opt/java_jdk/bin/java
-fi
-}
-
-do_arm64() {
-if [[ "$CPUINFO" == aarch64 ]]; then
-wget -O java.tar.gz http://ftp.osuosl.org/pub/funtoo/distfiles/oracle-java/jdk-8u144-linux-arm64-vfp-hflt.tar.gz
-mkdir /opt/java_jdk
-tar zxvf java.tar.gz -C /opt/java_jdk --strip-components=1
-rm java.tar.gz
-update-alternatives --install "/usr/bin/java" "java" "/opt/java_jdk/bin/java" 1
-update-alternatives --set java /opt/java_jdk/bin/java
-fi
-}
-
-#Install Java for X64 PC's
-do_x86() {
-if [[ "$CPUINFO" == x86_64 ]]; then
-wget -O java.tar.gz --no-check-certificate --no-cookies --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u91-b14/jre-8u91-linux-x64.tar.gz && continue
-mkdir /opt/java_jdk
-tar zxvf java.tar.gz -C /opt/java_jdk --strip-components=1
-rm java.tar.gz
-update-alternatives --install "/usr/bin/java" "java" "/opt/java_jdk/bin/java" 1
-update-alternatives --set java /opt/java_jdk/bin/java
-#clear
-fi
-}
-
-#Check Architecture
-do_java() {
-if [[ "$CPUINFO" == arm* ]]; then
-do_arm
-else
-if [[ "$CPUINFO" == aarch64 ]]; then
-do_arm64
-else
-if [[ "$CPUINFO" == x86_64 ]]; then
-do_x86
-fi
-fi
-fi
-}
-
-#Check for java install.
-if [ ! -d /opt/java_jdk ]; then
-do_java
-fi
-
 if [ ! -d "$INSTALL_LOC" ]; then
         if (whiptail --fb --title "BSCC-MC-Edition" --yesno "Welcome to the Bash Script Command Center - MC Edition. \
 
@@ -131,7 +96,6 @@ If you agree Please, continue." 15 60) then
         mkdir $INSTALL_LOC/Files
 	mkdir $INSTALL_LOC/PD_Backup
 	mkdir $INSTALL_LOC/minecraft_server
-	mkdir $INSTALL_LOC/mcmaps
 	mkdir $INSTALL_LOC/Files/versions
         cp Files/* $INSTALL_LOC/Files
         echo XXX
