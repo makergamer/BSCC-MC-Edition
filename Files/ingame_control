@@ -7,37 +7,37 @@
 
 LOG="/opt/BSCC/minecraft_server/logs/latest.log"
 
-if [ ! -f Allowed.list ]; then
+if [[ ! -f Allowed.list ]]; then
 touch Allowed.list
 fi
 
 check() {
-if [ ! -z "$RESTART" ]; then
+if [[ ! -z "$RESTART" ]]; then
 screen -S Minecraft -p 0 -X stuff "tell $ALL Wish Granted! $(printf \\r)"
 sleep .5
 BSCC restart
 fi
-if [ ! -z "$ARCHIVE" ]; then
+if [[ ! -z "$ARCHIVE" ]]; then
 screen -S Minecraft -p 0 -X stuff "tell $ALL Wish Granted! $(printf \\r)"
 sleep .5
 BSCC archive
 fi
-if [ ! -z "$BACKUP" ]; then
+if [[ ! -z "$BACKUP" ]]; then
 screen -S Minecraft -p 0 -X stuff "tell $ALL Wish Granted! $(printf \\r)"
 sleep .5
 BSCC rsync
 fi
-if [ ! -z "$STOP" ]; then
+if [[ ! -z "$STOP" ]]; then
 screen -S Minecraft -p 0 -X stuff "tell $ALL Wish Granted! $(printf \\r)"
 sleep .5
 BSCC stop
 fi
-if [ ! -z "$STATS" ]; then
+if [[ ! -z "$STATS" ]]; then
 screen -S Minecraft -p 0 -X stuff "tell $ALL Wish Granted! $(printf \\r)"
 sleep .5
 BSCC stats
 fi
-if [ ! -z "$BSCC" ]; then
+if [[ ! -z "$BSCC" ]]; then
 screen -S Minecraft -p 0 -X stuff "tell $ALL Here are the list of commonds you can use on BSCC. $(printf \\r)"
 screen -S Minecraft -p 0 -X stuff "tell $ALL Restart: Restarts server. $(printf \\r)"
 screen -S Minecraft -p 0 -X stuff "tell $ALL Archive: Creates an archive. $(printf \\r)"
@@ -56,8 +56,8 @@ ALL=$(cat $LOG | tail -n1 | grep -F "$info" | awk '{print $4}')
 #Remove the <> from the original log so that it matches the Allowed.list file used for other things.
 ALL=$(echo "$ALL" | sed 's/<*//' | sed 's/>//')
 
-if [ "$ALL" ]; then
-if [ "$(grep $ALL $OP)" = $ALL ]; then
+if [[ "$ALL" ]]; then
+if [[ "$(grep $ALL $OP)" = $ALL ]]; then
 #Add <> for the newer versions of Minecraft logs
 ALLOWED="<$ALL>"
 fi

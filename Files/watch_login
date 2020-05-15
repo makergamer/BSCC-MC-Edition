@@ -18,11 +18,11 @@ USER=$(tail -n 1 $LOG | grep -o "UUID of player.*" | awk '{print $4"="$6}')
 LEFT=$(tail -n 1 $LOG | grep -o ".*left the game" | cut -d " " -f4)
 NAME=$(echo $USER | cut -d "=" -f1)
 
-if [ $USER ]; then
-        if [ -z $(grep -w "$NAME" "$ON") ]; then
+if [[ $USER ]]; then
+        if [[ -z $(grep -w "$NAME" "$ON") ]]; then
                 grep -qw "$NAME" "$ON" || echo "$NAME" >> "$ON"
 RANDOM_MSG
-        if [ "$(grep $USER $ALLTIME)" != $USER ]; then
+        if [[ "$(grep $USER $ALLTIME)" != $USER ]]; then
                 grep -qw "$USER" "$ALLTIME" || echo "$USER" >> "$ALLTIME"
                 export NAME
                 screen -S Minecraft -p 0 -X stuff "say Welcome to the server $NAME$(printf \\r)"
@@ -33,8 +33,8 @@ else
     fi
 fi
 
-if [ $LEFT ]; then
- if [ "$(grep $LEFT $ON)" != $ON ]; then
+if [[ $LEFT ]]; then
+ if [[ "$(grep $LEFT $ON)" != $ON ]]; then
               sed -i -e '/'$LEFT'/d' $ON
  fi
 fi
@@ -43,7 +43,7 @@ fi
 ##Gives the server a chance to startup
 for ((i=120;i>0;i=i-1)); do
         clear
-        if [ ! -f $LOG ]; then
+        if [[ ! -f $LOG ]]; then
         clear
         echo -n "Minecraft latest.log not found yet. Time Remaining $i seconds"
         sleep 1
@@ -56,7 +56,7 @@ done
 VANILLA=$(cat conf.cfg | grep -o "VANILLA.*" | cut -d "=" -f2)
 
 
-if [ "${VANILLA}" = "true" ]; then
+if [[ "${VANILLA}" = "true" ]]; then
 	if ! screen -list | grep -q "WATCH_LOGOUT"; then
 		screen -dmS VANILLA_BACKUP ./vanilla_backup
 	fi

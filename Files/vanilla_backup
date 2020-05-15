@@ -10,7 +10,7 @@ ALLTIME="Alltimeusers.list"
 ####################################
 WORLD=$(cat /opt/BSCC/minecraft_server/server.properties | grep -o "level-name.*" | cut -d "=" -f2)
 for ((i=120;i>0;i=i-1)); do
-	if [ -z "$WORLD" ]; then
+	if [[ -z "$WORLD" ]]; then
 	WORLD=$(cat /opt/BSCC/minecraft_server/server.properties | grep -o "level-name.*" | cut -d "=" -f2)
 	echo -n "Looking for Custom World folder $i seconds"
 	sleep 1
@@ -26,15 +26,15 @@ done
 ## Make clean Onlineuser *bug*   ###
 ####################################
 rm $ON
-if [ ! -f "$ON" ]; then
+if [[ ! -f "$ON" ]]; then
 	touch $ON
 fi
-if [ ! -f "$ALLTIME" ]; then
+if [[ ! -f "$ALLTIME" ]]; then
 	touch $ALLTIME
 fi
 
 for ((i=120;i>0;i=i-1)); do
-	if [ ! -d "/opt/BSCC/minecraft_server/$WORLD" ]; then
+	if [[ ! -d "/opt/BSCC/minecraft_server/$WORLD" ]]; then
 	echo -n "Waiting for World folder to populate."
 	sleep 1
 else
@@ -45,12 +45,12 @@ done
 
 Vanilla_backup() {
 ## Look if user is new or now ###
-if [ ! -d $TARGET$DECODEDUSERNAME ]; then
+if [[ ! -d $TARGET$DECODEDUSERNAME ]]; then
 mkdir $TARGET$DECODEDUSERNAME
 fi
 
 VANILLA=$(cat conf.cfg | grep -o "VANILLA.*" | cut -d "=" -f2)
-if [ $VANILLA = true ]; then
+if [[ $VANILLA = true ]]; then
 dt=$(date +"%Y_%m_%d-%H%M%S")
 cp $PLAYERDATA$PLAYERUUID.dat $TARGET$DECODEDUSERNAME/${DECODEDUSERNAME}_${dt}.dat
 cd $TARGET$DECODEDUSERNAME
@@ -70,7 +70,7 @@ while read stats; do
 #echo "CorrectUUID is :$CorrectUUID"
 #echo "DECODEDUSERNAME is :$DECODEDUSERNAME"
 ###################################
-if [ $DECODEDUSERNAME ]; then
+if [[ $DECODEDUSERNAME ]]; then
 Vanilla_backup
 fi
 done

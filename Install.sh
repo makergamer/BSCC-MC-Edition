@@ -3,14 +3,14 @@ INSTALL_LOC=/opt/BSCC
 CPUINFO=`lscpu | grep "Architecture" | awk '{print $2}'`
 
 # Make sure we run with root privileges
-if [ $UID != 0 ]; then
+if [[ $UID != 0 ]]; then
 # not root, use sudo
 	echo "This script needs root privileges, rerunning it now using sudo!"
 	sudo "${SHELL}" "$0" $*
 	exit $?
 fi
 # get real username
-if [ $UID = 0 ] && [ ! -z "$SUDO_USER" ]; then
+if [[ $UID = 0 ]] && [[ ! -z "$SUDO_USER" ]]; then
 	USER="$SUDO_USER"
 else
 	USER="$(whoami)"
@@ -41,7 +41,7 @@ fi
 apt-get -y update
 apt-get install -y screen git wget rsync unzip sysstat inotify-tools bc jq
 sudo apt-get -y upgrade
-if [ ! -f /usr/bin/himalaya ]; then
+if [[ ! -f /usr/bin/himalaya ]]; then
 sudo apt-get -y install npm node
 curl -sL https://deb.nodesource.com/setup_13.x | sudo -E bash -
 sudo apt-get -y install nodejs
@@ -77,7 +77,7 @@ else
 fi
 }
 
-if [ ! -d "$INSTALL_LOC" ]; then
+if [[ ! -d "$INSTALL_LOC" ]]; then
         if (whiptail --fb --title "BSCC-MC-Edition" --yesno "Welcome to the Bash Script Command Center - MC Edition. \
 
 

@@ -10,9 +10,9 @@ source /opt/BSCC/Files/conf.cfg
 ######################
 function DEBUG()
 {
- [ "$_DEBUG" == "on" ] &&  $@
+ [[ "$_DEBUG" == "on" ]] &&  $@
 }
-if [ $_DEBUG = "on" ];then
+if [[ $_DEBUG = "on" ]];then
 exec > >(tee -i $INSTALL_LOC/Files/debug_log)
 exec 2>&1
 fi
@@ -21,8 +21,8 @@ do_debug() {
 Qdebug=$(whiptail --fb --inputbox "Enable debug? on/off" 10 80 $_DEBUG --title "DEBUG on/off" 3>&1 1>&2 2>&3)
 exitstatus=$?
 #Check if debug was toggled
-if [ ! $Qdebug = $_DEBUG ]; then
-if [ $exitstatus = 0 ]; then
+if [[ ! $Qdebug = $_DEBUG ]]; then
+if [[ $exitstatus = 0 ]]; then
     sed -i 's/_DEBUG=.*/_DEBUG='${Qdebug}'/g' $INSTALL_LOC/Files/conf.cfg
     clear
     echo "Please relaunch BSCC, Debug toggled."
@@ -53,7 +53,7 @@ $INSTALL_LOC/Files/update.sh
 do_adminpass() {
 ADMIN_AREA=$(whiptail --passwordbox "Enter Password:" 8 30 --title "password dialog" 3>&1 1>&2 2>&3)
 exitstatus=$?
-if [ $ADMIN_PASS == "$ADMIN_AREA"  ]; then
+if [[ $ADMIN_PASS == "$ADMIN_AREA"  ]]; then
 whiptail --ok-button Done --msgbox "Correct password" 10 30
 do_admin
 else
@@ -106,9 +106,9 @@ FUN=$(whiptail --fb --title "Level Type" --menu "Please select a Level Type"  --
         "4 AMPLIFIED" "[Same as default but world-generation height limit is increased.]" \
         3>&1 1>&2 2>&3)
 RET=$?
-if [ $RET -eq 1 ]; then
+if [[ $RET -eq 1 ]]; then
     break
-  elif [ $RET -eq 0 ]; then
+  elif [[ $RET -eq 0 ]]; then
     case "$FUN" in
       1\ *) echo "level-type=DEFAULT" > $SERVER_PROP; break ;;
       2\ *) echo "level-type=FLAT" > $SERVER_PROP; break ;;
@@ -237,7 +237,7 @@ fi
 }
 
 do_restore() {
-if [ "$(ls -A $INSTALL_LOC/archive)" ]; then
+if [[ "$(ls -A $INSTALL_LOC/archive)" ]]; then
   unset restore
   unset selected_restore
   restore=`ls -1t $INSTALL_LOC/archive | awk '{print $1 " |"}'`
@@ -246,7 +246,7 @@ if ! screen -list | grep -q "Minecraft"; then
   sed -i 's/check=.*/check=false/g' $CONFIG
   selected_restore=$(whiptail --menu --fb "Select your restore point" 20 60 10 ${restore[@]} 3>&1 1>&2 2>&3)
   RET=$?
-  if [ $RET -eq 1 ]; then
+  if [[ $RET -eq 1 ]]; then
   break
   fi
   rm -rf $DIR/*
@@ -261,7 +261,7 @@ if ! screen -list | grep -q "Minecraft"; then
   sed -i 's/check=.*/check=true/g' $CONFIG
 
 #Just incase something went really bad...
-if [ ! -f $DIR/$SERVERJAR ]; then
+if [[ ! -f $DIR/$SERVERJAR ]]; then
     do_fallback
 fi
   whiptail --msgbox --fb "Your server should now be restored and loading up.." 20 50 0
@@ -291,7 +291,7 @@ fi
 do_user_backup() {
 UBACKUP=$(whiptail --fb --inputbox "Where whould you like to save an archive to?" 8 78 $HOME/ --title "User Backups" 3>&1 1>&2 2>&3)
 RET=$?
-if [ $RET -eq 1 ]; then
+if [[ $RET -eq 1 ]]; then
   break
 fi
   whiptail --fb --msgbox "This will take a second to do and will also stop your server, Don't hit Ok until your ready for your server to go down." 20 60 0
@@ -358,11 +358,11 @@ VPLAYER=$(cat $ALLTIME | cut -d "=" -f1 | awk '{print $1 " |"}')
 unset vanilla_player res_playarr selected_backup UUID
 vanilla_player=$(whiptail --menu "Vanilla Inventory recovery" 20 60 7 ${VPLAYER[@]} 3>&1 1>&2 2>&3)
 RET=$?
-if [ $RET -eq 0 ]; then
+if [[ $RET -eq 0 ]]; then
 selected_backup=$(ls -lh1t $VPLAYER_BACKUP$vanilla_player | awk '{print $9,$5}' | head -36)
 UUID=$(cat $ALLTIME | grep "$vanilla_player" | cut -d "=" -f2)
 else
-if [ $RET -eq 1 ]; then
+if [[ $RET -eq 1 ]]; then
 do_menu
 fi
 fi
@@ -372,10 +372,10 @@ fi
 ##########################################
 res_playarr=$(whiptail --menu "Newest Inventory (YYMMDD-HHMMSS)" 20 60 7 ${selected_backup[@]} 3>&1 1>&2 2>&3)
 RET=$?
-if [ $RET -eq 0 ]; then
+if [[ $RET -eq 0 ]]; then
 cd $VPLAYER_BACKUP$vanilla_player
-if [ $vanilla_player ]; then
-                if [ "$(grep $vanilla_player $ON)" = $vanilla_player ]; then
+if [[ $vanilla_player ]]; then
+                if [[ "$(grep $vanilla_player $ON)" = $vanilla_player ]]; then
                         echo "this player is in this list"
                         screen -S Minecraft -p 0 -X stuff "tell $vanilla_player Attempting to restore this data!, You will be kicked$(printf \\r)"
                         sleep 4
@@ -395,7 +395,7 @@ fi
 do_inventory() {
 clear
 #Check that the mods are actually installed...
-if [ ! -f $DIR/mods/OpenB* ]; then
+if [[ ! -f $DIR/mods/OpenB* ]]; then
 if (whiptail --title  "Plugin Missing!" --fb --yesno "Openblocks not found!, Do you want to use vanilla recovery?" 12 78) then
     sed -i 's/VANILLA=.*/VANILLA=true/g' $CONFIG
     do_vanilla_inventory
@@ -409,13 +409,13 @@ playarr=(${playarr[@]})
 unset selected_player
 selected_player=$(whiptail --menu "OpenBlocks Inventory Restore Center" 20 60 10  ${playarr[@]} 3>&1 1>&2 2>&3)
 RET=$?
-if [ $RET -eq 0 ]; then
+if [[ $RET -eq 0 ]]; then
 #Grab all deaths from the users in data folder.
 unset new_playarr
 new_playarr=`ls -1t $INVENTORY_DIR | grep "inventory-$selected_player" | grep "death" | awk '{print $1 " |"}'`
 new_playarr=(${new_playarr[@]})
 else
-if [ $RET -eq 1 ]; then
+if [[ $RET -eq 1 ]]; then
 do_menu
 fi
 fi
@@ -423,12 +423,12 @@ unset res_playarr
 #issue restore from selected file.
 res_playarr=$(whiptail --menu "Newest Deaths up top!" 20 60 5 ${new_playarr[@]} 3>&1 1>&2 2>&3)
 RET=$?
-if [ $RET -eq 0 ]; then
+if [[ $RET -eq 0 ]]; then
 echo $res_playarr
 screen -S Minecraft -p 0 -X stuff "say Attempting to restore this data! $selected_player$(printf \\r)"
 screen -S Minecraft -p 0 -X stuff "/ob_inventory restore $selected_player $res_playarr$(printf \\r)"
 else
-if [ $RET -eq 1 ]; then
+if [[ $RET -eq 1 ]]; then
 do_inventory
 fi
 fi
@@ -438,7 +438,7 @@ fi
 do_eula() {
 #eula.txt Should be there. If not then something went wrong and should say so now.
 #source BSCC
-if [ ! -f $DIR/eula.txt ]; then
+if [[ ! -f $DIR/eula.txt ]]; then
      whiptail --msgbox --fb "Something is wrong here, there is no eula.txt file to be found." 20 60
         exit 0
 fi
@@ -462,12 +462,12 @@ do_console() {
 do_command() {
 INPUT=$(whiptail --fb --inputbox "Enter a console command or chat here:" 10 80 --title "Full Console Control" 3>&1 1>&2 2>&3)
 RET=$?
-if [ $RET -eq 0 ]; then
+if [[ $RET -eq 0 ]]; then
 screen -S Minecraft -p 0 -X stuff "`printf "$INPUT\r"`";
 fi
 
 }
-if [ -f /opt/BSCC/minecraft_server/logs/latest.log ]; then
+if [[ -f /opt/BSCC/minecraft_server/logs/latest.log ]]; then
 log="/opt/BSCC/minecraft_server/logs/latest.log"
 else
 log="/opt/BSCC/minecraft_server/server.log"
@@ -503,7 +503,7 @@ do_ram() {
 #################################
 USERMAX=$(whiptail --inputbox "Please select a MAXMEM Default is 512M" 8 78 $MAXMEM --title "Total Ram Available:$RAM" 3>&1 1>&2 2>&3)
 exitstatus=$?
-if [ $exitstatus = 0 ]; then
+if [[ $exitstatus = 0 ]]; then
     sed -i 's/MAXMEM=.*/MAXMEM='$USERMAX'/g' $CONFIG
 else
     sed -i 's/MAXMEM=.*/MAXMEM=512M/g' $CONFIG
@@ -511,7 +511,7 @@ fi
 
 USERMIN=$(whiptail --inputbox "Please select a MINMEM Default is 128M. (MUST BE LOWER THEN MAXMEM)" 8 78 $MINMEM --title "Total Ram Available:$RAM" 3>&1 1>&2 2>&3)
 exitstatus=$?
-if [ $exitstatus = 0 ]; then
+if [[ $exitstatus = 0 ]]; then
     sed -i 's/MINMEM=.*/MINMEM='$USERMIN'/g' $CONFIG
 else
     sed -i 's/MINMEM=.*/MINMEM=128M/g' $CONFIG
@@ -541,7 +541,7 @@ do_first_run() {
         #Allow time for the server to load and crash due to eula.
         for ((i=120;i>0;i=i-1)); do
  	        clear
-	       if [ ! -f $DIR/eula.txt ]; then
+	       if [[ ! -f $DIR/eula.txt ]]; then
   	       clear
   	       echo -n "Time Remaining $i seconds"
   	       sleep 1
@@ -563,7 +563,7 @@ do_first_run() {
         sleep 2
 ) | whiptail --gauge "Gathering info" 8 40 0
 #eula.txt Should be there. If not then something went wrong and should say so now.
-if [ ! -f $DIR/eula.txt ]; then
+if [[ ! -f $DIR/eula.txt ]]; then
      whiptail --msgbox --fb "Something is wrong here, there is no eula.txt file to be found." 20 60
 #Make a point to see if java is present or not
 	java -version
@@ -581,7 +581,7 @@ do_leveltype
 #All done here
 whiptail --fb --title "YOUR ALL SETUP!!!" --msgbox "Well if your seeing this it means that there is a good chance that your server is all setup and read to go. Give it some time to load and enjoy. Run BSCC for more info" 20 60
 ##Check for upgrade path##
-if [ -d /opt/BSCC/upgrade_backup ]; then
+if [[ -d /opt/BSCC/upgrade_backup ]]; then
 	do_upgrade
 fi
 exit 0
@@ -591,7 +591,7 @@ exit 0
 do_fallback() {
 fallback=`ls $DIR | grep ".*.jar" | awk '{print $1 " |"}'`
 fallback=(${fallback[@]})
-if [ ! -f $DIR/$SERVERJAR ]; then
+if [[ ! -f $DIR/$SERVERJAR ]]; then
 whiptail --msgbox --fb "Looks like your Server jar is not set. Please try a fallback from the list.." 20 60 0
 fallback_attempt=$(whiptail --menu "These are the Jar files we found." 20 60 3 ${fallback[@]} 3>&1 1>&2 2>&3)
 sed -i 's/SERVERJAR=.*/SERVERJAR='$fallback_attempt'/g' $CONFIG
@@ -603,7 +603,7 @@ fi
 #########################
 #Select Version of Minecraft and download.
 do_vanilla() {
-if [ ! -d $INSTALL_LOC/Files/versions ]; then
+if [[ ! -d $INSTALL_LOC/Files/versions ]]; then
 mkdir $INSTALL_LOC/Files/versions
 fi
 cd $INSTALL_LOC/Files/
@@ -647,7 +647,7 @@ dl_size=$(echo $getsize | awk '{ byte = $1 /1024/1024 ; print byte " MB"}')
 echo $dl_size
 RET=$?
 wget --spider $dl_link
-if [ $? -eq 0 ]; then
+if [[ $? -eq 0 ]]; then
 clear
 echo "Checking Download link: $dl_link"
 sleep 2
@@ -667,7 +667,7 @@ fi
 #Check the download and if failed remove the file.
 clear
 r=`wget -O $DIR/$vanilla_select\.jar $dl_link`
-if [ $? -ne 0 ]; then
+if [[ $? -ne 0 ]]; then
 rm $DIR/$vanilla_select\jar
 whiptail --msgbox --clear --fb "Download failed!, check your internet and the link.\
 sed -i 's/SERVERJAR=.*/SERVERJAR=/g' $CONFIG
@@ -694,15 +694,15 @@ spigot_list=$(cat spigot.json | grep -ow "spigot-1.*R0.1-SNAPSHOT.*.jar" | cut -
 spigot_list=(${spigot_list[@]})
 spigot_servers=$(whiptail --menu "Select Your Spigot server." 20 60 10 ${spigot_list[@]} 3>&1 1>&2 2>&3)
 RET=$?
-  if [ $RET -eq 1 ]; then
+  if [[ $RET -eq 1 ]]; then
     exit 1
-  elif [ $RET -eq 0 ]; then
+  elif [[ $RET -eq 0 ]]; then
 dl_link=$(echo "https://yivesmirror.com/files/spigot/spigot-$spigot_servers")
 
 #Check the download and if failed remove the file.
 clear
 r=`wget $dl_link -O $DIR/spigot-$spigot_servers`
-if [ $? -ne 0 ]; then
+if [[ $? -ne 0 ]]; then
 rm $DIR/-spigot$spigot_servers
 whiptail --msgbox --clear --fb "Download failed!, check your internet and the link.\
 The current link is: $dl_link" 20 60
@@ -718,7 +718,7 @@ fi
 
 do_ftb() {
 # this will get all the ftb server names...
-if [ ! -f /opt/BSCC/Files/modpacks.xml ]; then
+if [[ ! -f /opt/BSCC/Files/modpacks.xml ]]; then
 cd /opt/BSCC/Files/
 wget http://ftb.cursecdn.com/FTB2/static/modpacks.xml
 fi
@@ -733,7 +733,7 @@ unset var
 var=$(whiptail --menu "Please Select your FTB Server" 20 80 10 ${server[@]} 3>&1 1>&2 2>&3)
 echo $var
 RET=$?
-if [ $RET -eq 0 ]; then
+if [[ $RET -eq 0 ]]; then
 name1=$(awk -v var="$var" 'BEGIN {print var}' | awk -F 'Server|server|[-]' '{print $1}')
 name2=$(awk -v var="$var" 'BEGIN {print var}' | awk -F 'Server|server|[_-]' '{print $1}')
 echo $name1
@@ -741,22 +741,22 @@ echo $name1
 #######Dirty fix for older Versions ########
 ####### Of FTB                      ########
 ############################################
-if [ $name1 = RetroSMP_ ]; then
+if [[ $name1 = RetroSMP_ ]]; then
 name1=FTBRETROSMP
 fi
-if [ $name1 = TechWorld_ ]; then
+if [[ $name1 = TechWorld_ ]]; then
 name1=Tech_World
 fi
-if [ $name1 = MagicWorld_ ]; then
+if [[ $name1 = MagicWorld_ ]]; then
 name1=Magic_World
 fi
-if [ $name1 = MagicWorld2 ]; then
+if [[ $name1 = MagicWorld2 ]]; then
 name1=Magic_World_2
 fi
-if [ $name1 = Direwolf20_ ]; then
+if [[ $name1 = Direwolf20_ ]]; then
 name1=Direwolf20
 fi
-if [ $name1 = Direwolf20 ]; then
+if [[ $name1 = Direwolf20 ]]; then
 name1=Direwolf20_1_6_4
 fi
 ###########################################
@@ -772,14 +772,14 @@ check=$(awk -v var="$old" 'BEGIN {print var}' | cut -d "|" -f1)
 if [[ -z "$check" ]]; then
 old=$(cat /opt/BSCC/Files/modpacks.xml | grep $var | grep -o repo.* | cut -d "=" -f2 | cut -d "\"" -f2 | awk '{print $1 " |"}')
 fi
-elif [ $RET -eq 1 ]; then
+elif [[ $RET -eq 1 ]]; then
 return $RET
 exit 0
 fi
 
 version_select=$(whiptail --menu --fb "Pick your Version  Please" 20 60 10 ${old[@]} 3>&1 1>&2 2>&3)
 RET=$?
-if [ $RET -eq 0 ]; then
+if [[ $RET -eq 0 ]]; then
 #use this to get the version
 version=$(awk -v var="$version_select" 'BEGIN {print var}' | sed 's/\./_/g')
 
@@ -787,7 +787,7 @@ version=$(awk -v var="$version_select" 'BEGIN {print var}' | sed 's/\./_/g')
 #Check for download and attempt the name change.
 dl_link="http://ftb.cursecdn.com/FTB2/modpacks/$name1/$version/$var"
 wget --spider $dl_link
-if [ $? -eq 0 ]; then
+if [[ $? -eq 0 ]]; then
 clear
 echo "Checking Download link: $dl_link"
 #sleep 2
@@ -799,7 +799,7 @@ else
 echo "Bad link attempting 2nd one"
 dl_link="http://ftb.cursecdn.com/FTB2/modpacks/$name2/$version/$var"
 wget --spider $dl_link
-if [ $? -eq 0 ]; then
+if [[ $? -eq 0 ]]; then
 clear
 echo "Checking Download link (2nd): $dl_link"
 #sleep 2
@@ -829,16 +829,16 @@ if ! unzip $var; then
 fi
 
 #Some OLD FTB used this directory
-if [ -d $DIR/Feed\ The\ Beast\ Insanity\ Co-op/ ]; then
+if [[ -d $DIR/Feed\ The\ Beast\ Insanity\ Co-op/ ]]; then
 mv $DIR/Feed\ The\ Beast\ Insanity\ Co-op/* $DIR
 rm -rf $DIR/Feed\ The\ Beast\ Insanity\ Co-op/
 fi
 
-if [ -f $DIR/FTBInstall.sh ]; then
+if [[ -f $DIR/FTBInstall.sh ]]; then
 sh FTBInstall.sh
 
 #Found some FTB that don't have FTBserver.jar in them...
-if [ -f $DIR/FTBserver.jar ]; then
+if [[ -f $DIR/FTBserver.jar ]]; then
   sed -i 's/SERVERJAR=.*/SERVERJAR=FTBserver.jar/g' $CONFIG
 else
   do_fallback
@@ -861,7 +861,7 @@ rm $INSTALL_LOC/Files/modpacks.xml
 fi
 
 ##Check for upgrade in progress..
-if [ ! -d $INSTALL_LOC/upgrade_backup ]; then
+if [[ ! -d $INSTALL_LOC/upgrade_backup ]]; then
 exit 0
 fi
 }
@@ -877,7 +877,7 @@ do_ingame() {
   unset selected_player
   selected_player=$(whiptail --fb --menu "Select the user you would like to Allow Ingame Commands" 20 60 10  ${playarr[@]} 3>&1 1>&2 2>&3)
   RET=$?
-  if [ $RET -eq 0 ]; then
+  if [[ $RET -eq 0 ]]; then
   if [[ " ${allowlist[*]} " == *" $selected_player "* ]]; then
   whiptail --msgbox --fb "This user is already allowed, Removing them now." 20 60 0
     sed -i '/'$selected_player'/d' $INSTALL_LOC/Files/Allowed.list
@@ -897,9 +897,9 @@ VER=$(whiptail --title "Select Minecraft Version" --menu "Please select what ver
 "4 Restore" "[Attempt to restore a server from an archive.]" \
  3>&1 1>&2 2>&3)
   RET=$?
-  if [ $RET -eq 1 ]; then
+  if [[ $RET -eq 1 ]]; then
     exit 0
-  elif [ $RET -eq 0 ]; then
+  elif [[ $RET -eq 0 ]]; then
     case "$VER" in
       1\ *) do_vanilla ;;
       2\ *) do_spigot ;;
@@ -964,7 +964,7 @@ fi
 do_chat() {
 INPUT=$(whiptail --fb --inputbox "You can chat here. No commands!." 10 80 --title "Chat Log" 3>&1 1>&2 2>&3)
 RET=$?
-if [ $RET -eq 0 ]; then
+if [[ $RET -eq 0 ]]; then
 screen -S Minecraft -p 0 -X stuff "`printf "say $INPUT\r"`";
 do_chat
 fi
@@ -978,23 +978,23 @@ INPUT=$(whiptail --fb --inputbox "Enter your random message here." 10 80  --titl
 do_prop() {
 #Check to make sure the arrey isn't present, Stops duplicates..
 unset PROP
-if [ ${#PROP[@]} -eq 0 ]; then
+if [[ ${#PROP[@]} -eq 0 ]]; then
     PROP=`cat $SERVER_PROP | grep "=" | awk '{print $1 " |"}'`
     echo "No arrey found, Building"
 fi
 IFS=$'\r\n' GLOBIGNORE='*' command eval 'PROP=(${PROP[@]})'
 SELECTED_PROP=$(whiptail --fb --menu "Server.Properties" 20 80 10 ${PROP[@]} 3>&1 1>&2 2>&3)
 RET=$?
-if [ $RET -eq 0 ]; then
+if [[ $RET -eq 0 ]]; then
 #User has selected something.. time to edit
 MOD_PROP=`cut -d "=" -f 2 <<< $SELECTED_PROP`
 #Take new input
 COMPLETE_PROP=$(whiptail --fb --inputbox "" 8 78 "$MOD_PROP" --title "Changing settings for ($SELECTED_PROP) " 3>&1 1>&2 2>&3)
 RET=$?
-if [ $RET -eq 0 ]; then
+if [[ $RET -eq 0 ]]; then
 REPLACE_PROP=`cut -f1 -d "=" <<< $SELECTED_PROP`
 sed -i 's/'$REPLACE_PROP'=.*/'$REPLACE_PROP'='$COMPLETE_PROP'/g' $SERVER_PROP
-elif [ $RET -eq 1 ]; then
+elif [[ $RET -eq 1 ]]; then
 whiptail --msgbox --fb "Under development" 20 60 1 \
 do_admin
   fi
@@ -1017,7 +1017,7 @@ do_op() {
   unset selected_player
   selected_player=$(whiptail --fb --menu "Select the user you would like to Op" 20 60 10  ${playarr[@]} 3>&1 1>&2 2>&3)
   RET=$?
-  if [ $RET -eq 0 ]; then
+  if [[ $RET -eq 0 ]]; then
   if [[ " ${oplist[*]} " == *" $selected_player "* ]]; then
   whiptail --msgbox --fb "This user is already Oped, moving to DeOp...." 20 60 0
     do_Qdeop 
@@ -1038,7 +1038,7 @@ else
 unset selected_player
 selected_player=$(whiptail --fb --menu "Select the user you would like to DeOp" 20 60 10  ${oplist[@]} 3>&1 1>&2 2>&3)
   RET=$?
-  if [ $RET -eq 0 ]; then
+  if [[ $RET -eq 0 ]]; then
   do_Qdeop
 fi
 fi
@@ -1049,7 +1049,7 @@ do_Qstop() {
  whiptail --fb --yesno "Did you want to stop the server?" 20 60 2 \
     --yes-button Yes --no-button No
   RET=$?
-  if [ $RET -eq 0 ]; then
+  if [[ $RET -eq 0 ]]; then
     sed -i 's/check=.*/check=false/g' $CONFIG
     screen -S Minecraft -p 0 -X stuff "stop$(printf \\r)"
     screen -X -S WATCH_LOGIN quit
@@ -1117,7 +1117,7 @@ fi
  whiptail --fb --yesno "Would you like to setup a new server right now?" 20 60 2 \
     --yes-button Yes --no-button No
   RET=$?
-  if [ $RET -eq 0 ]; then
+  if [[ $RET -eq 0 ]]; then
     BSCC
     clear
     exit 0
@@ -1133,7 +1133,7 @@ It will erase your server and everything involved with BSCC. \n
 Do you agree?" 20 60 2 \
     --yes-button Yes --no-button No
   RET=$?
-  if [ $RET -eq 0 ]; then
+  if [[ $RET -eq 0 ]]; then
     sudo rm -rf $INSTALL_LOC
     sudo rm /usr/bin/BSCC
     whiptail --msgbox --fb "Everything is now removed. I hope you enjoyed using BSCC and please leave a comment as to why your leaving. Thank you." 20 60 0
@@ -1149,9 +1149,9 @@ do_op_menu() {
       "2 DeOp" "[DeOp a user]" \
       3>&1 1>&2 2>&3)
     RET=$?
-    if [ $RET -eq 1 ]; then
+    if [[ $RET -eq 1 ]]; then
     do_admin
-    elif [ $RET -eq 0 ]; then
+    elif [[ $RET -eq 0 ]]; then
       case "$FUN" in
         1\ *) do_op ;;
 	2\ *) do_deop ;;
@@ -1170,9 +1170,9 @@ while true; do
     "4 User backup" "[Let's you define where to save a copy of your world]" \
     3>&1 1>&2 2>&3)
   RET=$?
-  if [ $RET -eq 1 ]; then
+  if [[ $RET -eq 1 ]]; then
     do_admin
-  elif [ $RET -eq 0 ]; then
+  elif [[ $RET -eq 0 ]]; then
     case "$FUN" in
       1\ *) do_archive; whiptail --fb --msgbox "Your archive was created." 20 60 0 ;;
       2\ *) do_rsync; whiptail --fb --msgbox "Your backup was created." 20 60 0 ;;
@@ -1201,16 +1201,16 @@ RESTART=[how often a restart should be done.] \n
 REMOVE=[Clear all crontab jobs.]" 20 90 0
 
 list=$(whiptail --menu --fb "Select your task" 20 60 0 ${varr[@]} 3>&1 1>&2 2>&3)
-if [ "$list" = REMOVE ]; then
+if [[ "$list" = REMOVE ]]; then
 whiptail --yesno --fb "This will remove all of your Cron Jobs!. Continue?" 20 60 0 \
   --yes-button Yes --no-button No
  RET=$?
-   if [ $RET -eq 0 ]; then
+   if [[ $RET -eq 0 ]]; then
     sudo sed -i".bak" '/BSCC*/d' $crontabs/$USER
     whiptail --fb --msgbox "CRON JOBS cleared." 20 60 1
     do_admin_advanced
  else
-   if [ $RET -eq 1 ]; then
+   if [[ $RET -eq 1 ]]; then
     do_admin_advanced
   fi
 fi
@@ -1227,9 +1227,9 @@ clear
     "8 12" "[Hours]" \
     3>&1 1>&2 2>&3)
   RET=$?
-  if [ $RET -eq 1 ]; then
+  if [[ $RET -eq 1 ]]; then
     do_admin_advanced
-  elif [ $RET -eq 0 ]; then
+  elif [[ $RET -eq 0 ]]; then
     case "$FUN" in
       1\ *) sudo sed -i".bak" '/BSCC '${list}'/d' $crontabs/$USER; (crontab -l 2>/dev/null; echo "*/5 * * * * BSCC $list") | crontab - ;;
       2\ *) sudo sed -i".bak" '/BSCC '${list}'/d' $crontabs/$USER; (crontab -l 2>/dev/null; echo "*/10 * * * * BSCC $list") | crontab - ;;
@@ -1267,8 +1267,8 @@ done
 do_upgrade() {
 UPGRADE_TMP="/opt/BSCC/upgrade_backup"
 source /opt/BSCC/Files/conf.cfg
-if [ "$SERVER_TYPE" = "VANILLA" ]; then
-	if [ -d $UPGRADE_TMP ]; then
+if [[ "$SERVER_TYPE" = "VANILLA" ]]; then
+	if [[ -d $UPGRADE_TMP ]]; then
 	mv $UPGRADE_TMP/* $DIR
         do_no_menu_start
         whiptail --fb --msgbox "Your upgrade is now complete, Your server should be loading up now. \
@@ -1286,8 +1286,8 @@ This will roll you back to before your upgrade." 20 60 0
         rm -r *
         do_vanilla
 fi
-if [ "$SERVER_TYPE" = "SPIGOT" ]; then
-        if [ -d $UPGRADE_TMP ]; then
+if [[ "$SERVER_TYPE" = "SPIGOT" ]]; then
+        if [[ -d $UPGRADE_TMP ]]; then
         mv $UPGRADE_TMP/* $DIR
         do_no_menu_start
         whiptail --fb --msgbox "Your upgrade is now complete, Your server should be loading up now. \
@@ -1306,7 +1306,7 @@ This will roll you back to before your upgrade." 20 60 0
         rm -r *
         do_spigot
 fi
-if [ "$SERVER_TYPE" = "FTB" ]; then
+if [[ "$SERVER_TYPE" = "FTB" ]]; then
 	echo "a FTB server was found!."
 	sleep 3
         do_upgrade_backup
@@ -1325,7 +1325,7 @@ This will roll you back to before your upgrade." 20 60 0
 	rm -r $UPGRADE_TMP
 	exit 0
 fi
-if [ -z $SERVER_TYPE]; then
+if [[ -z $SERVER_TYPE]; then
         echo "Nothing found!"
         exit 0
 fi
@@ -1337,9 +1337,9 @@ while true; do
     "1 Placeholder" "[]" \
     3>&1 1>&2 2>&3)
   RET=$?
-  if [ $RET -eq 1 ]; then
+  if [[ $RET -eq 1 ]]; then
      exit 1
-  elif [ $RET -eq 0 ]; then
+  elif [[ $RET -eq 0 ]]; then
     case "$FUN" in
       1\ *) echo "Nothing to see here yet.." ;;
       *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
@@ -1360,9 +1360,9 @@ while true; do
     "7 Uninstall BSCC" "[This will remove BSCC completely]" \
     3>&1 1>&2 2>&3)
   RET=$?
-  if [ $RET -eq 1 ]; then
+  if [[ $RET -eq 1 ]]; then
     do_admin
-  elif [ $RET -eq 0 ]; then
+  elif [[ $RET -eq 0 ]]; then
     case "$FUN" in
       1\ *) do_cron ;;
       2\ *) do_upgrade ;;
@@ -1378,9 +1378,9 @@ done
 }
 
 do_finish() {
-  if [ $ASK_TO_REBOOT -eq 1 ]; then
+  if [[ $ASK_TO_REBOOT -eq 1 ]]; then
     whiptail --fb --yesno "Would you like to reboot now?" 20 60 2
-    if [ $? -eq 0 ]; then # yes
+    if [[ $? -eq 0 ]]; then # yes
     echo " words lol"
     fi
   fi
@@ -1399,9 +1399,9 @@ while true; do
     "7 Advanced menu" "[Upgrade & Delete servers]" \
     3>&1 1>&2 2>&3)
   RET=$?
-  if [ $RET -eq 1 ]; then
+  if [[ $RET -eq 1 ]]; then
      exit 1
-  elif [ $RET -eq 0 ]; then
+  elif [[ $RET -eq 0 ]]; then
     case "$FUN" in
       1\ *) do_console ;;
       2\ *) do_random_msg ;;
@@ -1431,9 +1431,9 @@ while true; do
     "8 Update BSCC" "[Update script to keep the fun rolling]" \
     3>&1 1>&2 2>&3)
   RET=$?
-  if [ $RET -eq 1 ]; then
+  if [[ $RET -eq 1 ]]; then
     do_finish
-  elif [ $RET -eq 0 ]; then
+  elif [[ $RET -eq 0 ]]; then
     case "$FUN" in
       1\ *) do_adminpass ;;
       2\ *) do_start ;;
@@ -1488,7 +1488,7 @@ Your Java Version is: $JAVA_VERSION \n
 IP: $INTERNAL_IP|Remote IP: $EXTERNAL_IP" 35 55 10
 CHOICES=$?
 unset TOTAL on_list CPU LOAD UPTIME RAM STATUS
-  if [ $CHOICES -eq 0 ]; then
+  if [[ $CHOICES -eq 0 ]]; then
    	do_info
 fi
 clear
@@ -1523,8 +1523,8 @@ unset MC_SERVER_DIR WORLD ARCHIVE PD_VANILLA_BACKUP RSYNC_BACKUP TOTAL_SERVER FR
 #####################################################################
 #Actually the beginning of this huge mess..also a catch for problems..
 ######################################################################
-if [ ! -f $DIR/$SERVERJAR ]; then
-if [ $_DEBUG = on ]; then
+if [[ ! -f $DIR/$SERVERJAR ]]; then
+if [[ $_DEBUG = on ]]; then
 do_version_option
 else
 do_debug

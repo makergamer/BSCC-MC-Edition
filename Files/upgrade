@@ -25,9 +25,9 @@ while true; do
     "3 FTB" "|" \
     3>&1 1>&2 2>&3)
   RET=$?
-  if [ $RET -eq 1 ]; then
+  if [[ $RET -eq 1 ]]; then
      exit 1
-  elif [ $RET -eq 0 ]; then
+  elif [[ $RET -eq 0 ]]; then
     case "$FUN" in
       1\ *)  sed -i "s/SERVER_TYPE=.*/SERVER_TYPE=VANILLA/g" $CONFIG; break ;;
       2\ *)  sed -i "s/SERVER_TYPE=.*/SERVER_TYPE=SPIGOT/g" $CONFIG; break ;;
@@ -60,14 +60,14 @@ do_update() {
 	sed -i "s/startonboot=.*/startonboot=$startonboot/g" $CONFIG
 	sed -i "s/MCSREEN=.*/MCSCREEN=$MCSCREEN/g" $CONFIG
 	chown -R $SUDO_USER:$SUDO_USER $INSTALL_LOC/Files/
-        if [ -z $SERVER_TYPE ]; then
+        if [[ -z $SERVER_TYPE ]]; then
         whiptail --fb --msgbox "This update is a large update and bringing many new features, One of them is something many of you have asked me about. Server upgrading!, \
 Well i'm glad to say it's been implemented (still betaish) but will require you to tell me what server you are currently running on BSCC. Thank you and I hope you enjoy." 20 60 0
         do_servertype
         fi
 }
 
-if [ -f /opt/BSCC/Files/conf.cfg ]; then
+if [[ -f /opt/BSCC/Files/conf.cfg ]]; then
 	do_changelog
 	do_update
 else
