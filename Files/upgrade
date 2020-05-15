@@ -8,25 +8,30 @@ CONFIG=$INSTALL_LOC/Files/conf.cfg
 cd $INSTALL_LOC/Files
 
 do_changelog() {
-        cat <<EOF >> changelog
+
+  cat <<EOF >> changelog
 1. Removed all things related to maps.
 2. Shortened commands for BSCC via in-game chat.
 3. Sorry it's been so long, I will be reworking some of BSCC soon.
 EOF
-whiptail --fb --title "BSCC 2.0.7 Changelog" --textbox changelog 20 60
-rm changelog
+
+  whiptail --fb --title "BSCC 2.0.7 Changelog" --textbox changelog 20 60
+
+  rm changelog
 }
 
 do_servertype() {
-while true; do
+  while true; do
   FUN=$(whiptail --fb --title "User input needed" --menu "Please tell me what version you are currently running with BSCC."  --cancel-button Exit --ok-button Select 20 80 7 \
-    "1 Vanilla" "|" \
-    "2 Spigot" "|" \
-    "3 FTB" "|" \
-    3>&1 1>&2 2>&3)
-  RET=$?
+"1 Vanilla" "|" \
+"2 Spigot" "|" \
+"3 FTB" "|" \
+3>&1 1>&2 2>&3)
+
+    RET=$?
+
   if [[ $RET -eq 1 ]]; then
-     exit 1
+    exit 1
   elif [[ $RET -eq 0 ]]; then
     case "$FUN" in
       1\ *)  sed -i "s/SERVER_TYPE=.*/SERVER_TYPE=VANILLA/g" $CONFIG; break ;;
@@ -34,45 +39,56 @@ while true; do
       3\ *)  sed -i "s/SERVER_TYPE=.*/SERVER_TYPE=FTB/g" $CONFIG;break ;;
       *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
-fi
+  fi
 done
 }
 
 #All checks cleared.. Update
 do_update() {
-	cp $CONFIG $INSTALL_LOC/Files/conf.cfg.bak
-	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/BSCC -O BSCC
-	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/conf.cfg -O conf.cfg
-	wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/update.sh -O update.sh
-	wet https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/ingame_control -O ingame_control
-	clear
-	sudo mv BSCC /usr/bin/
-	sudo chmod +x /usr/bin/BSCC
-	chmod +x /opt/BSCC/Files/update.sh
+  cp $CONFIG $INSTALL_LOC/Files/conf.cfg.bak
+
+  wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/BSCC -O BSCC
+  wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/conf.cfg -O conf.cfg
+  wget https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/update.sh -O update.sh
+wet https://raw.githubusercontent.com/kicker22004/BSCC-MC-Edition/master/Files/ingame_control -O ingame_control
+
+  clear
+
+  sudo mv BSCC /usr/bin/
+  sudo chmod +x /usr/bin/BSCC
+  chmod +x /opt/BSCC/Files/update.sh
+
 #Grab old info and replace in new conf.cfg
-	source $INSTALL_LOC/Files/conf.cfg.bak
-	sed -i "s/MCVERSION=.*/MCVERSION=$MCVERSION/g" $CONFIG
-	sed -i "s/SERVERJAR=.*/SERVERJAR=$SERVERJAR/g" $CONFIG
-	sed -i "s/MINMEM=.*/MINMEM=$MINMEM/g" $CONFIG
-	sed -i "s/MAXMEM=.*/MAXMEM=$MAXMEM/g" $CONFIG
-	sed -i "s/ARGUMENTS=.*/ARGUMENTS=$ARGUMENTS/g" $CONFIG
-	sed -i "s/check=.*/check=$check/g" $CONFIG
-	sed -i "s/startonboot=.*/startonboot=$startonboot/g" $CONFIG
-	sed -i "s/MCSREEN=.*/MCSCREEN=$MCSCREEN/g" $CONFIG
-	chown -R $SUDO_USER:$SUDO_USER $INSTALL_LOC/Files/
-        if [[ -z $SERVER_TYPE ]]; then
-        whiptail --fb --msgbox "This update is a large update and bringing many new features, One of them is something many of you have asked me about. Server upgrading!, \
+  source $INSTALL_LOC/Files/conf.cfg.bak
+  sed -i "s/MCVERSION=.*/MCVERSION=$MCVERSION/g" $CONFIG
+  sed -i "s/SERVERJAR=.*/SERVERJAR=$SERVERJAR/g" $CONFIG
+  sed -i "s/MINMEM=.*/MINMEM=$MINMEM/g" $CONFIG
+  sed -i "s/MAXMEM=.*/MAXMEM=$MAXMEM/g" $CONFIG
+  sed -i "s/ARGUMENTS=.*/ARGUMENTS=$ARGUMENTS/g" $CONFIG
+  sed -i "s/check=.*/check=$check/g" $CONFIG
+  sed -i "s/startonboot=.*/startonboot=$startonboot/g" $CONFIG
+  sed -i "s/MCSREEN=.*/MCSCREEN=$MCSCREEN/g" $CONFIG
+
+  chown -R $SUDO_USER:$SUDO_USER $INSTALL_LOC/Files/
+
+  if [[ -z $SERVER_TYPE ]]; then
+    whiptail --fb --msgbox "This update is a large update and bringing many new features, One of them is something many of you have asked me about. Server upgrading!, \
 Well i'm glad to say it's been implemented (still betaish) but will require you to tell me what server you are currently running on BSCC. Thank you and I hope you enjoy." 20 60 0
-        do_servertype
-        fi
+
+    do_servertype
+  fi
 }
 
 if [[ -f /opt/BSCC/Files/conf.cfg ]]; then
-	do_changelog
-	do_update
+  do_changelog
+
+  do_update
 else
-	whiptail --msgbox --fb "Sorry it seems that your BSCC installation is not complete. Leaving." 20 60 0
-	clear
-	echo "No conf.cfg found in /opt/BSCC/Files/" ; exit 1
+  whiptail --msgbox --fb "Sorry it seems that your BSCC installation is not complete. Leaving." 20 60 0
+
+  clear
+
+  echo "No conf.cfg found in /opt/BSCC/Files/" ; exit 1
 fi
+
 exit 0

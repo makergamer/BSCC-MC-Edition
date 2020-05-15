@@ -8,66 +8,71 @@
 LOG="/opt/BSCC/minecraft_server/logs/latest.log"
 
 if [[ ! -f Allowed.list ]]; then
-touch Allowed.list
+  touch Allowed.list
 fi
 
 check() {
 if [[ ! -z "$RESTART" ]]; then
-screen -S Minecraft -p 0 -X stuff "tell $ALL Wish Granted! $(printf \\r)"
-sleep .5
-BSCC restart
+  screen -S Minecraft -p 0 -X stuff "tell $ALL Wish Granted! $(printf \\r)"
+  sleep .5
+  BSCC restart
 fi
+
 if [[ ! -z "$ARCHIVE" ]]; then
-screen -S Minecraft -p 0 -X stuff "tell $ALL Wish Granted! $(printf \\r)"
-sleep .5
-BSCC archive
+  screen -S Minecraft -p 0 -X stuff "tell $ALL Wish Granted! $(printf \\r)"
+  sleep .5
+  BSCC archive
 fi
+
 if [[ ! -z "$BACKUP" ]]; then
-screen -S Minecraft -p 0 -X stuff "tell $ALL Wish Granted! $(printf \\r)"
-sleep .5
-BSCC rsync
+  screen -S Minecraft -p 0 -X stuff "tell $ALL Wish Granted! $(printf \\r)"
+  sleep .5
+  BSCC rsync
 fi
+
 if [[ ! -z "$STOP" ]]; then
-screen -S Minecraft -p 0 -X stuff "tell $ALL Wish Granted! $(printf \\r)"
-sleep .5
-BSCC stop
+  screen -S Minecraft -p 0 -X stuff "tell $ALL Wish Granted! $(printf \\r)"
+  sleep .5
+  BSCC stop
 fi
+
 if [[ ! -z "$STATS" ]]; then
-screen -S Minecraft -p 0 -X stuff "tell $ALL Wish Granted! $(printf \\r)"
-sleep .5
-BSCC stats
+  screen -S Minecraft -p 0 -X stuff "tell $ALL Wish Granted! $(printf \\r)"
+  sleep .5
+  BSCC stats
 fi
+
 if [[ ! -z "$BSCC" ]]; then
-screen -S Minecraft -p 0 -X stuff "tell $ALL Here are the list of commonds you can use on BSCC. $(printf \\r)"
-screen -S Minecraft -p 0 -X stuff "tell $ALL Restart: Restarts server. $(printf \\r)"
-screen -S Minecraft -p 0 -X stuff "tell $ALL Archive: Creates an archive. $(printf \\r)"
-screen -S Minecraft -p 0 -X stuff "tell $ALL Backup: Creates a backup of the server. $(printf \\r)"
-screen -S Minecraft -p 0 -X stuff "tell $ALL Stop: Stops the server. $(printf \\r)"
-screen -S Minecraft -p 0 -X stuff "tell $ALL Stats: Lists the states on the server. $(printf \\r)"
+  screen -S Minecraft -p 0 -X stuff "tell $ALL Here are the list of commonds you can use on BSCC. $(printf \\r)"
+  screen -S Minecraft -p 0 -X stuff "tell $ALL Restart: Restarts server. $(printf \\r)"
+  screen -S Minecraft -p 0 -X stuff "tell $ALL Archive: Creates an archive. $(printf \\r)"
+  screen -S Minecraft -p 0 -X stuff "tell $ALL Backup: Creates a backup of the server. $(printf \\r)"
+  screen -S Minecraft -p 0 -X stuff "tell $ALL Stop: Stops the server. $(printf \\r)"
+  screen -S Minecraft -p 0 -X stuff "tell $ALL Stats: Lists the states on the server. $(printf \\r)"
 fi
 }
 
 while true; do
-unset ALLOWED RESTART ARCHIVE BACKUP STOP STATS
-info="[Server thread/INFO]:"
-OP="Allowed.list"
-ALL=$(cat $LOG | tail -n1 | grep -F "$info" | awk '{print $4}')
+  unset ALLOWED RESTART ARCHIVE BACKUP STOP STATS
+  info="[Server thread/INFO]:"
+  OP="Allowed.list"
+  ALL=$(cat $LOG | tail -n1 | grep -F "$info" | awk '{print $4}')
 
 #Remove the <> from the original log so that it matches the Allowed.list file used for other things.
-ALL=$(echo "$ALL" | sed 's/<*//' | sed 's/>//')
+  ALL=$(echo "$ALL" | sed 's/<*//' | sed 's/>//')
 
-if [[ "$ALL" ]]; then
-if [[ "$(grep $ALL $OP)" = $ALL ]]; then
+  if [[ "$ALL" ]] && [[ "$(grep $ALL $OP)" = $ALL ]]; then
 #Add <> for the newer versions of Minecraft logs
-ALLOWED="<$ALL>"
-fi
-fi
-RESTART=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Restart")
-ARCHIVE=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Archive")
-BACKUP=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Backup")
-STOP=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Stop")
-STATS=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Stats")
-BSCC=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED BSCC")
-sleep 1
-check
+    ALLOWED="<$ALL>"
+  fi
+
+  RESTART=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Restart")
+  ARCHIVE=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Archive")
+  BACKUP=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Backup")
+  STOP=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Stop")
+  STATS=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED Stats")
+  BSCC=$(cat $LOG | tail -n1 | grep -F "$info $ALLOWED BSCC")
+  sleep 1
+  check
+
 done

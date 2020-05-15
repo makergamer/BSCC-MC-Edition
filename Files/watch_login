@@ -7,48 +7,45 @@ LOG_DIR="/opt/BSCC/minecraft_server/logs/"
 
 ##Add random messages##
 RANDOM_MSG() {
-#Adding Random Message over just one welcome message.
-	IFS=$'\r\n' command eval 'MSG=($(cat RandomMSG.txt))'
-        GEN=$((RANDOM % ${#MSG[@]}))
-        MSG=${MSG[$GEN]}
+  #Adding Random Message over just one welcome message.
+  IFS=$'\r\n' command eval 'MSG=($(cat RandomMSG.txt))'
+  GEN=$((RANDOM % ${#MSG[@]}))
+  MSG=${MSG[$GEN]}
 }
 
 do_check() {
-USER=$(tail -n 1 $LOG | grep -o "UUID of player.*" | awk '{print $4"="$6}')
-LEFT=$(tail -n 1 $LOG | grep -o ".*left the game" | cut -d " " -f4)
-NAME=$(echo $USER | cut -d "=" -f1)
+  USER=$(tail -n 1 $LOG | grep -o "UUID of player.*" | awk '{print $4"="$6}')
+  LEFT=$(tail -n 1 $LOG | grep -o ".*left the game" | cut -d " " -f4)
+  NAME=$(echo $USER | cut -d "=" -f1)
 
-if [[ $USER ]]; then
-        if [[ -z $(grep -w "$NAME" "$ON") ]]; then
-                grep -qw "$NAME" "$ON" || echo "$NAME" >> "$ON"
-RANDOM_MSG
-        if [[ "$(grep $USER $ALLTIME)" != $USER ]]; then
-                grep -qw "$USER" "$ALLTIME" || echo "$USER" >> "$ALLTIME"
-                export NAME
-                screen -S Minecraft -p 0 -X stuff "say Welcome to the server $NAME$(printf \\r)"
-                ./kit $NAME
-else
-                screen -S Minecraft -p 0 -X stuff "tell $NAME $MSG$(printf \\r)"
-        fi
+  if [[ $USER ]] && [[ -z $(grep -w "$NAME" "$ON") ]]; then
+    grep -qw "$NAME" "$ON" || echo "$NAME" >> "$ON"
+    RANDOM_MSG
+    if [[ "$(grep $USER $ALLTIME)" != $USER ]]; then
+      grep -qw "$USER" "$ALLTIME" || echo "$USER" >> "$ALLTIME"
+      export NAME
+      screen -S Minecraft -p 0 -X stuff "say Welcome to the server $NAME$(printf \\r)"
+      ./kit $NAME
+    else
+      screen -S Minecraft -p 0 -X stuff "tell $NAME $MSG$(printf \\r)"
     fi
-fi
+  fi
 
-if [[ $LEFT ]]; then
- if [[ "$(grep $LEFT $ON)" != $ON ]]; then
-              sed -i -e '/'$LEFT'/d' $ON
- fi
-fi
+  if [[ $LEFT ]] && [[ "$(grep $LEFT $ON)" != $ON ]]; then
+    sed -i -e '/'$LEFT'/d' $ON
+  fi
 }
 
 ##Gives the server a chance to startup
 for ((i=120;i>0;i=i-1)); do
-        clear
-        if [[ ! -f $LOG ]]; then
-        clear
-        echo -n "Minecraft latest.log not found yet. Time Remaining $i seconds"
-        sleep 1
-        else
-  break
+  clear
+
+  if [[ ! -f $LOG ]]; then
+    clear
+    echo -n "Minecraft latest.log not found yet. Time Remaining $i seconds"
+    sleep 1
+  else
+    break
   fi
 done
 
@@ -57,12 +54,12 @@ VANILLA=$(cat conf.cfg | grep -o "VANILLA.*" | cut -d "=" -f2)
 
 
 if [[ "${VANILLA}" = "true" ]]; then
-	if ! screen -list | grep -q "WATCH_LOGOUT"; then
-		screen -dmS VANILLA_BACKUP ./vanilla_backup
-	fi
+  if ! screen -list | grep -q "WATCH_LOGOUT"; then
+    screen -dmS VANILLA_BACKUP ./vanilla_backup
+  fi
 fi
 
 inotifywait -q -m "$LOG_DIR" --format '%w%f' -e modify,move| 
 while read stats; do
-do_check
+  do_check
 done
