@@ -53,7 +53,7 @@ $INSTALL_LOC/Files/update.sh
 do_adminpass() {
 ADMIN_AREA=$(whiptail --passwordbox "Enter Password:" 8 30 --title "password dialog" 3>&1 1>&2 2>&3)
 exitstatus=$?
-if [[ $ADMIN_PASS == "$ADMIN_AREA"  ]]; then
+if [[ $ADMIN_PASS == "$ADMIN_AREA" ]]; then
 whiptail --ok-button Done --msgbox "Correct password" 10 30
 do_admin
 else
@@ -160,11 +160,10 @@ exit 0
 }
 
 do_check() {
-  if [[ $check = "true" ]]
-then
-  do_reload
-fi
-exit 0
+  if [[ $check = "true" ]]; then
+    do_reload
+  fi
+  exit 0
 }
 
 do_restart() {
@@ -475,26 +474,24 @@ fi
 
 while :
 do
-   read -t 1 -n 1 key
-   if [[ $key = c ]]
-then
-      do_command
-   else
-      clear
-        if ! screen -list | grep -q "Minecraft"; then
-        echo "Server not found...exiting"
-        exit 1
-else
-        echo -e ${green}"PRESS C TO TYPE IN CONSOLE, OR Q TO EXIT (Might need to hit twice!)"
-	tput sgr0
-        cat $log | tail -20
-        read -t 1 -n 1 key
-        if [[ $key = q ]]
-then
+  read -t 1 -n 1 key
+  if [[ $key = c ]]; then
+  do_command
+    else
+    clear
+    if ! screen -list | grep -q "Minecraft"; then
+      echo "Server not found...exiting"
+      exit 1
+      else
+      echo -e ${green}"PRESS C TO TYPE IN CONSOLE, OR Q TO EXIT (Might need to hit twice!)"
+      tput sgr0
+      cat $log | tail -20
+      read -t 1 -n 1 key
+      if [[ $key = q ]]; then
         do_admin
-fi
-fi
-fi
+      fi
+    fi
+  fi
 done
 }
 
@@ -1325,7 +1322,7 @@ This will roll you back to before your upgrade." 20 60 0
 	rm -r $UPGRADE_TMP
 	exit 0
 fi
-if [[ -z $SERVER_TYPE]; then
+if [[ -z $SERVER_TYPE ]]; then
         echo "Nothing found!"
         exit 0
 fi
