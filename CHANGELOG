@@ -1,0 +1,11 @@
+CHANGELOG
+
+- changed tests from '[' to '[['.
+  '[' is a user-space binary just like the 'test' command.
+  '[[' is internal to bash and saves a smidge of time & effort
+
+- cleaned up indention. added some external blank lines to easy reading
+
+- 'case' matching do not require open parentheses, just quoting to stringify. 
+
+- fixed some typos

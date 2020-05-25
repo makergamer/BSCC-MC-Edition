@@ -41,10 +41,11 @@ CONFIG=$INSTALL_LOC/Files/conf.cfg
 RSYNC=$INSTALL_LOC/rsync_backup
 ARCHIVE=$INSTALL_LOC/archive
 
-#Extra Functions for Cronjobs and Debugs (Down the road)
+# Extra Functions for Cronjobs and Debugs (Down the road)
 clear
 
 do_update() { $INSTALL_LOC/Files/update.sh; }
+
 
 do_adminpass() {
   ADMIN_AREA=$(whiptail --passwordbox "Enter Password:" 8 30 --title "password dialog" 3>&1 1>&2 2>&3)
@@ -56,6 +57,7 @@ do_adminpass() {
     whiptail --ok-button Done --msgbox "Incorrect password" 10 30
   fi
 }
+
 
 do_no_menu_start() {
   source /opt/BSCC/Files/conf.cfg
@@ -77,6 +79,7 @@ do_no_menu_start() {
   fi
 }
 
+
 do_no_menu_stop() {
   if screen -list | grep -q "Minecraft"; then
     sed -i 's/check=.*/check=false/g' $CONFIG
@@ -91,7 +94,9 @@ do_no_menu_stop() {
   fi
 }
 
+
 do_save() { screen -S Minecraft -p 0 -X stuff "save-all$(printf \\r)"; }
+
 
 do_leveltype() {
   while true; do
@@ -118,6 +123,7 @@ do_leveltype() {
   done
 }
 
+
 do_Qboot() {
   crontabs="/var/spool/cron/crontabs"
 
@@ -130,6 +136,7 @@ do_Qboot() {
     sudo sed -i".bak" '/BSCC boot/d' /var/spool/cron/crontabs/$USER
   fi
 }
+
 
 do_onboot() {
   if [[ $startonboot = "true" ]]; then
@@ -145,6 +152,7 @@ do_onboot() {
   exit 0
 }
 
+
 do_reload() {
   if ! screen -list | grep -q "Minecraft"; then
     cd $DIR
@@ -156,7 +164,9 @@ do_reload() {
   exit 0
 }
 
+
 do_check() { [[ $check = "true" ]] && do_reload && exit 0; }
+
 
 do_restart() {
   sed -i 's/check=.*/check=false/g' $CONFIG
@@ -185,6 +195,7 @@ do_restart() {
   exit 0
 }
 
+
 do_restart_now() {
   sed -i 's/check=.*/check=false/g' $CONFIG
   
@@ -201,6 +212,7 @@ do_restart_now() {
   sed -i 's/check=.*/check=true/g' $CONFIG
   exit 0
 }
+
 
 do_archive() {
   ###Create a save prior, without this the world wont be up to date.
@@ -228,6 +240,7 @@ do_archive() {
   screen -S Minecraft -p 0 -X stuff "say Archive complete, carry on... :($(printf \\r)"
 }
 
+
 do_rollback() {
   if ! screen -list | grep -q "Minecraft"; then
     sed -i 's/check=.*/check=false/g' $CONFIG
@@ -250,6 +263,7 @@ do_rollback() {
     do_rollback
   fi
 }
+
 
 do_restore() {
   if [[ "$(ls -A $INSTALL_LOC/archive)" ]]; then
@@ -319,6 +333,7 @@ do_restore() {
   fi
 }
 
+
 do_user_backup() {
 
   UBACKUP=$(whiptail --fb --inputbox "Where whould you like to save an archive to?" 8 78 $HOME/ --title "User Backups" 3>&1 1>&2 2>&3)
@@ -358,6 +373,7 @@ do_user_backup() {
   fi
 }
 
+
 do_stats() {
   UPTIME=$(uptime | awk '{print $1}')
   LOAD=$(uptime | grep -o "load average.*" | awk '{print $3,$4,$5}')
@@ -374,6 +390,7 @@ do_stats() {
   screen -S Minecraft -p 0 -X stuff "say Load Average (1M 5M 15M): $LOAD$(printf \\r)"
 }
 
+
 do_rsync() {
   if ! screen -list | grep -q "Minecraft"; then
     echo "no server running"
@@ -385,6 +402,7 @@ do_rsync() {
     screen -S Minecraft -p 0 -X stuff "say Backup completed.$(printf \\r)"
   fi
 }
+
 
 do_vanilla_inventory() {
   WORLD=$(cat /opt/BSCC/minecraft_server/server.properties | grep -o "level-name.*" | cut -d "=" -f2)
@@ -432,6 +450,7 @@ do_vanilla_inventory() {
   fi
 }
 
+
 do_inventory() {
   clear
   #Check that the mods are actually installed...
@@ -478,6 +497,7 @@ do_inventory() {
   fi
 }
 
+
 do_eula() {
 #eula.txt Should be there. If not then something went wrong and should say so now.
 #source BSCC
@@ -498,48 +518,58 @@ do_eula() {
 }
 
 
-## TODO - In shell scription nested functions are best avoided. This is not python.
+## Moved "do_command" from being nest in "do_console" as nested function in shell
+## is bad practice - this is not python. renamed to "do_console_command".
+do_console_command() {
+  INPUT=$(whiptail --fb --inputbox "Enter a console command or chat here:" 10 80 --title "Full Console Control" 3>&1 1>&2 2>&3)
+  RET=$?
+  
+  if [[ $RET -eq 0 ]]; then
+    screen -S Minecraft -p 0 -X stuff "`printf "$INPUT\r"`";
+  fi
+}
+
 do_console() {
   if ! screen -list | grep -q "Minecraft"; then
-        whiptail --msgbox --fb "There is no server running." 20 60 0
-        do_admin
+    whiptail --msgbox --fb "There is no server running." 20 60 0
+    
+    do_admin
   fi
-do_command() {
-INPUT=$(whiptail --fb --inputbox "Enter a console command or chat here:" 10 80 --title "Full Console Control" 3>&1 1>&2 2>&3)
-RET=$?
-if [[ $RET -eq 0 ]]; then
-screen -S Minecraft -p 0 -X stuff "`printf "$INPUT\r"`";
-fi
 
-}
-if [[ -f /opt/BSCC/minecraft_server/logs/latest.log ]]; then
-log="/opt/BSCC/minecraft_server/logs/latest.log"
-else
-log="/opt/BSCC/minecraft_server/server.log"
-fi
+  if [[ -f /opt/BSCC/minecraft_server/logs/latest.log ]]; then
+    log="/opt/BSCC/minecraft_server/logs/latest.log"
+  else
+    log="/opt/BSCC/minecraft_server/server.log"
+  fi
 
-while :
-do
-  read -t 1 -n 1 key
-  if [[ $key = c ]]; then
-  do_command
+  while :
+  do
+    read -t 1 -n 1 key
+    
+    if [[ $key = c ]]; then
+      do_console_command
     else
-    clear
-    if ! screen -list | grep -q "Minecraft"; then
-      echo "Server not found...exiting"
-      exit 1
+      clear
+      
+      if ! screen -list | grep -q "Minecraft"; then
+        echo "Server not found...exiting"
+        exit 1
       else
-      echo -e ${green}"PRESS C TO TYPE IN CONSOLE, OR Q TO EXIT (Might need to hit twice!)"
-      tput sgr0
-      cat $log | tail -20
-      read -t 1 -n 1 key
-      if [[ $key = q ]]; then
-        do_admin
+        echo -e ${green}"PRESS C TO TYPE IN CONSOLE, OR Q TO EXIT (Might need to hit twice!)"
+        tput sgr0
+        
+        cat $log | tail -20
+        
+        read -t 1 -n 1 key
+        
+        if [[ $key = q ]]; then
+          do_admin
+        fi
       fi
     fi
-  fi
-done
+  done
 }
+
 
 do_ram() {
 ##Setting up Memory alocation to the server
@@ -560,6 +590,7 @@ do_ram() {
     sed -i 's/MINMEM=.*/MINMEM=128M/g' $CONFIG
   fi
 }
+
 
 do_first_run() {
   (
@@ -633,7 +664,8 @@ do_first_run() {
   exit 0
 }
 
-#Fallback incase the Server jar isn't found or is missing after restore..
+
+# Fallback incase the Server jar isn't found or is missing after restore..
 do_fallback() {
   fallback=`ls $DIR | grep ".*.jar" | awk '{print $1 " |"}'`
   fallback=(${fallback[@]})
@@ -645,7 +677,7 @@ do_fallback() {
 }
 
 
-##Setup Minecraft server
+## Setup Minecraft server
 #########################
 #Select Version of Minecraft and download.
 do_vanilla() {
@@ -743,6 +775,7 @@ do_vanilla() {
   fi
 }
 
+
 do_spigot() {
   unset spigot_list spigot_servers r dl_link
   
@@ -784,156 +817,178 @@ do_spigot() {
 }
 
 
-## TODO - return to pretty printing do_ftb
 do_ftb() {
-# this will get all the ftb server names...
-if [[ ! -f /opt/BSCC/Files/modpacks.xml ]]; then
-cd /opt/BSCC/Files/
-wget http://ftb.cursecdn.com/FTB2/static/modpacks.xml
-fi
+  # this will get all the ftb server names...
+  if [[ ! -f /opt/BSCC/Files/modpacks.xml ]]; then
+    cd /opt/BSCC/Files/
+    wget http://ftb.cursecdn.com/FTB2/static/modpacks.xml
+  fi
 
-unset server
-server=$(cat /opt/BSCC/Files/modpacks.xml | grep -o serverPack.* | grep url | awk '{print $1}' | cut -d "=" -f2 | cut -d "\"" -f2 | grep .zip | awk '{print $1}' | grep -v '^$' | awk '{print $1 " |"}')
-#echo $server
-server=(${server[@]})
+  unset server
+  server=$(cat /opt/BSCC/Files/modpacks.xml | grep -o serverPack.* | grep url | awk '{print $1}' | cut -d "=" -f2 | cut -d "\"" -f2 | grep .zip | awk '{print $1}' | grep -v '^$' | awk '{print $1 " |"}')
+  #echo $server
+  server=(${server[@]})
 
-#List all the servers by thier Server name.
-unset var
-var=$(whiptail --menu "Please Select your FTB Server" 20 80 10 ${server[@]} 3>&1 1>&2 2>&3)
-echo $var
-RET=$?
-if [[ $RET -eq 0 ]]; then
-name1=$(awk -v var="$var" 'BEGIN {print var}' | awk -F 'Server|server|[-]' '{print $1}')
-name2=$(awk -v var="$var" 'BEGIN {print var}' | awk -F 'Server|server|[_-]' '{print $1}')
-echo $name1
-############################################
-#######Dirty fix for older Versions ########
-####### Of FTB                      ########
-############################################
-if [[ $name1 = RetroSMP_ ]]; then
-name1=FTBRETROSMP
-fi
-if [[ $name1 = TechWorld_ ]]; then
-name1=Tech_World
-fi
-if [[ $name1 = MagicWorld_ ]]; then
-name1=Magic_World
-fi
-if [[ $name1 = MagicWorld2 ]]; then
-name1=Magic_World_2
-fi
-if [[ $name1 = Direwolf20_ ]]; then
-name1=Direwolf20
-fi
-if [[ $name1 = Direwolf20 ]]; then
-name1=Direwolf20_1_6_4
-fi
-###########################################
-###########################################
-###########################################
-
-#Ask what Version they would like to download
-unset old
-old=$(cat /opt/BSCC/Files/modpacks.xml| grep $var | grep -o oldVersions.* | cut -d "=" -f2 | tr ';' ' | ' | cut -d "\"" -f2 | tr " " "\n" | awk '{print $1 " |"}')
-old=(${old[@]})
-##Check if the server only has a repo build!###
-check=$(awk -v var="$old" 'BEGIN {print var}' | cut -d "|" -f1)
-if [[ -z "$check" ]]; then
-old=$(cat /opt/BSCC/Files/modpacks.xml | grep $var | grep -o repo.* | cut -d "=" -f2 | cut -d "\"" -f2 | awk '{print $1 " |"}')
-fi
-elif [[ $RET -eq 1 ]]; then
-return $RET
-exit 0
-fi
-
-version_select=$(whiptail --menu --fb "Pick your Version  Please" 20 60 10 ${old[@]} 3>&1 1>&2 2>&3)
-RET=$?
-if [[ $RET -eq 0 ]]; then
-#use this to get the version
-version=$(awk -v var="$version_select" 'BEGIN {print var}' | sed 's/\./_/g')
+  #List all the servers by thier Server name.
+  unset var
+  var=$(whiptail --menu "Please Select your FTB Server" 20 80 10 ${server[@]} 3>&1 1>&2 2>&3)
+  echo $var
+  RET=$?
 
 
-#Check for download and attempt the name change.
-dl_link="http://ftb.cursecdn.com/FTB2/modpacks/$name1/$version/$var"
-wget --spider $dl_link
-if [[ $? -eq 0 ]]; then
-clear
-echo "Checking Download link: $dl_link"
-#sleep 2
-echo "Verifying the Link"
-#sleep 2
-echo "Link Confirmed good, Downloading"
-#sleep 2
-else
-echo "Bad link attempting 2nd one"
-dl_link="http://ftb.cursecdn.com/FTB2/modpacks/$name2/$version/$var"
-wget --spider $dl_link
-if [[ $? -eq 0 ]]; then
-clear
-echo "Checking Download link (2nd): $dl_link"
-#sleep 2
-echo "Verifying the Link"
-#sleep 2
-echo "Link Confirmed good, Downloading"
-#sleep 2
-else
-whiptail --msgbox --fb "Download not found!. Please report this message on Youtube or the Forum and provide this link. \n
-Attempting to download: $dl_link" 20 60 0
-exit 1
-fi
-fi
+  if [[ $RET -eq 0 ]]; then
+    name1=$(awk -v var="$var" 'BEGIN {print var}' | awk -F 'Server|server|[-]' '{print $1}')
+    name2=$(awk -v var="$var" 'BEGIN {print var}' | awk -F 'Server|server|[_-]' '{print $1}')
+    echo $name1
+    ############################################
+    #######Dirty fix for older Versions ########
+    ####### Of FTB                      ########
+    ############################################
+    if [[ $name1 = RetroSMP_ ]]; then
+      name1=FTBRETROSMP
+    fi
+    
+    if [[ $name1 = TechWorld_ ]]; then
+      name1=Tech_World
+    fi
+    
+    if [[ $name1 = MagicWorld_ ]]; then
+      name1=Magic_World
+    fi
+    
+    if [[ $name1 = MagicWorld2 ]]; then
+      name1=Magic_World_2
+    fi
+    
+    if [[ $name1 = Direwolf20_ ]]; then
+      name1=Direwolf20
+    fi
+    
+    if [[ $name1 = Direwolf20 ]]; then
+    name1=Direwolf20_1_6_4
+    fi
+    
+    ###########################################
+    ###########################################
+    ###########################################
 
-##Download link works pull it down.
-wget -O $DIR/$var $dl_link
-sed -i 's/MCVERSION=.*/MCVERSION='$var'/g' $CONFIG
-sed -i 's/SERVER_TYPE.*/SERVER_TYPE=FTB/g' $CONFIG
-do_ram
-cd $DIR
-if ! unzip $var; then
-whiptail --msgbox --fb "Download file didn't extract properly, Clearing Server folder!" 20 60 0
-rm -rf $DIR/*
-clear
-echo "Please check your internet and maybe the link on another machine. Link: $dl_link"
-exit 1
-fi
+    #Ask what Version they would like to download
+    unset old
+    old=$(cat /opt/BSCC/Files/modpacks.xml| grep $var | grep -o oldVersions.* | cut -d "=" -f2 | tr ';' ' | ' | cut -d "\"" -f2 | tr " " "\n" | awk '{print $1 " |"}')
+    old=(${old[@]})
+    
+    ##Check if the server only has a repo build!###
+    check=$(awk -v var="$old" 'BEGIN {print var}' | cut -d "|" -f1)
+    
+    if [[ -z "$check" ]]; then
+      old=$(cat /opt/BSCC/Files/modpacks.xml | grep $var | grep -o repo.* | cut -d "=" -f2 | cut -d "\"" -f2 | awk '{print $1 " |"}')
+    fi
+  elif [[ $RET -eq 1 ]]; then
+    return $RET
+    exit 0
+  fi
 
-#Some OLD FTB used this directory
-if [[ -d $DIR/Feed\ The\ Beast\ Insanity\ Co-op/ ]]; then
-mv $DIR/Feed\ The\ Beast\ Insanity\ Co-op/* $DIR
-rm -rf $DIR/Feed\ The\ Beast\ Insanity\ Co-op/
-fi
+  version_select=$(whiptail --menu --fb "Pick your Version  Please" 20 60 10 ${old[@]} 3>&1 1>&2 2>&3)
+  RET=$?
 
-if [[ -f $DIR/FTBInstall.sh ]]; then
-sh FTBInstall.sh
+  if [[ $RET -eq 0 ]]; then
+    #use this to get the version
+    version=$(awk -v var="$version_select" 'BEGIN {print var}' | sed 's/\./_/g')
 
-#Found some FTB that don't have FTBserver.jar in them...
-if [[ -f $DIR/FTBserver.jar ]]; then
-sed -i 's/SERVERJAR=.*/SERVERJAR=FTBserver.jar/g' $CONFIG
-else
-do_fallback
-fi
-else
-#Older version of FTB server.
-whiptail --msgbox --fb "FTB install script not found! \n
-This could be for a number of reasons but we will attempt to find a server.jar. \n
-If this is an older server the eula may fail this is ok just try and run the server anyways." 20 60 0
-do_fallback
-rm $INSTALL_LOC/Files/modpacks.xml
-fi
-#EULA Needs to be accepted by the user
-do_eula
-touch $INSTALL_LOC/Files/player.list
-do_Qboot
-whiptail --msgbox --fb "Ok everything should now be ready for you to start. Please use (BSCC menu) also these servers could load slowly...give it some time \n
-Also a big THANK YOU to all of the effort from MODS/DEVS involved in the FTB servers and maintenance" 20 60 0
-rm $INSTALL_LOC/Files/modpacks.xml
-fi
+    #Check for download and attempt the name change.
+    dl_link="http://ftb.cursecdn.com/FTB2/modpacks/$name1/$version/$var"
+    wget --spider $dl_link
+    
+    if [[ $? -eq 0 ]]; then
+      clear
+      
+      echo "Checking Download link: $dl_link"
+      #sleep 2
+      echo "Verifying the Link"
+      #sleep 2
+      echo "Link Confirmed good, Downloading"
+      #sleep 2
+    else
+      echo "Bad link attempting 2nd one"
+      dl_link="http://ftb.cursecdn.com/FTB2/modpacks/$name2/$version/$var"
+      wget --spider $dl_link
+      
+      if [[ $? -eq 0 ]]; then
+        clear
+        echo "Checking Download link (2nd): $dl_link"
+        #sleep 2
+        echo "Verifying the Link"
+        #sleep 2
+        echo "Link Confirmed good, Downloading"
+        #sleep 2
+      else
+        whiptail --msgbox --fb "Download not found!. Please report this message on Youtube or the Forum and provide this link. \n
+        Attempting to download: $dl_link" 20 60 0
+        exit 1
+      fi
+    fi
 
-##Check for upgrade in progress..
-if [[ ! -d $INSTALL_LOC/upgrade_backup ]]; then
-exit 0
-fi
+    ##Download link works pull it down.
+    wget -O $DIR/$var $dl_link
+    
+    sed -i 's/MCVERSION=.*/MCVERSION='$var'/g' $CONFIG
+    sed -i 's/SERVER_TYPE.*/SERVER_TYPE=FTB/g' $CONFIG
+    do_ram
+    cd $DIR
+    
+    if ! unzip $var; then
+      whiptail --msgbox --fb "Download file didn't extract properly, Clearing Server folder!" 20 60 0
+      rm -rf $DIR/*
+      clear
+      echo "Please check your internet and maybe the link on another machine. Link: $dl_link"
+      exit 1
+    fi
+
+    #Some OLD FTB used this directory
+    if [[ -d $DIR/Feed\ The\ Beast\ Insanity\ Co-op/ ]]; then
+      mv $DIR/Feed\ The\ Beast\ Insanity\ Co-op/* $DIR
+      rm -rf $DIR/Feed\ The\ Beast\ Insanity\ Co-op/
+    fi
+
+    if [[ -f $DIR/FTBInstall.sh ]]; then
+      sh FTBInstall.sh
+
+      #Found some FTB that don't have FTBserver.jar in them...
+      if [[ -f $DIR/FTBserver.jar ]]; then
+        sed -i 's/SERVERJAR=.*/SERVERJAR=FTBserver.jar/g' $CONFIG
+      else
+        do_fallback
+      fi
+    else
+    
+      #Older version of FTB server.
+      whiptail --msgbox --fb "FTB install script not found! \n
+      This could be for a number of reasons but we will attempt to find a server.jar. \n
+      If this is an older server the eula may fail this is ok just try and run the server anyways." 20 60 0
+      do_fallback
+      rm $INSTALL_LOC/Files/modpacks.xml
+    fi
+    
+    #EULA Needs to be accepted by the user
+    do_eula
+    
+    touch $INSTALL_LOC/Files/player.list
+    
+    do_Qboot
+    
+    whiptail --msgbox --fb "Ok everything should now be ready for you to start. Please use (BSCC menu) also these servers could load slowly...give it some time \n
+    Also a big THANK YOU to all of the effort from MODS/DEVS involved in the FTB servers and maintenance" 20 60 0
+
+    rm $INSTALL_LOC/Files/modpacks.xml
+  fi
+
+
+  ##Check for upgrade in progress..
+  if [[ ! -d $INSTALL_LOC/upgrade_backup ]]; then
+    exit 0
+  fi
 }
+
 
 do_ingame() {
   ALLTIME="/opt/BSCC/Files/Alltimeusers.list"
@@ -956,6 +1011,7 @@ do_ingame() {
     fi
   fi
 }
+
 
 do_version_option() {
   unset VAR
@@ -985,6 +1041,7 @@ do_version_option() {
   done
 }
 
+
 do_help() {
   echo -e "${yellow}This is the list of commands"
   echo -e "To use these commands do ./BSCC command. example ./BSCC help"
@@ -1003,7 +1060,7 @@ do_help() {
 }
 
 
-#GUI Menu Starts here!
+# GUI Menu Starts here!
 
 do_start() {
   if ! screen -list | grep -q "Minecraft"; then
@@ -1035,6 +1092,7 @@ do_stop() {
   fi
 }
 
+
 do_chat() {
   INPUT=$(whiptail --fb --inputbox "You can chat here. No commands!." 10 80 --title "Chat Log" 3>&1 1>&2 2>&3)
   RET=$?
@@ -1044,10 +1102,12 @@ do_chat() {
   fi
 }
 
+
 do_random_msg() {
   INPUT=$(whiptail --fb --inputbox "Enter your random message here." 10 80  --title "Greeting MSG" 3>&1 1>&2 2>&3)
   echo $INPUT >> $INSTALL_LOC/Files/RandomMSG.txt
   }
+
 
 do_prop() {
 #Check to make sure the arrey isn't present, Stops duplicates..
@@ -1079,12 +1139,14 @@ do_prop() {
   fi
 }
 
+
 do_Qdeop() {
   if (whiptail --title "DeOp Confirmation." --yesno "Are you sure you want to deOp $selected_player?" 8 78) then
     echo "User selected Yes, Deoping"
     screen -S Minecraft -p 0 -X stuff "`printf "deop $selected_player\r"`";
   fi
 }
+
 
 do_op() {
   unset playarr
@@ -1110,6 +1172,7 @@ do_op() {
   fi
 }
 
+
 do_deop() {
   unset oplist
   
@@ -1130,6 +1193,7 @@ do_deop() {
   fi
 }
 
+
 do_Qstop() {
   whiptail --fb --yesno "Did you want to stop the server?" 20 60 2 \
   --yes-button Yes --no-button No
@@ -1144,6 +1208,7 @@ do_Qstop() {
     whiptail --fb --msgbox "Stopping Server.." 20 60 1
   fi
 }
+
 
 do_delete() {
   if screen -list | grep -q "Minecraft"; then
@@ -1220,6 +1285,7 @@ do_delete() {
   fi
 }
 
+
 do_uninstall() {
   whiptail --fb --yesno "This is your only chance to say no to this... \n
   It will erase your server and everything involved with BSCC. \n
@@ -1236,6 +1302,7 @@ do_uninstall() {
     exit 0
   fi
 }
+
 
 do_op_menu() {
   while true; do
@@ -1256,6 +1323,7 @@ do_op_menu() {
     fi
   done
 }
+
 
 do_admin_backupmenu() {
   while true; do
@@ -1280,6 +1348,7 @@ do_admin_backupmenu() {
     fi
   done
 }
+
 
 do_cron() {
   unset list commands varr
@@ -1347,6 +1416,7 @@ do_cron() {
   fi
 }
 
+
 do_upgrade_backup() {
   do_save
   do_no_menu_stop
@@ -1368,6 +1438,7 @@ do_upgrade_backup() {
     fi
   done
 }
+
 
 do_upgrade() {
   UPGRADE_TMP="/opt/BSCC/upgrade_backup"
@@ -1463,6 +1534,7 @@ do_upgrade() {
   fi
 }
 
+
 do_beta() {
   while true; do
     FUN=$(whiptail --fb --title "BETA AREA!!!" --menu "Think Tank"  --cancel-button Exit --ok-button Select 20 80 2 \
@@ -1480,6 +1552,7 @@ do_beta() {
     fi
   done
 }
+
 
 do_admin_advanced() {
   while true; do
@@ -1511,6 +1584,7 @@ do_admin_advanced() {
   done
 }
 
+
 do_finish() {
   if [[ $ASK_TO_REBOOT -eq 1 ]]; then
     whiptail --fb --yesno "Would you like to reboot now?" 20 60 2
@@ -1521,6 +1595,7 @@ do_finish() {
   fi
   exit 0
 }
+
 
 do_admin() {
   while true; do
@@ -1551,6 +1626,7 @@ do_admin() {
     fi
   done
 }
+
 
 do_menu() {
   do_update
@@ -1695,7 +1771,7 @@ if [[ ! -f $DIR/$SERVERJAR ]]; then
   fi
 fi
 
-#Extra Functions for cronjobs and debug (Down the road)
+# Extra Functions for cronjobs and debug (Down the road)
 #Selection for Functions.
 
 case "$1" in
@@ -1761,3 +1837,4 @@ case "$1" in
 esac
 
 DEBUG set +x
+

@@ -1,0 +1,46 @@
+NOTABLES
+
+- This is great project that makes standing up a personal, home use MC server so easy.
+  Original author (kicker22004) did a bang up job. plus plus.
+
+  They did lot of work into figuring things out for install and management of 
+  multiple server types too.
+
+  It has inspired me to make "re-implemtation" from my knowledge gained during cleanup.
+  I will see when I get to it. Work and COVID-19 keeps me busy.
+  
+  I have ideas around:
+  - modular shell scripts, allowing for a more "plug-in" like features (todo.txt inspired)
+    - this will allow for install dependences to be only necessary for installable server types
+    - this would abstract CLI from GUI/Whiptail for those who prefer it (and make it easier
+      to do on you mobile phone's SSH terminal from the couch when kids ask.)
+
+  - look to extend with "plugins" / features 
+    - may require a simple user/group empowerment to allow in-game commands for those without OP
+      for things like "kits", changing time/weather, cloned user data as template (necessary
+      to embue player with an enderchest of filled shulker chests)
+    - "kits" in Vanilla - yup. I have all kinds of themed kit ideas: farm-in-box,
+       village-in-a-box, "Jobs": Warrior, Alchemist, Ranger, MegaMiner, starter/apprentice
+    - need to investigate triggering kits/bonuses based on levels or achievements
+    - investigate possibility of commerce (tracked & managed outside of vanilla)
+      - more likely possibly with Bedrock given its Javascript extensibility
+
+  - further abstration of
+    - variables, ex. /opt/BSCC/ is hard coded throughout
+    - allowance for non-root users to install and run MC server 
+      (server deps and /opt/BSCC prevent that)
+    - possible configuration of multiple servers running at the same time
+    - server engine drop-in start with Vanilla, Bedrock, Spigot
+      - allows for additional commands specific to server engine types (like Spigot)
+      - server engine drop-in allow for Spigot mods to be added separately
+  
+  - continue some "kludgy" things (like avoiding rsyslog) so it can be ran
+    in WSL on Windows 10 -- yes, BSCC runs in Debian on Windows 10 (cron, not so much)
+  
+
+- Clean up work was by hand using Geany due to its features:
+  - symbol / function tree navigation (a big help)
+  - un/tab selected blocks
+  - color syntax highlighter
+  (why Geany? I don't have time to learn emacs, there's no easy shell script pretty printer
+   and learned a lot of how the author was doing things.)
