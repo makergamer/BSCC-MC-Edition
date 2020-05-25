@@ -1,4 +1,5 @@
 #!/bin/bash
+
 #Add Color for help list
 red='\e[0;31m'
 green='\e[1;32m'
@@ -8,27 +9,24 @@ source /opt/BSCC/Files/conf.cfg
 ######################
 ###Add Debug checks###
 ######################
-function DEBUG()
-{
- [[ "$_DEBUG" == "on" ]] &&  $@
-}
-if [[ $_DEBUG = "on" ]];then
-exec > >(tee -i $INSTALL_LOC/Files/debug_log)
-exec 2>&1
+function DEBUG() { [[ "$_DEBUG" == "on" ]] &&  $@; }
+
+if [[ $_DEBUG = "on" ]]; then
+  exec > >(tee -i $INSTALL_LOC/Files/debug_log)
+  exec 2>&1
 fi
 
 do_debug() {
-Qdebug=$(whiptail --fb --inputbox "Enable debug? on/off" 10 80 $_DEBUG --title "DEBUG on/off" 3>&1 1>&2 2>&3)
-exitstatus=$?
+  Qdebug=$(whiptail --fb --inputbox "Enable debug? on/off" 10 80 $_DEBUG --title "DEBUG on/off" 3>&1 1>&2 2>&3)
+  exitstatus=$?
+
 #Check if debug was toggled
-if [[ ! $Qdebug = $_DEBUG ]]; then
-if [[ $exitstatus = 0 ]]; then
+  if [[ ! $Qdebug = $_DEBUG ]] && [[ $exitstatus = 0 ]]; then
     sed -i 's/_DEBUG=.*/_DEBUG='${Qdebug}'/g' $INSTALL_LOC/Files/conf.cfg
     clear
     echo "Please relaunch BSCC, Debug toggled."
     exit 0
-fi
-fi
+  fi
 }
 
 ###################################################
@@ -46,37 +44,37 @@ ARCHIVE=$INSTALL_LOC/archive
 #Extra Functions for Cronjobs and Debugs (Down the road)
 clear
 
-do_update() {
-$INSTALL_LOC/Files/update.sh
-}
+do_update() { $INSTALL_LOC/Files/update.sh; }
 
 do_adminpass() {
-ADMIN_AREA=$(whiptail --passwordbox "Enter Password:" 8 30 --title "password dialog" 3>&1 1>&2 2>&3)
-exitstatus=$?
-if [[ $ADMIN_PASS == "$ADMIN_AREA" ]]; then
-whiptail --ok-button Done --msgbox "Correct password" 10 30
-do_admin
-else
-whiptail --ok-button Done --msgbox "Incorrect password" 10 30
-fi
+  ADMIN_AREA=$(whiptail --passwordbox "Enter Password:" 8 30 --title "password dialog" 3>&1 1>&2 2>&3)
+  exitstatus=$?
+  if [[ $ADMIN_PASS == "$ADMIN_AREA" ]]; then
+    whiptail --ok-button Done --msgbox "Correct password" 10 30
+    do_admin
+  else
+    whiptail --ok-button Done --msgbox "Incorrect password" 10 30
+  fi
 }
 
 do_no_menu_start() {
   source /opt/BSCC/Files/conf.cfg
   if ! screen -list | grep -q "Minecraft"; then
-     cd $DIR
-     $START
-     sed -i 's/check=.*/check=true/g' $CONFIG
+    cd $DIR
+    $START
+    sed -i 's/check=.*/check=true/g' $CONFIG
   else
-     echo "Server was found running... close it before running this"
+    echo "Server was found running... close it before running this"
   fi
+
   if ! screen -list | grep -q "WATCH"; then
-     cd $INSTALL_LOC/Files/
-     $WATCH
+    cd $INSTALL_LOC/Files/
+    $WATCH
   fi
+
   if ! screen -list | grep -q "IN_GAME"; then
     $IN_GAME
-fi
+  fi
 }
 
 do_no_menu_stop() {
@@ -93,228 +91,270 @@ do_no_menu_stop() {
   fi
 }
 
-do_save() {
-screen -S Minecraft -p 0 -X stuff "save-all$(printf \\r)"
-}
+do_save() { screen -S Minecraft -p 0 -X stuff "save-all$(printf \\r)"; }
 
 do_leveltype() {
-while true; do
-FUN=$(whiptail --fb --title "Level Type" --menu "Please select a Level Type"  --cancel-button Exit --ok-button Select 20 80 4 \
+  while true; do
+    FUN=$(whiptail --fb --title "Level Type" --menu "Please select a Level Type"  --cancel-button Exit --ok-button Select 20 80 4 \
         "1 DEFAULT" "[Standard world with hills, valleys, water, etc.]" \
         "2 FLAT" "[A flat world with no features, meant for building.]" \
         "3 LARGEBIOMES" "[Same as default but all biomes are larger.]" \
         "4 AMPLIFIED" "[Same as default but world-generation height limit is increased.]" \
         3>&1 1>&2 2>&3)
-RET=$?
-if [[ $RET -eq 1 ]]; then
-    break
-  elif [[ $RET -eq 0 ]]; then
-    case "$FUN" in
-      1\ *) echo "level-type=DEFAULT" > $SERVER_PROP; break ;;
-      2\ *) echo "level-type=FLAT" > $SERVER_PROP; break ;;
-      3\ *) echo "level-type=LARGEBIOMES" > $SERVER_PROP; break ;;
-      4\ *) echo "level-type=AMPLIFIED" > $SERVER_PROP; break ;;
-      *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
-      esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
-  else
-    exit 1
-fi
-done
+    RET=$?
+    if [[ $RET -eq 1 ]]; then
+      break
+    elif [[ $RET -eq 0 ]]; then
+      case "$FUN" in
+        1\ *) echo "level-type=DEFAULT" > $SERVER_PROP; break ;;
+        2\ *) echo "level-type=FLAT" > $SERVER_PROP; break ;;
+        3\ *) echo "level-type=LARGEBIOMES" > $SERVER_PROP; break ;;
+        4\ *) echo "level-type=AMPLIFIED" > $SERVER_PROP; break ;;
+        *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
+        esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
+    else
+      exit 1
+    fi
+  done
 }
 
 do_Qboot() {
-crontabs="/var/spool/cron/crontabs"
+  crontabs="/var/spool/cron/crontabs"
+
 ##Setup on boot requests.
-if (whiptail --fb --title "Start Server on bootup?" --yes-button "Yes" --no-button "No"  --yesno "Would You like the server to startup on boot?" 10 60) then
+  if (whiptail --fb --title "Start Server on bootup?" --yes-button "Yes" --no-button "No"  --yesno "Would You like the server to startup on boot?" 10 60) then
     sed -i 's/startonboot=.*/startonboot=true/g' $CONFIG
     sudo sed -i".bak" '/BSCC boot/d' $crontabs/$USER; (crontab -l 2>/dev/null; echo "@reboot BSCC boot") | crontab -
-else
+  else
     sed -i 's/startonboot=.*/startonboot=false/g' $CONFIG
     sudo sed -i".bak" '/BSCC boot/d' /var/spool/cron/crontabs/$USER
-fi
+  fi
 }
 
 do_onboot() {
-    if [[ $startonboot = "true" ]]
-then
-  echo "Starting server"
-  cd $DIR
-  $START
-  cd $INSTALL_LOC/Files/
-  $WATCH
-else
-  echo "Set Onboot was not selected"
-fi
-exit 0
+  if [[ $startonboot = "true" ]]; then
+    echo "Starting server"
+    cd $DIR
+    $START
+    cd $INSTALL_LOC/Files/
+    $WATCH
+  else
+    echo "Set Onboot was not selected"
+  fi
+  
+  exit 0
 }
 
 do_reload() {
-if ! screen -list | grep -q "Minecraft"; then
+  if ! screen -list | grep -q "Minecraft"; then
     cd $DIR
     $START
     sed -i 's/check=.*/check=true/g' $CONFIG
     cd $INSTALL_LOC/Files/
     $WATCH
-fi
-exit 0
-}
-
-do_check() {
-  if [[ $check = "true" ]]; then
-    do_reload
   fi
   exit 0
 }
 
+do_check() { [[ $check = "true" ]] && do_reload && exit 0; }
+
 do_restart() {
-sed -i 's/check=.*/check=false/g' $CONFIG
-screen -S Minecraft -p 0 -X stuff "save-all$(printf \\r)"
-screen -S Minecraft -p 0 -X stuff "say Restart in 1 Minutes..WHY ARE YOU STILL HERE!!!$(printf \\r)"
-sleep 50
-screen -S Minecraft -p 0 -X stuff "say 10 seconds..$(printf \\r)"
-sleep 10
-screen -S Minecraft -p 0 -X stuff "stop$(printf \\r)"
-sleep 3
-screen -X -S WATCH_LOGIN quit
-screen -X -S VANILLA_BACKUP quit
-sleep 10
-cd $INSTALL_LOC/Files/
-$WATCH
-cd $DIR
-$START
-sed -i 's/check=.*/check=true/g' $CONFIG
-exit 0
+  sed -i 's/check=.*/check=false/g' $CONFIG
+  
+  screen -S Minecraft -p 0 -X stuff "save-all$(printf \\r)"
+  screen -S Minecraft -p 0 -X stuff "say Restart in 1 Minutes..WHY ARE YOU STILL HERE!!!$(printf \\r)"
+  sleep 50
+
+  screen -S Minecraft -p 0 -X stuff "say 10 seconds..$(printf \\r)"
+  sleep 10
+
+  screen -S Minecraft -p 0 -X stuff "stop$(printf \\r)"
+  sleep 3
+
+  screen -X -S WATCH_LOGIN quit
+  screen -X -S VANILLA_BACKUP quit
+  sleep 10
+
+  cd $INSTALL_LOC/Files/
+  $WATCH
+
+  cd $DIR
+  $START
+
+  sed -i 's/check=.*/check=true/g' $CONFIG
+  exit 0
 }
 
 do_restart_now() {
-sed -i 's/check=.*/check=false/g' $CONFIG
-screen -S Minecraft -p 0 -X stuff "say Server is going down.... Please log NOW!$(printf \\r)"
-screen -S Minecraft -p 0 -X stuff "save-all$(printf \\r)"
-sleep 10
-screen -S Minecraft -p 0 -X stuff "stop$(printf \\r)"
-sleep 10
-cd $DIR
-$START
-sed -i 's/check=.*/check=true/g' $CONFIG
-exit 0
+  sed -i 's/check=.*/check=false/g' $CONFIG
+  
+  screen -S Minecraft -p 0 -X stuff "say Server is going down.... Please log NOW!$(printf \\r)"
+  screen -S Minecraft -p 0 -X stuff "save-all$(printf \\r)"
+  sleep 10
+  
+  screen -S Minecraft -p 0 -X stuff "stop$(printf \\r)"
+  sleep 10
+  
+  cd $DIR
+  $START
+  
+  sed -i 's/check=.*/check=true/g' $CONFIG
+  exit 0
 }
 
 do_archive() {
   ###Create a save prior, without this the world wont be up to date.
   do_save
+  
   ##Grab conf file for restores..
   rm $DIR/conf.cfg
   cp $INSTALL_LOC/Files/conf.cfg $DIR/conf.cfg
+
   today=$(date '+%Y-%mM-%dD_%HH_%MM_%SS')
+
   cd $ARCHIVE
+
   screen -S Minecraft -p 0 -X stuff "say Creating Archive of the server, Sorry for any lag.$(printf \\r)"
   clear
+
   echo -e ${green}"Making archive...Please wait 5 seconds."
   tput sgr0
   sleep 4
+
   tar -zcvf "$today".tar.gz -C $DIR .
+
   rm `ls -t | awk 'NR>8'` 2>/dev/null
+
   screen -S Minecraft -p 0 -X stuff "say Archive complete, carry on... :($(printf \\r)"
 }
 
 do_rollback() {
-if ! screen -list | grep -q "Minecraft"; then
-sed -i 's/check=.*/check=false/g' $CONFIG
-rm -rf $DIR/*
-rsync -r -t $RSYNC/* $DIR
-cd $DIR
-$START
-sed -i 's/check=.*/check=true/g' $CONFIG
-else
-sed -i 's/check=.*/check=false/g' $CONFIG
-screen -S Minecraft -p 0 -X stuff "say Going down for rollback!$(printf \\r)"
-sleep 10
-screen -S Minecraft -p 0 -X stuff "stop$(printf \\r)"
-sleep 20
-do_rollback
-fi
+  if ! screen -list | grep -q "Minecraft"; then
+    sed -i 's/check=.*/check=false/g' $CONFIG
+    
+    rm -rf $DIR/*
+    rsync -r -t $RSYNC/* $DIR
+    
+    cd $DIR
+    $START
+    sed -i 's/check=.*/check=true/g' $CONFIG
+  else
+    sed -i 's/check=.*/check=false/g' $CONFIG
+    
+    screen -S Minecraft -p 0 -X stuff "say Going down for rollback!$(printf \\r)"
+    sleep 10
+    
+    screen -S Minecraft -p 0 -X stuff "stop$(printf \\r)"
+    sleep 20
+    
+    do_rollback
+  fi
 }
 
 do_restore() {
-if [[ "$(ls -A $INSTALL_LOC/archive)" ]]; then
-  unset restore
-  unset selected_restore
-  restore=`ls -1t $INSTALL_LOC/archive | awk '{print $1 " |"}'`
-  restore=(${restore[@]})
-if ! screen -list | grep -q "Minecraft"; then
-  sed -i 's/check=.*/check=false/g' $CONFIG
-  selected_restore=$(whiptail --menu --fb "Select your restore point" 20 60 10 ${restore[@]} 3>&1 1>&2 2>&3)
-  RET=$?
-  if [[ $RET -eq 1 ]]; then
-  break
-  fi
-  rm -rf $DIR/*
-  cp $INSTALL_LOC/archive/$selected_restore $DIR/restore.tar.gz
-  cd $DIR
-  tar -xvf restore.tar.gz
-  rm restore.tar.gz
-  rm $INSTALL_LOC/Files/conf.cfg
-  mv $DIR/conf.cfg $INSTALL_LOC/Files/
-  source /opt/BSCC/Files/conf.cfg
-  do_start
-  sed -i 's/check=.*/check=true/g' $CONFIG
+  if [[ "$(ls -A $INSTALL_LOC/archive)" ]]; then
+    unset restore
+    unset selected_restore
+    
+    restore=`ls -1t $INSTALL_LOC/archive | awk '{print $1 " |"}'`
+    restore=(${restore[@]})
+    
+    if ! screen -list | grep -q "Minecraft"; then
+      sed -i 's/check=.*/check=false/g' $CONFIG
+      selected_restore=$(whiptail --menu --fb "Select your restore point" 20 60 10 ${restore[@]} 3>&1 1>&2 2>&3)
+      RET=$?
+      
+      if [[ $RET -eq 1 ]]; then
+        break
+      fi
+      
+      rm -rf $DIR/*
+      cp $INSTALL_LOC/archive/$selected_restore $DIR/restore.tar.gz
+      cd $DIR
+      
+      tar -xvf restore.tar.gz
+      rm restore.tar.gz
+      rm $INSTALL_LOC/Files/conf.cfg
+      
+      mv $DIR/conf.cfg $INSTALL_LOC/Files/
+      
+      source /opt/BSCC/Files/conf.cfg
+      
+      do_start
+      
+      sed -i 's/check=.*/check=true/g' $CONFIG
 
-#Just incase something went really bad...
-if [[ ! -f $DIR/$SERVERJAR ]]; then
-    do_fallback
-fi
-  whiptail --msgbox --fb "Your server should now be restored and loading up.." 20 50 0
-  exit 0
-else
-  sed -i 's/check=.*/check=false/g' $CONFIG
-  screen -S Minecraft -p 0 -X stuff "say Going down for rollback!$(printf \\r)"
-  sleep 5
-  whiptail --msgbox --fb "Server was found running.. Hit ok and wait up to 20 seconds to recheck." 20 50 0
-  screen -S Minecraft -p 0 -X stuff "stop$(printf \\r)"
-for ((i=20;i>0;i=i-1)); do
-  clear
-if screen -list | grep -q "Minecraft"; then
-  clear
-  echo -n "Time Remaining $i seconds"
-  sleep 1
-else
-  break
-fi
-done
-fi
-else
-whiptail --msgbox --fb "No Archives found.." 10 60 0
-fi
+      #Just incase something went really bad...
+      if [[ ! -f $DIR/$SERVERJAR ]]; then
+          do_fallback
+      fi
+      
+      whiptail --msgbox --fb "Your server should now be restored and loading up.." 20 50 0
+      
+      exit 0
+    else
+      sed -i 's/check=.*/check=false/g' $CONFIG
+      
+      screen -S Minecraft -p 0 -X stuff "say Going down for rollback!$(printf \\r)"
+      sleep 5
+      
+      whiptail --msgbox --fb "Server was found running.. Hit ok and wait up to 20 seconds to recheck." 20 50 0
+      
+      screen -S Minecraft -p 0 -X stuff "stop$(printf \\r)"
+      
+      for ((i=20;i>0;i=i-1)); do
+        clear
+        if screen -list | grep -q "Minecraft"; then
+          clear
+          echo -n "Time Remaining $i seconds"
+          sleep 1
+        else
+          break
+        fi
+      done
+    fi
+
+  else
+    whiptail --msgbox --fb "No Archives found.." 10 60 0
+  fi
 }
 
 do_user_backup() {
-UBACKUP=$(whiptail --fb --inputbox "Where whould you like to save an archive to?" 8 78 $HOME/ --title "User Backups" 3>&1 1>&2 2>&3)
-RET=$?
-if [[ $RET -eq 1 ]]; then
-  break
-fi
+
+  UBACKUP=$(whiptail --fb --inputbox "Where whould you like to save an archive to?" 8 78 $HOME/ --title "User Backups" 3>&1 1>&2 2>&3)
+  RET=$?
+
+  if [[ $RET -eq 1 ]]; then
+    break
+  fi
+
   whiptail --fb --msgbox "This will take a second to do and will also stop your server, Don't hit Ok until your ready for your server to go down." 20 60 0
   do_save  
   do_no_menu_stop
-for ((i=120;i>0;i=i-1)); do
-        clear
-        if screen -list | grep -q "Minecraft"; then
-        clear
-        echo -n "Waiting for Minecraft to stop for a clean backup!. Time Remaining $i seconds"
-        sleep 1
-        else
-  cd $UBACKUP
-  rm -f USERBSCCWORLDBACKUP.tar.gz
-  rm $DIR/conf.cfg
-  cp $INSTALL_LOC/Files/conf.cfg $DIR/conf.cfg
-  tar -zcvf USERBSCCWORLDBACKUP.tar.gz -C $DIR .
-  whiptail --fb --msgbox "You should now have a file called USERBSCCWORLDBACKUP.tar.gz in this location: $UBACKUP You can use this for restores on different systems later on." 20 60 0
-  break
-  fi
-done
+  for ((i=120;i>0;i=i-1)); do
+    clear
+    
+    if screen -list | grep -q "Minecraft"; then
+      clear
+      echo -n "Waiting for Minecraft to stop for a clean backup!. Time Remaining $i seconds"
+      sleep 1
+    else
+
+      cd $UBACKUP
+
+      rm -f USERBSCCWORLDBACKUP.tar.gz
+      rm $DIR/conf.cfg
+      cp $INSTALL_LOC/Files/conf.cfg $DIR/conf.cfg
+
+      tar -zcvf USERBSCCWORLDBACKUP.tar.gz -C $DIR .
+      whiptail --fb --msgbox "You should now have a file called USERBSCCWORLDBACKUP.tar.gz in this location: $UBACKUP You can use this for restores on different systems later on." 20 60 0
+      break
+    fi
+  done
+
   #Last check to see if it's failed..
   if screen -list | grep -q "Minecraft"; then
-  whiptail --fb --msgbox "This server never stopped!, A user defined backup wont' be ran. Please try stopping it first." 20 60 0
+    whiptail --fb --msgbox "This server never stopped!, A user defined backup wont' be ran. Please try stopping it first." 20 60 0
   fi
 }
 
