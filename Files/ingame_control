@@ -18,7 +18,7 @@ if [[ ! -z "$RESTART" ]]; then
   BSCC restart
 fi
 
-if [[ ! -z "$ARCHIVE" ]]; thenS/
+if [[ ! -z "$ARCHIVE" ]]; then
   screen -S Minecraft -p 0 -X stuff "tell $ALL Wish Granted! $(printf \\r)"
   sleep .5
   BSCC archive
